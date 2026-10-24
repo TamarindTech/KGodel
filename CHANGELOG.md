@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0
+
+- Added standard Python packaging, wheel support, editable installation, and a `kgodel` console command.
+- Bundled all three route experiments and their worlds; `demo` runs from any directory after installation.
+- Added an interactive `shell` for querying current beliefs, explaining proofs, previewing decisions, stepping operations, continuing intentions, and exporting traces.
+- Kept inspection commands pure and retained a live agent across shell commands, including after invalid input.
+- Added setup and troubleshooting guidance for module-discovery errors and interpreter/environment mismatches.
+- Added 21 demo and shell tests plus a wheel verification tool that installs and runs outside the source tree.
+- Added Windows/Linux CI for Python 3.10 and 3.13, including installation verification.
+
 ## 0.4.0
 
 - Added ordered multi-operation plans with optional `require` guards before each operation.

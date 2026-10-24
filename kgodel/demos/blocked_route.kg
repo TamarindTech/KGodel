@@ -1,0 +1,32 @@
+% KGodel 0.1: revise an outdated belief and take an alternative route.
+agent explorer {
+    belief at(start).
+    belief path(start, bridge).
+    belief path(bridge, goal).
+    belief path(start, forest).
+    belief path(forest, goal).
+
+    % An outdated map says the bridge is clear. Reality will disagree.
+    belief clear(bridge).
+
+    rule reachable(X, Y) :- path(X, Y).
+    rule reachable(X, Y) :- path(X, Z), reachable(Z, Y).
+
+    rule next_step(X, G, G) :- path(X, G).
+    rule next_step(X, Y, G) :- path(X, Y), reachable(Y, G).
+    rule can_move(X, Y) :- at(X), path(X, Y), clear(Y).
+
+    goal at(goal).
+
+    % First try a route that current evidence says is clear.
+    plan travel(X, Y, G) for at(G) {
+        when can_move(X, Y), next_step(X, Y, G).
+        act move(X, Y).
+    }
+
+    % Otherwise inspect an unknown next step. Known blockages fail this guard.
+    plan inspect_route(X, Y, G) for at(G) {
+        when at(X), next_step(X, Y, G), unknown(clear(Y)).
+        observe clear(Y).
+    }
+}

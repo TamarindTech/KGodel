@@ -1,16 +1,34 @@
-# KGodel 0.4
+# KGodel 0.5
 
 **An experimental logic language for agents that can revise their beliefs and explain their decisions.**
 
 KGodel combines a small Prolog-inspired syntax with explicit goals, guarded plans, observations, and actions. This working prototype explores the reasoning cycle in a finite simulated world.
 
-KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. Version 0.4 adds **multi-step intentions**: agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails.
+KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. **Multi-step intentions** let agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails. Version 0.5 adds installation support, bundled demos, and an interactive shell for exploring a live agent.
 
 The first experiment starts with an outdated belief that a bridge is clear. The agent tries the bridge, discovers the blockage, retracts its old belief, checks a forest route, and reaches its destination. Its decision record preserves the evidence used before each action and the observations returned afterward.
 
-## Run the experiment
+## Install and try a demo
 
-Requires Python 3.10 or newer. There are no third-party dependencies, API keys, or installation steps. Open a terminal in this `KGodel` folder and run:
+Requires Python 3.10 or newer. There are no third-party runtime dependencies or API keys. From the root of this repository, install KGodel into the Python environment you want to use:
+
+```powershell
+python -m pip install .
+python -m kgodel demo
+```
+
+After installation, `python -m kgodel` works from any folder when using that same Python environment. The installed `kgodel` command is also available when that environment's Scripts/bin directory is on your PATH. For active development, use `python -m pip install -e .` so source edits take effect immediately. KGodel has not been published to PyPI; these instructions install this local checkout.
+
+The default demo is the multi-step route. List or choose a bundled experiment:
+
+```powershell
+python -m kgodel demo --list
+python -m kgodel demo blocked-route
+python -m kgodel demo hypothesis-planning
+python -m kgodel demo multistep-route
+```
+
+Demos include their programs and simulated worlds, so they need no relative file paths. You can still run directly from the source folder without installing:
 
 ```powershell
 python -m kgodel run examples/blocked_route.kg
@@ -25,6 +43,35 @@ The companion `examples/blocked_route.world.json` supplies the environment. The 
 5. Report `achieved`, with the final location confirmed by the simulator.
 
 There are five plan executions: one failed movement, two observations, and two successful movements. The completed run is saved in [the readable trace](output/blocked-route.trace.txt) and [the structured trace](output/blocked-route.trace.json).
+
+If you see **`No module named kgodel`**, either run from the repository root (the folder containing `kgodel/`) or install the checkout using the same `python` you use to run it. Installation in one virtual environment does not install it into other Python environments. See the [installation and shell guide](docs/using-kgodel.md) for Windows setup and troubleshooting.
+
+## Explore a live agent
+
+Start a session with a bundled demo:
+
+```powershell
+python -m kgodel shell --demo multistep-route
+```
+
+Enter these requests at the `kgodel>` prompt, one line at a time:
+
+```text
+:preview
+:step
+clear(bridge).
+:step 2
+:explain at(forest)
+suppose(clear(goal)) { prove(clear(goal)). }
+:status
+:run
+:save session.json
+:quit
+```
+
+The first step observes the blocked bridge; the next two operations inspect the forest and move there. Queries use the agent's current beliefs and do not advance it. `:preview` explains the next decision. `:step` and `:run` continue the same agent and its active intention, preserving earlier observations. `:help` lists all commands, including `:beliefs` and `:trace`.
+
+To use your own program, run `python -m kgodel shell path/to/agent.kg`. Its companion world is loaded by default, or supply `--world PATH`. State is held in memory while the shell is open. `:save` exports a cumulative trace, not a resumable checkpoint.
 
 ## The language
 
@@ -188,7 +235,7 @@ Observations from the local simulator are trusted. They replace the directly opp
 
 A goal is satisfied when it is supported by the current knowledge. That does not make every supplied initial belief objectively true. In the example, the final goal's proof comes from the simulator's successful movement observation.
 
-Implemented: one agent, ground goals, function-free rules, explicit negation, unknown guards, local simulation, belief revision, proof records, bounded execution, nested hypothetical contexts, conditional plan applicability, explicit priorities, pure decision previews, and multi-step intentions with current-evidence requirements and in-memory resumption.
+Implemented: one agent, ground goals, function-free rules, explicit negation, unknown guards, local simulation, belief revision, proof records, bounded execution, nested hypothetical contexts, conditional plan applicability, explicit priorities, pure decision previews, multi-step intentions with current-evidence requirements and in-memory resumption, bundled demos, and an interactive shell.
 
 Future experiments: competing evidence, counterfactual belief replacement, computed utility and information gain, durable checkpoints, and optional LLM-generated proposals. Hypothetical checks qualify declared plans; they do not synthesize new plans, predict actual tool outcomes, or grant facts to the accepted belief state. There is no general external-tool interface or real-world action execution.
 
@@ -205,6 +252,15 @@ The tests cover recursive rules, variable consistency, explicit negation, unknow
 Planning tests cover bound hypothesis variables, priority and tie ordering, fallback after unsupported or inconsistent checks, shared decision budgets, pure previews, real observation requirements, decision-history continuity, and the route experiment.
 
 Intention tests cover fixed bindings, local requirements, fresh derived evidence, goal completion, failed operations, retry suppression, priority behavior during commitments, pure continuation previews, and resuming at every pause boundary without replaying operations.
+
+Shell tests cover current-state queries, inspection without effects, continued intentions, invalid input, resource budgets, exports, and clean exit. To verify the actual installed distribution from outside the checkout:
+
+```powershell
+python -m pip wheel . --no-deps --wheel-dir dist
+python tools/verify_install.py dist
+```
+
+The verifier installs the wheel into a temporary environment and exercises the module command, console command, every bundled demo, and a stepped shell session from an unrelated directory. The `dist` directory must contain exactly one KGodel wheel, or pass a specific wheel path. GitHub Actions runs the unit suite and this installation check on Windows and Linux with Python 3.10 and 3.13.
 
 ## Design references
 

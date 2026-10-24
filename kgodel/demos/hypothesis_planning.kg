@@ -1,0 +1,32 @@
+% Explore whether a path would be useful before spending an observation on it.
+agent explorer {
+    belief at(start).
+    belief path(start, alley).
+    belief path(start, bridge).
+    belief path(bridge, goal).
+    belief path(start, forest).
+    belief path(forest, goal).
+
+    rule usable_edge(X, Y) :- path(X, Y), clear(Y).
+    rule reachable(X, Y) :- path(X, Y).
+    rule reachable(X, Y) :- path(X, Z), reachable(Z, Y).
+    rule promising(X, G, G) :- usable_edge(X, G).
+    rule promising(X, Y, G) :- usable_edge(X, Y), reachable(Y, G).
+    rule can_move(X, Y) :- at(X), usable_edge(X, Y).
+
+    goal at(goal).
+
+    % Declared first, but confirmed movement has a higher priority.
+    plan inspect_route(X, Y, G) for at(G) priority 10 {
+        when at(X), path(X, Y), unknown(clear(Y)).
+        suppose(clear(Y)) {
+            prove(promising(X, Y, G)).
+        }
+        observe clear(Y).
+    }
+
+    plan travel(X, Y, G) for at(G) priority 20 {
+        when can_move(X, Y), promising(X, Y, G).
+        act move(X, Y).
+    }
+}
