@@ -1,0 +1,159 @@
+{
+  "status": "ok",
+  "results": [
+    {
+      "kind": "query",
+      "scope": "base",
+      "query": "can_move(start, forest)",
+      "status": "unknown",
+      "proof": null,
+      "assumptions_used": []
+    },
+    {
+      "kind": "suppose",
+      "scope": "hypothesis_1",
+      "parent_scope": "base",
+      "assumptions": [
+        "clear(forest)"
+      ],
+      "results": [
+        {
+          "kind": "query",
+          "scope": "hypothesis_1",
+          "query": "can_move(start, forest)",
+          "status": "true",
+          "proof": {
+            "conclusion": "can_move(start, forest)",
+            "source": "rule_5",
+            "premises": [
+              {
+                "conclusion": "at(start)",
+                "source": "program",
+                "premises": []
+              },
+              {
+                "conclusion": "path(start, forest)",
+                "source": "program",
+                "premises": []
+              },
+              {
+                "conclusion": "clear(forest)",
+                "source": "assumption:hypothesis_1",
+                "premises": []
+              }
+            ]
+          },
+          "assumptions_used": [
+            {
+              "scope": "hypothesis_1",
+              "literal": "clear(forest)"
+            }
+          ]
+        },
+        {
+          "kind": "suppose",
+          "scope": "hypothesis_2",
+          "parent_scope": "hypothesis_1",
+          "assumptions": [
+            "clear(goal)"
+          ],
+          "results": [
+            {
+              "kind": "query",
+              "scope": "hypothesis_2",
+              "query": "clear(forest)",
+              "status": "true",
+              "proof": {
+                "conclusion": "clear(forest)",
+                "source": "assumption:hypothesis_1",
+                "premises": []
+              },
+              "assumptions_used": [
+                {
+                  "scope": "hypothesis_1",
+                  "literal": "clear(forest)"
+                }
+              ]
+            },
+            {
+              "kind": "query",
+              "scope": "hypothesis_2",
+              "query": "clear(goal)",
+              "status": "true",
+              "proof": {
+                "conclusion": "clear(goal)",
+                "source": "assumption:hypothesis_2",
+                "premises": []
+              },
+              "assumptions_used": [
+                {
+                  "scope": "hypothesis_2",
+                  "literal": "clear(goal)"
+                }
+              ]
+            }
+          ],
+          "status": "evaluated"
+        },
+        {
+          "kind": "query",
+          "scope": "hypothesis_1",
+          "query": "clear(goal)",
+          "status": "unknown",
+          "proof": null,
+          "assumptions_used": []
+        },
+        {
+          "kind": "query",
+          "scope": "hypothesis_1",
+          "query": "can_move(start, forest)",
+          "status": "true",
+          "proof": {
+            "conclusion": "can_move(start, forest)",
+            "source": "rule_5",
+            "premises": [
+              {
+                "conclusion": "at(start)",
+                "source": "program",
+                "premises": []
+              },
+              {
+                "conclusion": "path(start, forest)",
+                "source": "program",
+                "premises": []
+              },
+              {
+                "conclusion": "clear(forest)",
+                "source": "assumption:hypothesis_1",
+                "premises": []
+              }
+            ]
+          },
+          "assumptions_used": [
+            {
+              "scope": "hypothesis_1",
+              "literal": "clear(forest)"
+            }
+          ]
+        }
+      ],
+      "status": "evaluated"
+    },
+    {
+      "kind": "query",
+      "scope": "base",
+      "query": "clear(forest)",
+      "status": "unknown",
+      "proof": null,
+      "assumptions_used": []
+    },
+    {
+      "kind": "query",
+      "scope": "base",
+      "query": "can_move(start, forest)",
+      "status": "unknown",
+      "proof": null,
+      "assumptions_used": []
+    }
+  ]
+}

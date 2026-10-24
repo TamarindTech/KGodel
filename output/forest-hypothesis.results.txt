@@ -1,0 +1,26 @@
+unknown: can_move(start, forest)
+  Neither the statement nor its explicit negation has supporting evidence.
+Suppose clear(forest) [hypothesis_1]:
+  true: can_move(start, forest)
+    can_move(start, forest) [rule_5]
+      at(start) [program]
+      path(start, forest) [program]
+      clear(forest) [assumption:hypothesis_1]
+  Suppose clear(goal) [hypothesis_2]:
+    true: clear(forest)
+      clear(forest) [assumption:hypothesis_1]
+    true: clear(goal)
+      clear(goal) [assumption:hypothesis_2]
+  End hypothesis_2; temporary assumptions discarded.
+  unknown: clear(goal)
+    Neither the statement nor its explicit negation has supporting evidence.
+  true: can_move(start, forest)
+    can_move(start, forest) [rule_5]
+      at(start) [program]
+      path(start, forest) [program]
+      clear(forest) [assumption:hypothesis_1]
+End hypothesis_1; temporary assumptions discarded.
+unknown: clear(forest)
+  Neither the statement nor its explicit negation has supporting evidence.
+unknown: can_move(start, forest)
+  Neither the statement nor its explicit negation has supporting evidence.

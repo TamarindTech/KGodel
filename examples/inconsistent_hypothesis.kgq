@@ -1,0 +1,8 @@
+% The initial program already believes clear(bridge).
+% An opposite assumption is inconsistent; it does not replace that belief.
+suppose(not clear(bridge)) {
+    prove(can_move(start, bridge)).
+}
+
+% Independent queries can still use the accepted beliefs.
+prove(clear(bridge)).

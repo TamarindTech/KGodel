@@ -1,0 +1,22 @@
+% This request file uses examples/blocked_route.kg as its knowledge base.
+% No environment is loaded and no movement takes place.
+
+prove(can_move(start, forest)).
+
+suppose(clear(forest)) {
+    prove(can_move(start, forest)).
+
+    % An inner scope inherits the outer assumption.
+    suppose(clear(goal)) {
+        prove(clear(forest)).
+        prove(clear(goal)).
+    }
+
+    % The inner assumption is gone, but the outer one still applies.
+    prove(clear(goal)).
+    prove(can_move(start, forest)).
+}
+
+% The original beliefs remain unchanged after both scopes have ended.
+prove(clear(forest)).
+prove(can_move(start, forest)).
