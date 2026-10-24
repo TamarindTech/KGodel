@@ -13,6 +13,7 @@ from .parser import parse, parse_queries
 from .planning import deliberate, format_decision
 from .querying import evaluate_queries, format_query_results
 from .runtime import Agent, RouteWorld, format_trace
+from .sessions import load_session, save_session
 from .shell import run_shell
 
 
@@ -28,6 +29,7 @@ def execution_options(command: argparse.ArgumentParser):
                          help="Maximum hypothetical contexts per decision (default: 64)")
     command.add_argument("--trace-json", help="Save the structured decision and proof record")
     command.add_argument("--trace-text", help="Save the human-readable decision record")
+    command.add_argument("--checkpoint", help="Save a resumable session after this run")
 
 
 def execute_agent(agent: Agent, args: argparse.Namespace) -> int:
@@ -38,6 +40,8 @@ def execute_agent(agent: Agent, args: argparse.Namespace) -> int:
         save(args.trace_json, json.dumps(result, indent=2))
     if args.trace_text:
         save(args.trace_text, rendered)
+    if args.checkpoint:
+        save_session(agent, args.checkpoint)
     return 0 if result["status"] == "achieved" else 1
 
 
@@ -53,6 +57,7 @@ def main(argv: list[str] | None = None) -> int:
     source = shell.add_mutually_exclusive_group(required=True)
     source.add_argument("program", nargs="?")
     source.add_argument("--demo", choices=DEMOS, help="Use a bundled experiment")
+    source.add_argument("--resume", metavar="SESSION", help="Open a saved session without advancing it")
     shell.add_argument("--world", help="World JSON for a program file")
     shell.add_argument("--max-hypotheses", type=int, default=64,
                        help="Maximum hypothetical contexts per request or decision (default: 64)")
@@ -73,20 +78,26 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("program")
     run.add_argument("--world", help="World JSON; defaults to the program's .world.json companion")
     execution_options(run)
+    resume = commands.add_parser("resume", help="Continue a saved session at its next unfinished operation")
+    resume.add_argument("session")
+    execution_options(resume)
     args = parser.parse_args(argv)
     try:
         if args.command == "demo":
             if args.list:
-                if args.name or args.trace_json or args.trace_text:
-                    parser.error("demo --list cannot be combined with a demo name or trace output")
+                if args.name or args.trace_json or args.trace_text or args.checkpoint:
+                    parser.error("demo --list cannot be combined with a demo name or output files")
                 for name, (_, description) in DEMOS.items():
                     print(f"{name}: {description}")
                 return 0
             return execute_agent(load_demo(args.name or DEFAULT_DEMO), args)
-        if args.command == "shell" and args.demo:
+        if args.command == "resume":
+            return execute_agent(load_session(args.session), args)
+        if args.command == "shell" and (args.demo or args.resume):
             if args.world:
-                parser.error("--world can only be used with a program file, not --demo")
-            return run_shell(load_demo(args.demo), max_hypotheses=args.max_hypotheses)
+                parser.error("--world can only be used with a program file")
+            agent = load_session(args.resume) if args.resume else load_demo(args.demo)
+            return run_shell(agent, max_hypotheses=args.max_hypotheses)
         program_path = Path(args.program)
         program = parse(program_path.read_text(encoding="utf-8-sig"))
         if args.command in ("run", "shell"):

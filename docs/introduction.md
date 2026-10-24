@@ -74,7 +74,7 @@ Proof records connect conclusions to rules and evidence sources. Execution trace
 
 ## What you can use today
 
-KGodel 0.5 includes a Python interpreter, three bundled route experiments, an interactive shell, and readable or JSON execution records. It runs locally with Python 3.10 or newer and requires no API keys or third-party runtime dependencies.
+KGodel 0.6 includes a Python interpreter, three bundled route experiments, an interactive shell, saved sessions, and readable or JSON execution records. It runs locally with Python 3.10 or newer and requires no API keys or third-party runtime dependencies.
 
 From the repository root, install the checkout:
 
@@ -89,12 +89,12 @@ python -m kgodel demo
 python -m kgodel shell --demo multistep-route
 ```
 
-In the shell, `:preview` shows the next decision, `:step` advances one operation, `:beliefs` shows accepted evidence, and `:explain at(forest)` asks for a proof. Use `:run` to continue and `:quit` to exit.
+In the shell, `:preview` shows the next decision, `:step` advances one operation, `:beliefs` shows accepted evidence, and `:explain at(forest)` asks for a proof. Use `:run` to continue. Before exiting with `:quit`, use `:checkpoint session.json` to save your progress. Later, `python -m kgodel shell --resume session.json` reopens the same agent with its evidence and unfinished plan intact.
 
 ## Where the experiment is heading
 
-The current prototype focuses on one agent in a local route simulator. It implements a limited logic language rather than full Prolog. Session state lasts while the process is running; exported traces are records, not restart checkpoints.
+The current prototype focuses on one agent in a local route simulator. It implements a limited logic language rather than full Prolog. Checkpoints preserve experiment state across restarts; traces provide a readable account of what happened. Saving is explicit, so changes since the last checkpoint are lost when you close the process.
 
-Future research directions include comparing conflicting evidence sources, richer plan evaluation, persistent sessions, and validating proposals from language models. LLM integration, general external tools, and multi-agent communication are not implemented in version 0.5.
+Future research directions include comparing conflicting evidence sources, richer plan evaluation, and validating proposals from language models. LLM integration, general external tools, and multi-agent communication are not implemented in version 0.6.
 
 KGodel gives developers a small language to experiment with and gives other participants a way to examine the agent's assumptions, evidence, and behavior. Both can use the same concrete question to guide the work: **what supports this decision, and what should happen when that support changes?**

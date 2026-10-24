@@ -1,4 +1,4 @@
-# Using KGodel 0.5
+# Using KGodel 0.6
 
 KGodel has two entry points: `python -m kgodel` and, after installation, the `kgodel` console command. Both call the same interpreter and accept the same arguments. Python 3.10 or newer is required.
 
@@ -64,16 +64,17 @@ python -m kgodel demo --max-steps 3 --trace-json paused.trace.json
 python -m kgodel demo --max-hypotheses 64 --trace-text journey.txt
 ```
 
-Exit statuses match `run`: 0 for achieved goals, 1 for a completed invocation that did not achieve all goals, and 2 for input or file errors. A step limit is not proof of goal impossibility. `demo --list` is read-only and cannot be combined with a demo name or trace output. Trace paths are relative to your current directory unless absolute.
+Exit statuses match `run`: 0 for achieved goals, 1 for a completed invocation that did not achieve all goals, and 2 for input or file errors. A step limit is not proof of goal impossibility. `demo --list` is read-only and cannot be combined with a demo name or output files. Output paths are relative to your current directory unless absolute. Both `demo` and `run` also accept `--checkpoint PATH` to save a resumable session.
 
 ## Interactive sessions
 
 ```powershell
 python -m kgodel shell --demo multistep-route
 python -m kgodel shell examples/multistep_route.kg
+python -m kgodel shell --resume session.json
 ```
 
-Supply exactly one source: a program file or `--demo NAME`. File-based sessions accept `--world PATH`; otherwise the companion `.world.json` file is loaded. `--world` cannot override a bundled demo. `--max-hypotheses N` sets the context budget for each query request or plan-selection decision, defaulting to 64.
+Supply exactly one source: a program file, `--demo NAME`, or `--resume SESSION`. File-based sessions accept `--world PATH`; otherwise the companion `.world.json` file is loaded. `--world` cannot override a bundled demo or saved session. `--max-hypotheses N` sets the context budget for each query request or plan-selection decision, defaulting to 64.
 
 Every request occupies one line. A hypothetical request can contain nested scopes and multiple proofs on that same line. Language predicates are entered normally; shell commands begin with `:` so predicates such as `run` remain usable as queries.
 
@@ -90,6 +91,7 @@ Every request occupies one line. A hypothetical request can contain nested scope
 | `:beliefs` | Show accepted base beliefs and their evidence sources. |
 | `:trace` | Show the last cumulative execution record. |
 | `:save PATH` | Export that record as JSON. Paths containing spaces may be quoted. |
+| `:checkpoint PATH` | Save a resumable agent and world, even before the first operation. |
 | `:help` | Show the command reference. |
 | `:quit` | Exit the session. |
 
@@ -101,7 +103,20 @@ Invalid input prints a diagnostic and leaves the session open. If reasoning find
 
 `:quit` and end-of-input exit with code 0. Ctrl+C exits with code 130. Normal shell exit does not imply all agent goals were achieved; inspect `:status` or the last run result for that. On Windows, terminal end-of-input is usually Ctrl+Z followed by Enter; on macOS/Linux it is Ctrl+D.
 
-The session, intention cursor, and attempt history are in memory. Exiting and starting again creates a new agent. Saved traces are records, not restart checkpoints. No persistent or real-world tool execution is introduced in this version; the language and intention semantics remain those of 0.4.
+Use `:checkpoint PATH` before exiting to save progress. It preserves the program, beliefs and proof sources, simulator state, intention cursor, attempt history, and cumulative execution records. It writes the named file without advancing the agent, replacing an existing checkpoint atomically. A resumed shell makes the previous execution record available to `:trace` and `:save` immediately.
+
+## Continue a saved session
+
+```powershell
+python -m kgodel demo --max-steps 3 --checkpoint session.json
+python -m kgodel resume session.json --checkpoint session.json --trace-json completed.trace.json
+```
+
+The pause command returns 1 because the goal is unfinished. `resume` loads the checkpoint and executes up to 50 further operations by default; use `--max-steps N` and `--max-hypotheses N` to set new budgets. Counters and history remain cumulative. All execution options accepted by `run` also work with `resume`.
+
+`resume` leaves the input checkpoint unchanged unless you explicitly name it as an output. Use `--checkpoint session.json` to replace it with the new state, or choose a different path to retain the earlier state. For inspection before continuing, use `shell --resume session.json`; opening the shell performs no operations. Sessions do not autosave on exit.
+
+Checkpoints are self-contained and need no original `.kg` or world file. A saved trace from `:save` or `--trace-json` cannot be resumed. Invalid, truncated, oversized, and unsupported checkpoint formats produce a diagnostic. The language and intention semantics remain those of 0.4; persistence currently supports only the built-in local route simulator. See [the session format and Python API](sessions-v0.6.md) for precise guarantees and limits.
 
 ## Test a built distribution
 
@@ -111,6 +126,6 @@ python -m pip wheel . --no-deps --wheel-dir dist
 python tools/verify_install.py dist
 ```
 
-The verifier requires a wheel path or a directory containing exactly one KGodel wheel. It creates a fresh temporary environment, installs the local wheel without using a package index, and runs from a directory outside the repository. It checks that the imported package comes from the temporary environment, validates metadata and both command entry points, runs every bundled demo, then steps and resumes a shell session and exports its trace.
+The verifier requires a wheel path or a directory containing exactly one KGodel wheel. It creates a fresh temporary environment, installs the local wheel without using a package index, and runs from a directory outside the repository. It checks that the imported package comes from the temporary environment, validates metadata and both command entry points, runs every bundled demo, steps a shell session, and restores a checkpoint in separate command-line and shell processes. The resumed trace must equal an uninterrupted run.
 
 The normal test suite needs only Python's standard library. Wheel creation needs the declared setuptools build dependency. GitHub Actions is configured to perform both checks on Windows and Linux using Python 3.10 and 3.13.

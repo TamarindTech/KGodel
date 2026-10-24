@@ -27,10 +27,10 @@ def verify(wheel: Path):
         python = scripts / ("python.exe" if os.name == "nt" else "python")
         console = scripts / ("kgodel.exe" if os.name == "nt" else "kgodel")
 
-        def run(*arguments, input=None):
+        def run(*arguments, input=None, expected_code=0):
             result = subprocess.run(list(map(str, arguments)), cwd=outside, env=environment,
                                     input=input, capture_output=True, text=True, timeout=120)
-            if result.returncode != 0:
+            if result.returncode != expected_code:
                 raise RuntimeError(f"Command failed ({result.returncode}): {arguments}\n{result.stdout}\n{result.stderr}")
             return result.stdout
 
@@ -63,7 +63,19 @@ def verify(wheel: Path):
         assert "Result: achieved" in transcript, transcript
         result = json.loads((outside / "session trace.json").read_text(encoding="utf-8"))
         assert result["status"] == "achieved" and result["steps"] == 5, result
-        print(f"{module_version}: module, console command, bundled data, and interactive session verified outside checkout")
+        checkpoint = outside / "saved session.json"
+        run(console, "demo", "--max-steps", "3", "--checkpoint", checkpoint, expected_code=1)
+        paused = checkpoint.read_bytes()
+        resumed_trace = outside / "resumed.json"
+        run(python, "-I", "-m", "kgodel", "resume", checkpoint, "--trace-json", resumed_trace)
+        resumed = json.loads(resumed_trace.read_text(encoding="utf-8"))
+        uninterrupted = json.loads((outside / "multistep-route.json").read_text(encoding="utf-8"))
+        assert resumed == uninterrupted, resumed
+        assert checkpoint.read_bytes() == paused
+        transcript = run(console, "shell", "--resume", checkpoint,
+                         input=":trace\n:explain at(forest)\n:run\n:quit\n")
+        assert "simulator:step_3" in transcript and "Result: achieved" in transcript, transcript
+        print(f"{module_version}: installation, demos, shell, and cross-process session restart verified outside checkout")
 
 
 if __name__ == "__main__":

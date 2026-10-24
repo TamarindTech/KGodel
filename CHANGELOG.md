@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0
+
+- Added self-contained JSON session checkpoints for the built-in route simulator, preserving program semantics, current beliefs and proof sources, world state, attempts, histories, and active intentions.
+- Added `--checkpoint PATH` to `run` and `demo`, a `resume SESSION` command, `shell --resume SESSION`, and the shell's `:checkpoint PATH` command.
+- Restored unfinished intentions without replaying prior operations; trace exports remain separate from resumable checkpoints.
+- Added version and structural validation, bounded file loading, and atomic replacement that preserves an existing checkpoint when writing fails.
+- Added a pure `Agent.execution_record()` accessor so reopened shells can inspect earlier traces immediately.
+- Added 21 session tests and cross-process restart checks to the installed-wheel verifier.
+- Updated the README, introduction, and usage guide; added a session format and semantics reference.
+
 ## 0.5.0
 
 - Added standard Python packaging, wheel support, editable installation, and a `kgodel` console command.

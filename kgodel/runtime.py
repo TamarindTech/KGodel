@@ -103,6 +103,7 @@ class Agent:
         self.intention: Intention | None = None
         self.intention_events: list[dict] = []
         self._next_intention_id = 1
+        self._last_outcome: tuple[str, str] | None = None
 
     def inference(self) -> Inference:
         # Recompute from current base beliefs: old conclusions cannot survive revision.
@@ -204,6 +205,14 @@ class Agent:
                 self._release_intention("completed", "All operations in the plan completed successfully.")
             else:
                 self.intention = replace(self.intention, next_step=selected.step_index + 1)
+        self._last_outcome = (status, reason)
+        return self.execution_record()
+
+    def execution_record(self) -> dict | None:
+        """Describe the last run without advancing or releasing an intention."""
+        if self._last_outcome is None:
+            return None
+        status, reason = self._last_outcome
         final_logic = None
         if status != "reasoning_error":
             final_logic = self.inference()

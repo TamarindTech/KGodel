@@ -1,4 +1,4 @@
-"""An interactive, in-memory session for examining a simulated agent."""
+"""An interactive session for examining a simulated agent."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from .model import KGodelError, Literal
 from .planning import format_decision
 from .querying import format_query_results
 from .runtime import Agent, format_trace
+from .sessions import save_session
 
 
 HELP = """Queries inspect current beliefs without executing operations:
@@ -26,10 +27,11 @@ Commands:
   :beliefs               Show accepted base beliefs and their sources
   :trace                 Show the most recent cumulative execution record
   :save PATH             Save that execution record as JSON
+  :checkpoint PATH       Save the agent and world for a later restart
   :help                  Show this help
   :quit                  End this session
 
-Enter each request on one line. Session state is kept only while the shell is open."""
+Enter each request on one line. Use :checkpoint before exiting to save progress."""
 
 
 class ShellSession:
@@ -38,7 +40,7 @@ class ShellSession:
             raise KGodelError("The hypothesis budget must be nonnegative.")
         self.agent = agent
         self.max_hypotheses = max_hypotheses
-        self.last_result: dict | None = None
+        self.last_result = agent.execution_record()
 
     def status(self) -> str:
         logic = self.agent.inference()
@@ -106,6 +108,13 @@ class ShellSession:
                 active = result["active_intention"]
                 lines.append(f"Next: {active['plan']} step {active['next_step']} of {active['total_steps']}.")
             return "\n".join(lines)
+        if command == ":checkpoint":
+            if len(argument) >= 2 and argument[0] == argument[-1] and argument[0] in "\"'":
+                argument = argument[1:-1]
+            if not argument:
+                raise KGodelError(":checkpoint requires a file path.")
+            save_session(self.agent, argument)
+            return f"Saved resumable session to {argument}."
         if command in (":trace", ":save"):
             if self.last_result is None:
                 raise KGodelError("No execution record yet. Use :step or :run first.")
