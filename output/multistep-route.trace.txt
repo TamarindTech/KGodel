@@ -1,0 +1,77 @@
+KGodel 0.4.0 | agent explorer
+
+1. Goal at(goal): selected journey (priority 20).
+   Intention 1, plan step 1 of 4.
+   journey for at(goal) (priority 20): selected.
+     Supported: at(start) [program].
+     Supported: path(start, bridge) [program].
+     Supported: path(bridge, goal) [program].
+     Accepted knowledge leaves clear(bridge) unknown.
+     Suppose clear(bridge), clear(goal) [hypothesis_1]:
+       true: viable(start, bridge, goal)
+         Depends on clear(bridge) [hypothesis_1].
+         Depends on clear(goal) [hypothesis_1].
+     End hypothesis_1; temporary assumptions discarded.
+   Plan step 1 of 4.
+   Next operation: observe clear(bridge).
+   Decision: selected. First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.
+   Because at(start) [program].
+   Because path(start, bridge) [program].
+   Because path(bridge, goal) [program].
+   Because clear(bridge) is unknown in the current belief state.
+   observe clear(bridge): Observed not clear(bridge).
+   Learned not clear(bridge).
+
+2. Goal at(goal): selected journey (priority 20).
+   Intention 2, plan step 1 of 4.
+   Released intention 1 (journey): requirements_failed. The next step's requirements are not supported by current beliefs.
+     Required at(start): true.
+     Required path(start, bridge): true.
+     Required clear(bridge): false.
+   journey for at(goal) (priority 20): selected.
+     Supported: at(start) [program].
+     Supported: path(start, forest) [program].
+     Supported: path(forest, goal) [program].
+     Accepted knowledge leaves clear(forest) unknown.
+     Suppose clear(forest), clear(goal) [hypothesis_1]:
+       true: viable(start, forest, goal)
+         Depends on clear(forest) [hypothesis_1].
+         Depends on clear(goal) [hypothesis_1].
+     End hypothesis_1; temporary assumptions discarded.
+   Plan step 1 of 4.
+   Next operation: observe clear(forest).
+   Decision: selected. First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.
+   Because at(start) [program].
+   Because path(start, forest) [program].
+   Because path(forest, goal) [program].
+   Because clear(forest) is unknown in the current belief state.
+   observe clear(forest): Observed clear(forest).
+   Learned clear(forest).
+
+3. Goal at(goal): selected journey (priority 20).
+   Intention 2, plan step 2 of 4.
+   Because at(start) [program].
+   Because path(start, forest) [program].
+   Because clear(forest) [simulator:step_2].
+   act move(start, forest): Moved from start to forest.
+   Revised at(start) -> not at(start).
+   Learned at(forest).
+
+4. Goal at(goal): selected journey (priority 20).
+   Intention 2, plan step 3 of 4.
+   Because at(forest) [simulator:step_3].
+   observe clear(goal): Observed clear(goal).
+   Learned clear(goal).
+
+5. Goal at(goal): selected journey (priority 20).
+   Intention 2, plan step 4 of 4.
+   Because at(forest) [simulator:step_3].
+   Because path(forest, goal) [program].
+   Because clear(goal) [simulator:step_4].
+   act move(forest, goal): Moved from forest to goal.
+   Revised at(forest) -> not at(forest).
+   Learned at(goal).
+
+Intention 1 (journey) after operation 1: requirements_failed. The next step's requirements are not supported by current beliefs.
+Result: achieved. All goals are supported by the current beliefs.
+Environment position: goal.

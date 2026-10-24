@@ -5,10 +5,11 @@ from __future__ import annotations
 import json
 import re
 
-from .model import Atom, KGodelError, Literal, Plan, Program, ProveQuery, Query, Rule, SupposeQuery, Unknown, Var
+from .model import (Atom, KGodelError, Literal, Plan, PlanStep, Program, ProveQuery, Query, Rule,
+                    SupposeQuery, Unknown, Var, query_variables)
 
 
-TOKEN = re.compile(r'\s+|%[^\n]*|//[^\n]*|:-|[A-Za-z_][A-Za-z0-9_]*|"(?:\\.|[^"\\])*"|[{}(),.]')
+TOKEN = re.compile(r'\s+|%[^\n]*|//[^\n]*|:-|[A-Za-z_][A-Za-z0-9_]*|[0-9]+|"(?:\\.|[^"\\])*"|[{}(),.]')
 
 
 class Parser:
@@ -106,37 +107,65 @@ class Parser:
             self.take(")")
         self.take("for")
         target = self.atom()
+        priority = 0
+        if self.accept("priority"):
+            value = self.peek()
+            if not value.isascii() or not value.isdigit() or len(value) > 7 or int(value) > 1000000:
+                self.fail("Plan priority must be an integer from 0 to 1000000")
+            priority = int(self.take())
         self.take("{")
         self.take("when")
         guards = [self.guard()]
         while self.accept(","):
             guards.append(self.guard())
         self.take(".")
-        operation = self.take()
-        if operation not in ("act", "observe"):
-            self.fail("A plan must contain one 'act' or 'observe' operation")
-        argument = self.atom()
-        self.take(".")
+        hypotheses = []
+        while self.peek() == "suppose":
+            hypotheses.append(self.hypothesis(allow_variables=True))
+        steps = []
+        while self.peek() != "}":
+            requirements = []
+            if self.accept("require"):
+                requirements.append(self.guard())
+                while self.accept(","):
+                    requirements.append(self.guard())
+                self.take(".")
+            operation = self.take()
+            if operation not in ("act", "observe"):
+                self.fail("Expected an 'act' or 'observe' operation after optional 'require' guards")
+            argument = self.atom()
+            self.take(".")
+            steps.append(PlanStep(operation, argument, tuple(requirements)))
+        if not steps:
+            self.fail("A plan must contain at least one 'act' or 'observe' operation")
         self.take("}")
 
         if len(parameters) != len(set(parameters)):
             self.fail(f"Duplicate parameters in plan {name}")
-        used = target.variables | argument.variables
+        step_variables = set()
+        for step in steps:
+            step_variables |= step.argument.variables
+            for requirement in step.requirements:
+                step_variables |= requirement.atom.variables
+        used = target.variables | step_variables
         for guard in guards:
             used |= guard.atom.variables
+        hypothetical_variables = set().union(*(query_variables(query) for query in hypotheses))
+        used |= hypothetical_variables
         if used != set(parameters):
             self.fail(f"Plan {name} must declare exactly its variables: {', '.join(sorted(used)) or '(none)'}")
         bound = set(target.variables)
         for guard in guards:
             if isinstance(guard, Literal):
                 bound |= guard.atom.variables
-        needed = set(argument.variables)
+        needed = step_variables | hypothetical_variables
         for guard in guards:
             if isinstance(guard, Unknown):
                 needed |= guard.atom.variables
         if not needed <= bound:
             self.fail(f"Plan {name} has unbound variables: {', '.join(sorted(needed - bound))}")
-        return Plan(name, tuple(parameters), target, tuple(guards), operation, argument)
+        return Plan(name, tuple(parameters), target, tuple(guards), tuple(steps),
+                    priority, tuple(hypotheses))
 
     def program(self) -> Program:
         self.take("agent")
@@ -180,26 +209,30 @@ class Parser:
             self.fail("Only one agent is supported in this version")
         return Program(name, tuple(beliefs), tuple(rules), tuple(goals), tuple(plans))
 
-    def queries(self, *, nested: bool = False, depth: int = 0) -> tuple[Query, ...]:
+    def hypothesis(self, *, depth: int = 0, allow_variables: bool = False) -> SupposeQuery:
+        if depth >= 16:
+            self.fail("Hypothesis nesting limit exceeded (16)")
+        self.take("suppose")
+        self.take("(")
+        assumptions = [self.literal()]
+        while self.accept(","):
+            assumptions.append(self.literal())
+        self.take(")")
+        if not allow_variables and any(literal.atom.variables for literal in assumptions):
+            self.fail("Assumptions must be ground")
+        self.take("{")
+        body = self.queries(nested=True, depth=depth + 1, allow_variables=allow_variables)
+        self.take("}")
+        self.accept(".")
+        return SupposeQuery(tuple(assumptions), body)
+
+    def queries(self, *, nested: bool = False, depth: int = 0,
+                allow_variables: bool = False) -> tuple[Query, ...]:
         statements = []
         end = "}" if nested else "<end>"
         while self.peek() != end:
             if self.peek() == "suppose":
-                if depth >= 16:
-                    self.fail("Hypothesis nesting limit exceeded (16)")
-                self.take("suppose")
-                self.take("(")
-                assumptions = [self.literal()]
-                while self.accept(","):
-                    assumptions.append(self.literal())
-                self.take(")")
-                if any(literal.atom.variables for literal in assumptions):
-                    self.fail("Assumptions must be ground")
-                self.take("{")
-                body = self.queries(nested=True, depth=depth + 1)
-                self.take("}")
-                self.accept(".")
-                statements.append(SupposeQuery(tuple(assumptions), body))
+                statements.append(self.hypothesis(depth=depth, allow_variables=allow_variables))
             else:
                 if self.accept("prove"):
                     self.take("(")

@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import json
 
 from . import __version__
 from .logic import Inference, Knowledge
-from .model import Atom, KGodelError, Literal, Program, Proof, match
+from .model import Atom, KGodelError, Literal, Program, Proof
 from .parser import parse_queries
+from .planning import Intention, attempt_key, choose_next, deliberate, format_decision
 from .querying import evaluate_queries
 
 
@@ -51,9 +52,10 @@ class RouteWorld:
 
     def validate(self, program: Program):
         for plan in program.plans:
-            expected = ("clear", 1) if plan.operation == "observe" else ("move", 2)
-            if (plan.argument.name, len(plan.argument.args)) != expected:
-                raise KGodelError(f"Route simulator does not support {plan.operation} {plan.argument}.")
+            for step in plan.steps:
+                expected = ("clear", 1) if step.operation == "observe" else ("move", 2)
+                if step.operation not in ("observe", "act") or (step.argument.name, len(step.argument.args)) != expected:
+                    raise KGodelError(f"Route simulator does not support {step.operation} {step.argument}.")
 
     def observe(self, atom: Atom) -> Outcome:
         if atom.name != "clear" or len(atom.args) != 1 or atom.variables:
@@ -97,6 +99,10 @@ class Agent:
         self.knowledge = Knowledge(program.beliefs)
         self.events: list[dict] = []
         self.attempts: set[tuple] = set()
+        self.decisions: list[dict] = []
+        self.intention: Intention | None = None
+        self.intention_events: list[dict] = []
+        self._next_intention_id = 1
 
     def inference(self) -> Inference:
         # Recompute from current base beliefs: old conclusions cannot survive revision.
@@ -106,9 +112,30 @@ class Agent:
         """Explore current knowledge without advancing this agent or its environment."""
         return evaluate_queries(self.knowledge, self.program.rules, parse_queries(source), **limits)
 
-    def run(self, max_steps: int = 50) -> dict:
+    def deliberate(self, *, max_hypotheses: int = 64) -> dict:
+        """Preview the next plan without recording an attempt or performing it."""
+        return deliberate(self.program, self.knowledge, self.attempts,
+                          max_hypotheses=max_hypotheses, intention=self.intention).report
+
+    def _remember_intention_state(self):
+        if self.intention is not None and len(self.intention.candidate.plan.steps) > 1:
+            current = self.intention.candidate
+            self.attempts.add(attempt_key(self.knowledge, current.goal, current.plan, current.bindings))
+
+    def _release_intention(self, status: str, reason: str, **details):
+        if self.intention is not None:
+            self._remember_intention_state()
+            if status == "completed":
+                details["next_step"] = None
+            self.intention_events.append({**self.intention.as_dict(), "status": status, "reason": reason,
+                                          "after_step": len(self.events), **details})
+            self.intention = None
+
+    def run(self, max_steps: int = 50, *, max_hypotheses: int = 64) -> dict:
         if max_steps < 0:
             raise KGodelError("The step limit must be nonnegative.")
+        if max_hypotheses < 0:
+            raise KGodelError("The hypothesis budget must be nonnegative.")
         status, reason = "step_limit", "Execution budget exhausted; the goal has not been disproved."
         for step in range(max_steps + 1):
             try:
@@ -118,38 +145,37 @@ class Agent:
                 break
             pending = [goal for goal in self.program.goals if logic.status(Literal(goal)) != "true"]
             if not pending:
+                self._release_intention("goal_satisfied", "The intention's goal is already supported by current beliefs.")
                 status, reason = "achieved", "All goals are supported by the current beliefs."
                 break
             if step == max_steps:
+                if self.intention is not None and logic.status(Literal(self.intention.candidate.goal)) == "true":
+                    self._release_intention("goal_satisfied", "The intention's goal is already supported by current beliefs.")
                 break
-            selected = None
-            fingerprint = self.knowledge.fingerprint()
-            try:
-                # Goal order, then source plan order, then sorted literal matches.
-                for goal in pending:
-                    for plan in self.program.plans:
-                        initial = match(plan.target, goal)
-                        if initial is None:
-                            continue
-                        for bindings, evidence in logic.solve(plan.guards, initial):
-                            key = (fingerprint, str(goal), plan.name, tuple(sorted(bindings.items())))
-                            if key not in self.attempts:
-                                selected = (goal, plan, bindings, evidence, key)
-                                break
-                        if selected:
-                            break
-                    if selected:
-                        break
-            except KGodelError as error:
-                status, reason = "reasoning_error", str(error)
+            decision = choose_next(self.program, self.knowledge, logic, self.attempts, self.intention,
+                                   max_hypotheses=max_hypotheses)
+            self.decisions.append(decision.report)
+            release = decision.report.get("released_intention")
+            if release is not None:
+                self._release_intention(release["status"], release["reason"],
+                                        requirements=release.get("requirements", []))
+            if decision.selected is None:
+                status, reason = decision.report["status"], decision.report["reason"]
                 break
-            if selected is None:
-                status, reason = "stuck", "No untried plan is applicable to an unsatisfied goal."
-                break
-            goal, plan, bindings, evidence, key = selected
+            selected = decision.selected
+            goal, plan, bindings, evidence, key = (selected.goal, selected.plan, selected.bindings,
+                                                  selected.evidence, selected.key)
             self.attempts.add(key)
-            argument = plan.argument.ground(bindings)
-            outcome = (self.world.observe(argument) if plan.operation == "observe"
+            if self.intention is None:
+                self.intention = Intention(self._next_intention_id, selected)
+                self._next_intention_id += 1
+                self.intention_events.append({**self.intention.as_dict(), "status": "committed",
+                                              "reason": "Selected a plan with fixed bindings.",
+                                              "after_step": len(self.events)})
+            self._remember_intention_state()
+            operation = plan.steps[selected.step_index]
+            argument = operation.argument.ground(bindings)
+            outcome = (self.world.observe(argument) if operation.operation == "observe"
                        else self.world.act(argument))
             event_number = len(self.events) + 1
             changes = [self.knowledge.observe(literal, f"simulator:step_{event_number}")
@@ -158,14 +184,26 @@ class Agent:
                 "step": event_number,
                 "goal": str(goal),
                 "plan": plan.name,
-                "bindings": bindings,
-                "operation": plan.operation,
+                "priority": plan.priority,
+                "decision": len(self.decisions),
+                "intention": self.intention.id,
+                "plan_step": selected.step_index + 1,
+                "total_steps": len(plan.steps),
+                "bindings": dict(bindings),
+                "operation": operation.operation,
                 "argument": str(argument),
                 "because": [p.as_dict() if isinstance(p, Proof) else p for p in evidence],
                 "success": outcome.success,
                 "detail": outcome.detail,
                 "belief_changes": changes,
             })
+            self._remember_intention_state()
+            if not outcome.success:
+                self._release_intention("operation_failed", outcome.detail)
+            elif selected.step_index + 1 == len(plan.steps):
+                self._release_intention("completed", "All operations in the plan completed successfully.")
+            else:
+                self.intention = replace(self.intention, next_step=selected.step_index + 1)
         final_logic = None
         if status != "reasoning_error":
             final_logic = self.inference()
@@ -175,6 +213,9 @@ class Agent:
             "reason": reason,
             "steps": len(self.events),
             "events": list(self.events),
+            "decisions": list(self.decisions),
+            "active_intention": self.intention.as_dict() if self.intention else None,
+            "intention_events": list(self.intention_events),
             "goals": {str(goal): final_logic.status(Literal(goal)) if final_logic else "unresolved"
                       for goal in self.program.goals},
             "beliefs": list(self.knowledge.fingerprint()),
@@ -190,7 +231,13 @@ class Agent:
 def format_trace(result: dict) -> str:
     lines = [f"KGodel {__version__} | agent {result['agent']}", ""]
     for event in result["events"]:
-        lines.append(f"{event['step']}. Goal {event['goal']}: selected {event['plan']}.")
+        lines.append(f"{event['step']}. Goal {event['goal']}: selected {event['plan']} "
+                     f"(priority {event['priority']}).")
+        if event.get("total_steps", 1) > 1:
+            lines.append(f"   Intention {event['intention']}, plan step {event['plan_step']} of {event['total_steps']}.")
+        decision = result["decisions"][event["decision"] - 1]
+        if decision.get("released_intention") or any(candidate["hypotheses"] for candidate in decision["candidates"]):
+            lines.extend("   " + line for line in format_decision(decision).splitlines())
         for evidence in event["because"]:
             if "unknown" in evidence:
                 lines.append(f"   Because {evidence['unknown']} is unknown in the current belief state.")
@@ -203,6 +250,18 @@ def format_trace(result: dict) -> str:
             elif change["changed"]:
                 lines.append(f"   Learned {change['accepted']}.")
         lines.append("")
+    if result["decisions"] and (not result["events"]
+            or result["events"][-1]["decision"] < len(result["decisions"])):
+        lines.append("Final deliberation:")
+        lines.extend("   " + line for line in format_decision(result["decisions"][-1]).splitlines())
+    for event in result.get("intention_events", []):
+        if event["status"] not in ("committed", "completed"):
+            lines.append(f"Intention {event['id']} ({event['plan']}) after operation {event['after_step']}: "
+                         f"{event['status']}. {event['reason']}")
+    if result.get("active_intention"):
+        active = result["active_intention"]
+        lines.append(f"Pending intention {active['id']} ({active['plan']}): "
+                     f"next plan step {active['next_step']} of {active['total_steps']}.")
     lines.append(f"Result: {result['status']}. {result['reason']}")
     lines.append(f"Environment position: {result['world_position']}.")
     return "\n".join(lines)

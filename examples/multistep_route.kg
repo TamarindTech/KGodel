@@ -1,0 +1,26 @@
+% Commit to a route, but confirm each destination before moving there.
+agent explorer {
+    belief at(start).
+    belief path(start, bridge).
+    belief path(bridge, goal).
+    belief path(start, forest).
+    belief path(forest, goal).
+
+    rule viable(X, Y, G) :- at(X), path(X, Y), clear(Y), path(Y, G), clear(G).
+
+    goal at(goal).
+
+    plan journey(X, Y, G) for at(G) priority 20 {
+        when at(X), path(X, Y), path(Y, G), unknown(clear(Y)).
+        suppose(clear(Y), clear(G)) {
+            prove(viable(X, Y, G)).
+        }
+        observe clear(Y).
+        require at(X), path(X, Y), clear(Y).
+        act move(X, Y).
+        require at(Y).
+        observe clear(G).
+        require at(Y), path(Y, G), clear(G).
+        act move(Y, G).
+    }
+}

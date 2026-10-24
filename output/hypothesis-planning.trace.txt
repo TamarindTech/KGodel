@@ -1,0 +1,83 @@
+KGodel 0.4.0 | agent explorer
+
+1. Goal at(goal): selected inspect_route (priority 10).
+   inspect_route for at(goal) (priority 10): unsupported.
+     Supported: at(start) [program].
+     Supported: path(start, alley) [program].
+     Accepted knowledge leaves clear(alley) unknown.
+     Suppose clear(alley) [hypothesis_1]:
+       unknown: promising(start, alley, goal)
+     End hypothesis_1; temporary assumptions discarded.
+   inspect_route for at(goal) (priority 10): selected.
+     Supported: at(start) [program].
+     Supported: path(start, bridge) [program].
+     Accepted knowledge leaves clear(bridge) unknown.
+     Suppose clear(bridge) [hypothesis_1]:
+       true: promising(start, bridge, goal)
+         Depends on clear(bridge) [hypothesis_1].
+     End hypothesis_1; temporary assumptions discarded.
+   Next operation: observe clear(bridge).
+   Decision: selected. First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.
+   Because at(start) [program].
+   Because path(start, bridge) [program].
+   Because clear(bridge) is unknown in the current belief state.
+   observe clear(bridge): Observed not clear(bridge).
+   Learned not clear(bridge).
+
+2. Goal at(goal): selected inspect_route (priority 10).
+   inspect_route for at(goal) (priority 10): unsupported.
+     Supported: at(start) [program].
+     Supported: path(start, alley) [program].
+     Accepted knowledge leaves clear(alley) unknown.
+     Suppose clear(alley) [hypothesis_1]:
+       unknown: promising(start, alley, goal)
+     End hypothesis_1; temporary assumptions discarded.
+   inspect_route for at(goal) (priority 10): selected.
+     Supported: at(start) [program].
+     Supported: path(start, forest) [program].
+     Accepted knowledge leaves clear(forest) unknown.
+     Suppose clear(forest) [hypothesis_1]:
+       true: promising(start, forest, goal)
+         Depends on clear(forest) [hypothesis_1].
+     End hypothesis_1; temporary assumptions discarded.
+   Next operation: observe clear(forest).
+   Decision: selected. First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.
+   Because at(start) [program].
+   Because path(start, forest) [program].
+   Because clear(forest) is unknown in the current belief state.
+   observe clear(forest): Observed clear(forest).
+   Learned clear(forest).
+
+3. Goal at(goal): selected travel (priority 20).
+   Because can_move(start, forest) [rule_6].
+   Because promising(start, forest, goal) [rule_5].
+   act move(start, forest): Moved from start to forest.
+   Revised at(start) -> not at(start).
+   Learned at(forest).
+
+4. Goal at(goal): selected inspect_route (priority 10).
+   inspect_route for at(goal) (priority 10): selected.
+     Supported: at(forest) [simulator:step_3].
+     Supported: path(forest, goal) [program].
+     Accepted knowledge leaves clear(goal) unknown.
+     Suppose clear(goal) [hypothesis_1]:
+       true: promising(forest, goal, goal)
+         Depends on clear(goal) [hypothesis_1].
+     End hypothesis_1; temporary assumptions discarded.
+   Next operation: observe clear(goal).
+   Decision: selected. First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.
+   Because at(forest) [simulator:step_3].
+   Because path(forest, goal) [program].
+   Because clear(goal) is unknown in the current belief state.
+   observe clear(goal): Observed clear(goal).
+   Learned clear(goal).
+
+5. Goal at(goal): selected travel (priority 20).
+   Because can_move(forest, goal) [rule_6].
+   Because promising(forest, goal, goal) [rule_4].
+   act move(forest, goal): Moved from forest to goal.
+   Revised at(forest) -> not at(forest).
+   Learned at(goal).
+
+Result: achieved. All goals are supported by the current beliefs.
+Environment position: goal.

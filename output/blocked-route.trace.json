@@ -8,6 +8,11 @@
       "step": 1,
       "goal": "at(goal)",
       "plan": "travel",
+      "priority": 0,
+      "decision": 1,
+      "intention": 1,
+      "plan_step": 1,
+      "total_steps": 1,
       "bindings": {
         "G": "goal",
         "X": "start",
@@ -75,6 +80,11 @@
       "step": 2,
       "goal": "at(goal)",
       "plan": "inspect_route",
+      "priority": 0,
+      "decision": 2,
+      "intention": 2,
+      "plan_step": 1,
+      "total_steps": 1,
       "bindings": {
         "G": "goal",
         "X": "start",
@@ -129,6 +139,11 @@
       "step": 3,
       "goal": "at(goal)",
       "plan": "travel",
+      "priority": 0,
+      "decision": 3,
+      "intention": 3,
+      "plan_step": 1,
+      "total_steps": 1,
       "bindings": {
         "G": "goal",
         "X": "start",
@@ -208,6 +223,11 @@
       "step": 4,
       "goal": "at(goal)",
       "plan": "inspect_route",
+      "priority": 0,
+      "decision": 4,
+      "intention": 4,
+      "plan_step": 1,
+      "total_steps": 1,
       "bindings": {
         "G": "goal",
         "X": "forest",
@@ -251,6 +271,11 @@
       "step": 5,
       "goal": "at(goal)",
       "plan": "travel",
+      "priority": 0,
+      "decision": 5,
+      "intention": 5,
+      "plan_step": 1,
+      "total_steps": 1,
       "bindings": {
         "G": "goal",
         "X": "forest",
@@ -314,6 +339,800 @@
           "changed": true
         }
       ]
+    }
+  ],
+  "decisions": [
+    {
+      "status": "selected",
+      "reason": "First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.",
+      "candidates": [
+        {
+          "goal": "at(goal)",
+          "plan": "travel",
+          "priority": 0,
+          "bindings": {
+            "G": "goal",
+            "X": "start",
+            "Y": "bridge"
+          },
+          "operation": "act",
+          "argument": "move(start, bridge)",
+          "because": [
+            {
+              "conclusion": "can_move(start, bridge)",
+              "source": "rule_5",
+              "premises": [
+                {
+                  "conclusion": "at(start)",
+                  "source": "program",
+                  "premises": []
+                },
+                {
+                  "conclusion": "path(start, bridge)",
+                  "source": "program",
+                  "premises": []
+                },
+                {
+                  "conclusion": "clear(bridge)",
+                  "source": "program",
+                  "premises": []
+                }
+              ]
+            },
+            {
+              "conclusion": "next_step(start, bridge, goal)",
+              "source": "rule_4",
+              "premises": [
+                {
+                  "conclusion": "path(start, bridge)",
+                  "source": "program",
+                  "premises": []
+                },
+                {
+                  "conclusion": "reachable(bridge, goal)",
+                  "source": "rule_1",
+                  "premises": [
+                    {
+                      "conclusion": "path(bridge, goal)",
+                      "source": "program",
+                      "premises": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "hypotheses": null,
+          "status": "selected",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 1,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "act",
+              "argument": "move(start, bridge)",
+              "requirements": []
+            }
+          ]
+        }
+      ],
+      "selected": {
+        "goal": "at(goal)",
+        "plan": "travel",
+        "priority": 0,
+        "bindings": {
+          "G": "goal",
+          "X": "start",
+          "Y": "bridge"
+        },
+        "operation": "act",
+        "argument": "move(start, bridge)",
+        "because": [
+          {
+            "conclusion": "can_move(start, bridge)",
+            "source": "rule_5",
+            "premises": [
+              {
+                "conclusion": "at(start)",
+                "source": "program",
+                "premises": []
+              },
+              {
+                "conclusion": "path(start, bridge)",
+                "source": "program",
+                "premises": []
+              },
+              {
+                "conclusion": "clear(bridge)",
+                "source": "program",
+                "premises": []
+              }
+            ]
+          },
+          {
+            "conclusion": "next_step(start, bridge, goal)",
+            "source": "rule_4",
+            "premises": [
+              {
+                "conclusion": "path(start, bridge)",
+                "source": "program",
+                "premises": []
+              },
+              {
+                "conclusion": "reachable(bridge, goal)",
+                "source": "rule_1",
+                "premises": [
+                  {
+                    "conclusion": "path(bridge, goal)",
+                    "source": "program",
+                    "premises": []
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "hypotheses": null,
+        "status": "selected",
+        "requirements": [],
+        "plan_step": 1,
+        "total_steps": 1,
+        "intention": null,
+        "sequence": [
+          {
+            "operation": "act",
+            "argument": "move(start, bridge)",
+            "requirements": []
+          }
+        ]
+      },
+      "hypotheses_checked": 0
+    },
+    {
+      "status": "selected",
+      "reason": "First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.",
+      "candidates": [
+        {
+          "goal": "at(goal)",
+          "plan": "inspect_route",
+          "priority": 0,
+          "bindings": {
+            "G": "goal",
+            "X": "start",
+            "Y": "forest"
+          },
+          "operation": "observe",
+          "argument": "clear(forest)",
+          "because": [
+            {
+              "conclusion": "at(start)",
+              "source": "program",
+              "premises": []
+            },
+            {
+              "conclusion": "next_step(start, forest, goal)",
+              "source": "rule_4",
+              "premises": [
+                {
+                  "conclusion": "path(start, forest)",
+                  "source": "program",
+                  "premises": []
+                },
+                {
+                  "conclusion": "reachable(forest, goal)",
+                  "source": "rule_1",
+                  "premises": [
+                    {
+                      "conclusion": "path(forest, goal)",
+                      "source": "program",
+                      "premises": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "unknown": "clear(forest)"
+            }
+          ],
+          "hypotheses": null,
+          "status": "selected",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 1,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "observe",
+              "argument": "clear(forest)",
+              "requirements": []
+            }
+          ]
+        }
+      ],
+      "selected": {
+        "goal": "at(goal)",
+        "plan": "inspect_route",
+        "priority": 0,
+        "bindings": {
+          "G": "goal",
+          "X": "start",
+          "Y": "forest"
+        },
+        "operation": "observe",
+        "argument": "clear(forest)",
+        "because": [
+          {
+            "conclusion": "at(start)",
+            "source": "program",
+            "premises": []
+          },
+          {
+            "conclusion": "next_step(start, forest, goal)",
+            "source": "rule_4",
+            "premises": [
+              {
+                "conclusion": "path(start, forest)",
+                "source": "program",
+                "premises": []
+              },
+              {
+                "conclusion": "reachable(forest, goal)",
+                "source": "rule_1",
+                "premises": [
+                  {
+                    "conclusion": "path(forest, goal)",
+                    "source": "program",
+                    "premises": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "unknown": "clear(forest)"
+          }
+        ],
+        "hypotheses": null,
+        "status": "selected",
+        "requirements": [],
+        "plan_step": 1,
+        "total_steps": 1,
+        "intention": null,
+        "sequence": [
+          {
+            "operation": "observe",
+            "argument": "clear(forest)",
+            "requirements": []
+          }
+        ]
+      },
+      "hypotheses_checked": 0
+    },
+    {
+      "status": "selected",
+      "reason": "First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.",
+      "candidates": [
+        {
+          "goal": "at(goal)",
+          "plan": "travel",
+          "priority": 0,
+          "bindings": {
+            "G": "goal",
+            "X": "start",
+            "Y": "forest"
+          },
+          "operation": "act",
+          "argument": "move(start, forest)",
+          "because": [
+            {
+              "conclusion": "can_move(start, forest)",
+              "source": "rule_5",
+              "premises": [
+                {
+                  "conclusion": "at(start)",
+                  "source": "program",
+                  "premises": []
+                },
+                {
+                  "conclusion": "path(start, forest)",
+                  "source": "program",
+                  "premises": []
+                },
+                {
+                  "conclusion": "clear(forest)",
+                  "source": "simulator:step_2",
+                  "premises": []
+                }
+              ]
+            },
+            {
+              "conclusion": "next_step(start, forest, goal)",
+              "source": "rule_4",
+              "premises": [
+                {
+                  "conclusion": "path(start, forest)",
+                  "source": "program",
+                  "premises": []
+                },
+                {
+                  "conclusion": "reachable(forest, goal)",
+                  "source": "rule_1",
+                  "premises": [
+                    {
+                      "conclusion": "path(forest, goal)",
+                      "source": "program",
+                      "premises": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "hypotheses": null,
+          "status": "selected",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 1,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "act",
+              "argument": "move(start, forest)",
+              "requirements": []
+            }
+          ]
+        }
+      ],
+      "selected": {
+        "goal": "at(goal)",
+        "plan": "travel",
+        "priority": 0,
+        "bindings": {
+          "G": "goal",
+          "X": "start",
+          "Y": "forest"
+        },
+        "operation": "act",
+        "argument": "move(start, forest)",
+        "because": [
+          {
+            "conclusion": "can_move(start, forest)",
+            "source": "rule_5",
+            "premises": [
+              {
+                "conclusion": "at(start)",
+                "source": "program",
+                "premises": []
+              },
+              {
+                "conclusion": "path(start, forest)",
+                "source": "program",
+                "premises": []
+              },
+              {
+                "conclusion": "clear(forest)",
+                "source": "simulator:step_2",
+                "premises": []
+              }
+            ]
+          },
+          {
+            "conclusion": "next_step(start, forest, goal)",
+            "source": "rule_4",
+            "premises": [
+              {
+                "conclusion": "path(start, forest)",
+                "source": "program",
+                "premises": []
+              },
+              {
+                "conclusion": "reachable(forest, goal)",
+                "source": "rule_1",
+                "premises": [
+                  {
+                    "conclusion": "path(forest, goal)",
+                    "source": "program",
+                    "premises": []
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "hypotheses": null,
+        "status": "selected",
+        "requirements": [],
+        "plan_step": 1,
+        "total_steps": 1,
+        "intention": null,
+        "sequence": [
+          {
+            "operation": "act",
+            "argument": "move(start, forest)",
+            "requirements": []
+          }
+        ]
+      },
+      "hypotheses_checked": 0
+    },
+    {
+      "status": "selected",
+      "reason": "First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.",
+      "candidates": [
+        {
+          "goal": "at(goal)",
+          "plan": "inspect_route",
+          "priority": 0,
+          "bindings": {
+            "G": "goal",
+            "X": "forest",
+            "Y": "goal"
+          },
+          "operation": "observe",
+          "argument": "clear(goal)",
+          "because": [
+            {
+              "conclusion": "at(forest)",
+              "source": "simulator:step_3",
+              "premises": []
+            },
+            {
+              "conclusion": "next_step(forest, goal, goal)",
+              "source": "rule_3",
+              "premises": [
+                {
+                  "conclusion": "path(forest, goal)",
+                  "source": "program",
+                  "premises": []
+                }
+              ]
+            },
+            {
+              "unknown": "clear(goal)"
+            }
+          ],
+          "hypotheses": null,
+          "status": "selected",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 1,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "observe",
+              "argument": "clear(goal)",
+              "requirements": []
+            }
+          ]
+        }
+      ],
+      "selected": {
+        "goal": "at(goal)",
+        "plan": "inspect_route",
+        "priority": 0,
+        "bindings": {
+          "G": "goal",
+          "X": "forest",
+          "Y": "goal"
+        },
+        "operation": "observe",
+        "argument": "clear(goal)",
+        "because": [
+          {
+            "conclusion": "at(forest)",
+            "source": "simulator:step_3",
+            "premises": []
+          },
+          {
+            "conclusion": "next_step(forest, goal, goal)",
+            "source": "rule_3",
+            "premises": [
+              {
+                "conclusion": "path(forest, goal)",
+                "source": "program",
+                "premises": []
+              }
+            ]
+          },
+          {
+            "unknown": "clear(goal)"
+          }
+        ],
+        "hypotheses": null,
+        "status": "selected",
+        "requirements": [],
+        "plan_step": 1,
+        "total_steps": 1,
+        "intention": null,
+        "sequence": [
+          {
+            "operation": "observe",
+            "argument": "clear(goal)",
+            "requirements": []
+          }
+        ]
+      },
+      "hypotheses_checked": 0
+    },
+    {
+      "status": "selected",
+      "reason": "First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.",
+      "candidates": [
+        {
+          "goal": "at(goal)",
+          "plan": "travel",
+          "priority": 0,
+          "bindings": {
+            "G": "goal",
+            "X": "forest",
+            "Y": "goal"
+          },
+          "operation": "act",
+          "argument": "move(forest, goal)",
+          "because": [
+            {
+              "conclusion": "can_move(forest, goal)",
+              "source": "rule_5",
+              "premises": [
+                {
+                  "conclusion": "at(forest)",
+                  "source": "simulator:step_3",
+                  "premises": []
+                },
+                {
+                  "conclusion": "path(forest, goal)",
+                  "source": "program",
+                  "premises": []
+                },
+                {
+                  "conclusion": "clear(goal)",
+                  "source": "simulator:step_4",
+                  "premises": []
+                }
+              ]
+            },
+            {
+              "conclusion": "next_step(forest, goal, goal)",
+              "source": "rule_3",
+              "premises": [
+                {
+                  "conclusion": "path(forest, goal)",
+                  "source": "program",
+                  "premises": []
+                }
+              ]
+            }
+          ],
+          "hypotheses": null,
+          "status": "selected",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 1,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "act",
+              "argument": "move(forest, goal)",
+              "requirements": []
+            }
+          ]
+        }
+      ],
+      "selected": {
+        "goal": "at(goal)",
+        "plan": "travel",
+        "priority": 0,
+        "bindings": {
+          "G": "goal",
+          "X": "forest",
+          "Y": "goal"
+        },
+        "operation": "act",
+        "argument": "move(forest, goal)",
+        "because": [
+          {
+            "conclusion": "can_move(forest, goal)",
+            "source": "rule_5",
+            "premises": [
+              {
+                "conclusion": "at(forest)",
+                "source": "simulator:step_3",
+                "premises": []
+              },
+              {
+                "conclusion": "path(forest, goal)",
+                "source": "program",
+                "premises": []
+              },
+              {
+                "conclusion": "clear(goal)",
+                "source": "simulator:step_4",
+                "premises": []
+              }
+            ]
+          },
+          {
+            "conclusion": "next_step(forest, goal, goal)",
+            "source": "rule_3",
+            "premises": [
+              {
+                "conclusion": "path(forest, goal)",
+                "source": "program",
+                "premises": []
+              }
+            ]
+          }
+        ],
+        "hypotheses": null,
+        "status": "selected",
+        "requirements": [],
+        "plan_step": 1,
+        "total_steps": 1,
+        "intention": null,
+        "sequence": [
+          {
+            "operation": "act",
+            "argument": "move(forest, goal)",
+            "requirements": []
+          }
+        ]
+      },
+      "hypotheses_checked": 0
+    }
+  ],
+  "active_intention": null,
+  "intention_events": [
+    {
+      "id": 1,
+      "goal": "at(goal)",
+      "plan": "travel",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "bridge"
+      },
+      "next_step": 1,
+      "total_steps": 1,
+      "status": "committed",
+      "reason": "Selected a plan with fixed bindings.",
+      "after_step": 0
+    },
+    {
+      "id": 1,
+      "goal": "at(goal)",
+      "plan": "travel",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "bridge"
+      },
+      "next_step": 1,
+      "total_steps": 1,
+      "status": "operation_failed",
+      "reason": "Movement failed: bridge is blocked.",
+      "after_step": 1
+    },
+    {
+      "id": 2,
+      "goal": "at(goal)",
+      "plan": "inspect_route",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "next_step": 1,
+      "total_steps": 1,
+      "status": "committed",
+      "reason": "Selected a plan with fixed bindings.",
+      "after_step": 1
+    },
+    {
+      "id": 2,
+      "goal": "at(goal)",
+      "plan": "inspect_route",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "next_step": null,
+      "total_steps": 1,
+      "status": "completed",
+      "reason": "All operations in the plan completed successfully.",
+      "after_step": 2
+    },
+    {
+      "id": 3,
+      "goal": "at(goal)",
+      "plan": "travel",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "next_step": 1,
+      "total_steps": 1,
+      "status": "committed",
+      "reason": "Selected a plan with fixed bindings.",
+      "after_step": 2
+    },
+    {
+      "id": 3,
+      "goal": "at(goal)",
+      "plan": "travel",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "next_step": null,
+      "total_steps": 1,
+      "status": "completed",
+      "reason": "All operations in the plan completed successfully.",
+      "after_step": 3
+    },
+    {
+      "id": 4,
+      "goal": "at(goal)",
+      "plan": "inspect_route",
+      "bindings": {
+        "G": "goal",
+        "X": "forest",
+        "Y": "goal"
+      },
+      "next_step": 1,
+      "total_steps": 1,
+      "status": "committed",
+      "reason": "Selected a plan with fixed bindings.",
+      "after_step": 3
+    },
+    {
+      "id": 4,
+      "goal": "at(goal)",
+      "plan": "inspect_route",
+      "bindings": {
+        "G": "goal",
+        "X": "forest",
+        "Y": "goal"
+      },
+      "next_step": null,
+      "total_steps": 1,
+      "status": "completed",
+      "reason": "All operations in the plan completed successfully.",
+      "after_step": 4
+    },
+    {
+      "id": 5,
+      "goal": "at(goal)",
+      "plan": "travel",
+      "bindings": {
+        "G": "goal",
+        "X": "forest",
+        "Y": "goal"
+      },
+      "next_step": 1,
+      "total_steps": 1,
+      "status": "committed",
+      "reason": "Selected a plan with fixed bindings.",
+      "after_step": 4
+    },
+    {
+      "id": 5,
+      "goal": "at(goal)",
+      "plan": "travel",
+      "bindings": {
+        "G": "goal",
+        "X": "forest",
+        "Y": "goal"
+      },
+      "next_step": null,
+      "total_steps": 1,
+      "status": "completed",
+      "reason": "All operations in the plan completed successfully.",
+      "after_step": 5
     }
   ],
   "goals": {

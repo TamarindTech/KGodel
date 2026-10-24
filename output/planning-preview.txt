@@ -1,0 +1,17 @@
+inspect_route for at(goal) (priority 10): unsupported.
+  Supported: at(start) [program].
+  Supported: path(start, alley) [program].
+  Accepted knowledge leaves clear(alley) unknown.
+  Suppose clear(alley) [hypothesis_1]:
+    unknown: promising(start, alley, goal)
+  End hypothesis_1; temporary assumptions discarded.
+inspect_route for at(goal) (priority 10): selected.
+  Supported: at(start) [program].
+  Supported: path(start, bridge) [program].
+  Accepted knowledge leaves clear(bridge) unknown.
+  Suppose clear(bridge) [hypothesis_1]:
+    true: promising(start, bridge, goal)
+      Depends on clear(bridge) [hypothesis_1].
+  End hypothesis_1; temporary assumptions discarded.
+Next operation: observe clear(bridge).
+Decision: selected. First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.

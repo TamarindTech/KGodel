@@ -1,0 +1,11 @@
+{
+  "position": "start",
+  "edges": [
+    ["start", "alley"],
+    ["start", "bridge"],
+    ["bridge", "goal"],
+    ["start", "forest"],
+    ["forest", "goal"]
+  ],
+  "blocked": ["bridge"]
+}
