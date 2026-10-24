@@ -1,6 +1,12 @@
+<p align="center">
+  <img src="docs/assets/kgodel-logo-transparent.svg" alt="KGödel — Agentic Logic Programming" width="640">
+</p>
+
 # KGodel 0.5
 
 **An experimental logic language for agents that can revise their beliefs and explain their decisions.**
+
+New to KGodel? Read the [introduction for developers and non-developers](docs/introduction.md).
 
 KGodel combines a small Prolog-inspired syntax with explicit goals, guarded plans, observations, and actions. This working prototype explores the reasoning cycle in a finite simulated world.
 

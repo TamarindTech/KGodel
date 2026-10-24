@@ -1,0 +1,2 @@
+# Preserve supplied SVG assets byte-for-byte.
+docs/assets/*.svg -text whitespace=cr-at-eol
