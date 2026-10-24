@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 
-from .model import (Atom, KGodelError, Literal, Plan, Program, ProveQuery, Query, Rule,
+from .model import (Atom, KGodelError, Literal, Plan, PlanStep, Program, ProveQuery, Query, Rule,
                     SupposeQuery, Unknown, Var, query_variables)
 
 
@@ -122,16 +122,32 @@ class Parser:
         hypotheses = []
         while self.peek() == "suppose":
             hypotheses.append(self.hypothesis(allow_variables=True))
-        operation = self.take()
-        if operation not in ("act", "observe"):
-            self.fail("A plan must contain one 'act' or 'observe' operation")
-        argument = self.atom()
-        self.take(".")
+        steps = []
+        while self.peek() != "}":
+            requirements = []
+            if self.accept("require"):
+                requirements.append(self.guard())
+                while self.accept(","):
+                    requirements.append(self.guard())
+                self.take(".")
+            operation = self.take()
+            if operation not in ("act", "observe"):
+                self.fail("Expected an 'act' or 'observe' operation after optional 'require' guards")
+            argument = self.atom()
+            self.take(".")
+            steps.append(PlanStep(operation, argument, tuple(requirements)))
+        if not steps:
+            self.fail("A plan must contain at least one 'act' or 'observe' operation")
         self.take("}")
 
         if len(parameters) != len(set(parameters)):
             self.fail(f"Duplicate parameters in plan {name}")
-        used = target.variables | argument.variables
+        step_variables = set()
+        for step in steps:
+            step_variables |= step.argument.variables
+            for requirement in step.requirements:
+                step_variables |= requirement.atom.variables
+        used = target.variables | step_variables
         for guard in guards:
             used |= guard.atom.variables
         hypothetical_variables = set().union(*(query_variables(query) for query in hypotheses))
@@ -142,13 +158,13 @@ class Parser:
         for guard in guards:
             if isinstance(guard, Literal):
                 bound |= guard.atom.variables
-        needed = set(argument.variables) | hypothetical_variables
+        needed = step_variables | hypothetical_variables
         for guard in guards:
             if isinstance(guard, Unknown):
                 needed |= guard.atom.variables
         if not needed <= bound:
             self.fail(f"Plan {name} has unbound variables: {', '.join(sorted(needed - bound))}")
-        return Plan(name, tuple(parameters), target, tuple(guards), operation, argument,
+        return Plan(name, tuple(parameters), target, tuple(guards), tuple(steps),
                     priority, tuple(hypotheses))
 
     def program(self) -> Program:

@@ -1,0 +1,1411 @@
+{
+  "agent": "explorer",
+  "status": "achieved",
+  "reason": "All goals are supported by the current beliefs.",
+  "steps": 5,
+  "events": [
+    {
+      "step": 1,
+      "goal": "at(goal)",
+      "plan": "journey",
+      "priority": 20,
+      "decision": 1,
+      "intention": 1,
+      "plan_step": 1,
+      "total_steps": 4,
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "bridge"
+      },
+      "operation": "observe",
+      "argument": "clear(bridge)",
+      "because": [
+        {
+          "conclusion": "at(start)",
+          "source": "program",
+          "premises": []
+        },
+        {
+          "conclusion": "path(start, bridge)",
+          "source": "program",
+          "premises": []
+        },
+        {
+          "conclusion": "path(bridge, goal)",
+          "source": "program",
+          "premises": []
+        },
+        {
+          "unknown": "clear(bridge)"
+        }
+      ],
+      "success": true,
+      "detail": "Observed not clear(bridge).",
+      "belief_changes": [
+        {
+          "accepted": "not clear(bridge)",
+          "source": "simulator:step_1",
+          "retracted": null,
+          "changed": true
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "goal": "at(goal)",
+      "plan": "journey",
+      "priority": 20,
+      "decision": 2,
+      "intention": 2,
+      "plan_step": 1,
+      "total_steps": 4,
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "operation": "observe",
+      "argument": "clear(forest)",
+      "because": [
+        {
+          "conclusion": "at(start)",
+          "source": "program",
+          "premises": []
+        },
+        {
+          "conclusion": "path(start, forest)",
+          "source": "program",
+          "premises": []
+        },
+        {
+          "conclusion": "path(forest, goal)",
+          "source": "program",
+          "premises": []
+        },
+        {
+          "unknown": "clear(forest)"
+        }
+      ],
+      "success": true,
+      "detail": "Observed clear(forest).",
+      "belief_changes": [
+        {
+          "accepted": "clear(forest)",
+          "source": "simulator:step_2",
+          "retracted": null,
+          "changed": true
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "goal": "at(goal)",
+      "plan": "journey",
+      "priority": 20,
+      "decision": 3,
+      "intention": 2,
+      "plan_step": 2,
+      "total_steps": 4,
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "operation": "act",
+      "argument": "move(start, forest)",
+      "because": [
+        {
+          "conclusion": "at(start)",
+          "source": "program",
+          "premises": []
+        },
+        {
+          "conclusion": "path(start, forest)",
+          "source": "program",
+          "premises": []
+        },
+        {
+          "conclusion": "clear(forest)",
+          "source": "simulator:step_2",
+          "premises": []
+        }
+      ],
+      "success": true,
+      "detail": "Moved from start to forest.",
+      "belief_changes": [
+        {
+          "accepted": "clear(forest)",
+          "source": "simulator:step_3",
+          "retracted": null,
+          "changed": false
+        },
+        {
+          "accepted": "not at(start)",
+          "source": "simulator:step_3",
+          "retracted": "at(start)",
+          "changed": true
+        },
+        {
+          "accepted": "at(forest)",
+          "source": "simulator:step_3",
+          "retracted": null,
+          "changed": true
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "goal": "at(goal)",
+      "plan": "journey",
+      "priority": 20,
+      "decision": 4,
+      "intention": 2,
+      "plan_step": 3,
+      "total_steps": 4,
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "operation": "observe",
+      "argument": "clear(goal)",
+      "because": [
+        {
+          "conclusion": "at(forest)",
+          "source": "simulator:step_3",
+          "premises": []
+        }
+      ],
+      "success": true,
+      "detail": "Observed clear(goal).",
+      "belief_changes": [
+        {
+          "accepted": "clear(goal)",
+          "source": "simulator:step_4",
+          "retracted": null,
+          "changed": true
+        }
+      ]
+    },
+    {
+      "step": 5,
+      "goal": "at(goal)",
+      "plan": "journey",
+      "priority": 20,
+      "decision": 5,
+      "intention": 2,
+      "plan_step": 4,
+      "total_steps": 4,
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "operation": "act",
+      "argument": "move(forest, goal)",
+      "because": [
+        {
+          "conclusion": "at(forest)",
+          "source": "simulator:step_3",
+          "premises": []
+        },
+        {
+          "conclusion": "path(forest, goal)",
+          "source": "program",
+          "premises": []
+        },
+        {
+          "conclusion": "clear(goal)",
+          "source": "simulator:step_4",
+          "premises": []
+        }
+      ],
+      "success": true,
+      "detail": "Moved from forest to goal.",
+      "belief_changes": [
+        {
+          "accepted": "clear(goal)",
+          "source": "simulator:step_5",
+          "retracted": null,
+          "changed": false
+        },
+        {
+          "accepted": "not at(forest)",
+          "source": "simulator:step_5",
+          "retracted": "at(forest)",
+          "changed": true
+        },
+        {
+          "accepted": "at(goal)",
+          "source": "simulator:step_5",
+          "retracted": null,
+          "changed": true
+        }
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "status": "selected",
+      "reason": "First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.",
+      "candidates": [
+        {
+          "goal": "at(goal)",
+          "plan": "journey",
+          "priority": 20,
+          "bindings": {
+            "G": "goal",
+            "X": "start",
+            "Y": "bridge"
+          },
+          "operation": "observe",
+          "argument": "clear(bridge)",
+          "because": [
+            {
+              "conclusion": "at(start)",
+              "source": "program",
+              "premises": []
+            },
+            {
+              "conclusion": "path(start, bridge)",
+              "source": "program",
+              "premises": []
+            },
+            {
+              "conclusion": "path(bridge, goal)",
+              "source": "program",
+              "premises": []
+            },
+            {
+              "unknown": "clear(bridge)"
+            }
+          ],
+          "hypotheses": {
+            "status": "ok",
+            "results": [
+              {
+                "kind": "suppose",
+                "scope": "hypothesis_1",
+                "parent_scope": "base",
+                "assumptions": [
+                  "clear(bridge)",
+                  "clear(goal)"
+                ],
+                "results": [
+                  {
+                    "kind": "query",
+                    "scope": "hypothesis_1",
+                    "query": "viable(start, bridge, goal)",
+                    "status": "true",
+                    "proof": {
+                      "conclusion": "viable(start, bridge, goal)",
+                      "source": "rule_1",
+                      "premises": [
+                        {
+                          "conclusion": "at(start)",
+                          "source": "program",
+                          "premises": []
+                        },
+                        {
+                          "conclusion": "path(start, bridge)",
+                          "source": "program",
+                          "premises": []
+                        },
+                        {
+                          "conclusion": "clear(bridge)",
+                          "source": "assumption:hypothesis_1",
+                          "premises": []
+                        },
+                        {
+                          "conclusion": "path(bridge, goal)",
+                          "source": "program",
+                          "premises": []
+                        },
+                        {
+                          "conclusion": "clear(goal)",
+                          "source": "assumption:hypothesis_1",
+                          "premises": []
+                        }
+                      ]
+                    },
+                    "assumptions_used": [
+                      {
+                        "scope": "hypothesis_1",
+                        "literal": "clear(bridge)"
+                      },
+                      {
+                        "scope": "hypothesis_1",
+                        "literal": "clear(goal)"
+                      }
+                    ]
+                  }
+                ],
+                "status": "evaluated"
+              }
+            ]
+          },
+          "status": "selected",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 4,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "observe",
+              "argument": "clear(bridge)",
+              "requirements": []
+            },
+            {
+              "operation": "act",
+              "argument": "move(start, bridge)",
+              "requirements": [
+                "at(start)",
+                "path(start, bridge)",
+                "clear(bridge)"
+              ]
+            },
+            {
+              "operation": "observe",
+              "argument": "clear(goal)",
+              "requirements": [
+                "at(bridge)"
+              ]
+            },
+            {
+              "operation": "act",
+              "argument": "move(bridge, goal)",
+              "requirements": [
+                "at(bridge)",
+                "path(bridge, goal)",
+                "clear(goal)"
+              ]
+            }
+          ]
+        }
+      ],
+      "selected": {
+        "goal": "at(goal)",
+        "plan": "journey",
+        "priority": 20,
+        "bindings": {
+          "G": "goal",
+          "X": "start",
+          "Y": "bridge"
+        },
+        "operation": "observe",
+        "argument": "clear(bridge)",
+        "because": [
+          {
+            "conclusion": "at(start)",
+            "source": "program",
+            "premises": []
+          },
+          {
+            "conclusion": "path(start, bridge)",
+            "source": "program",
+            "premises": []
+          },
+          {
+            "conclusion": "path(bridge, goal)",
+            "source": "program",
+            "premises": []
+          },
+          {
+            "unknown": "clear(bridge)"
+          }
+        ],
+        "hypotheses": {
+          "status": "ok",
+          "results": [
+            {
+              "kind": "suppose",
+              "scope": "hypothesis_1",
+              "parent_scope": "base",
+              "assumptions": [
+                "clear(bridge)",
+                "clear(goal)"
+              ],
+              "results": [
+                {
+                  "kind": "query",
+                  "scope": "hypothesis_1",
+                  "query": "viable(start, bridge, goal)",
+                  "status": "true",
+                  "proof": {
+                    "conclusion": "viable(start, bridge, goal)",
+                    "source": "rule_1",
+                    "premises": [
+                      {
+                        "conclusion": "at(start)",
+                        "source": "program",
+                        "premises": []
+                      },
+                      {
+                        "conclusion": "path(start, bridge)",
+                        "source": "program",
+                        "premises": []
+                      },
+                      {
+                        "conclusion": "clear(bridge)",
+                        "source": "assumption:hypothesis_1",
+                        "premises": []
+                      },
+                      {
+                        "conclusion": "path(bridge, goal)",
+                        "source": "program",
+                        "premises": []
+                      },
+                      {
+                        "conclusion": "clear(goal)",
+                        "source": "assumption:hypothesis_1",
+                        "premises": []
+                      }
+                    ]
+                  },
+                  "assumptions_used": [
+                    {
+                      "scope": "hypothesis_1",
+                      "literal": "clear(bridge)"
+                    },
+                    {
+                      "scope": "hypothesis_1",
+                      "literal": "clear(goal)"
+                    }
+                  ]
+                }
+              ],
+              "status": "evaluated"
+            }
+          ]
+        },
+        "status": "selected",
+        "requirements": [],
+        "plan_step": 1,
+        "total_steps": 4,
+        "intention": null,
+        "sequence": [
+          {
+            "operation": "observe",
+            "argument": "clear(bridge)",
+            "requirements": []
+          },
+          {
+            "operation": "act",
+            "argument": "move(start, bridge)",
+            "requirements": [
+              "at(start)",
+              "path(start, bridge)",
+              "clear(bridge)"
+            ]
+          },
+          {
+            "operation": "observe",
+            "argument": "clear(goal)",
+            "requirements": [
+              "at(bridge)"
+            ]
+          },
+          {
+            "operation": "act",
+            "argument": "move(bridge, goal)",
+            "requirements": [
+              "at(bridge)",
+              "path(bridge, goal)",
+              "clear(goal)"
+            ]
+          }
+        ]
+      },
+      "hypotheses_checked": 1
+    },
+    {
+      "status": "selected",
+      "reason": "First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.",
+      "candidates": [
+        {
+          "goal": "at(goal)",
+          "plan": "journey",
+          "priority": 20,
+          "bindings": {
+            "G": "goal",
+            "X": "start",
+            "Y": "forest"
+          },
+          "operation": "observe",
+          "argument": "clear(forest)",
+          "because": [
+            {
+              "conclusion": "at(start)",
+              "source": "program",
+              "premises": []
+            },
+            {
+              "conclusion": "path(start, forest)",
+              "source": "program",
+              "premises": []
+            },
+            {
+              "conclusion": "path(forest, goal)",
+              "source": "program",
+              "premises": []
+            },
+            {
+              "unknown": "clear(forest)"
+            }
+          ],
+          "hypotheses": {
+            "status": "ok",
+            "results": [
+              {
+                "kind": "suppose",
+                "scope": "hypothesis_1",
+                "parent_scope": "base",
+                "assumptions": [
+                  "clear(forest)",
+                  "clear(goal)"
+                ],
+                "results": [
+                  {
+                    "kind": "query",
+                    "scope": "hypothesis_1",
+                    "query": "viable(start, forest, goal)",
+                    "status": "true",
+                    "proof": {
+                      "conclusion": "viable(start, forest, goal)",
+                      "source": "rule_1",
+                      "premises": [
+                        {
+                          "conclusion": "at(start)",
+                          "source": "program",
+                          "premises": []
+                        },
+                        {
+                          "conclusion": "path(start, forest)",
+                          "source": "program",
+                          "premises": []
+                        },
+                        {
+                          "conclusion": "clear(forest)",
+                          "source": "assumption:hypothesis_1",
+                          "premises": []
+                        },
+                        {
+                          "conclusion": "path(forest, goal)",
+                          "source": "program",
+                          "premises": []
+                        },
+                        {
+                          "conclusion": "clear(goal)",
+                          "source": "assumption:hypothesis_1",
+                          "premises": []
+                        }
+                      ]
+                    },
+                    "assumptions_used": [
+                      {
+                        "scope": "hypothesis_1",
+                        "literal": "clear(forest)"
+                      },
+                      {
+                        "scope": "hypothesis_1",
+                        "literal": "clear(goal)"
+                      }
+                    ]
+                  }
+                ],
+                "status": "evaluated"
+              }
+            ]
+          },
+          "status": "selected",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 4,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "observe",
+              "argument": "clear(forest)",
+              "requirements": []
+            },
+            {
+              "operation": "act",
+              "argument": "move(start, forest)",
+              "requirements": [
+                "at(start)",
+                "path(start, forest)",
+                "clear(forest)"
+              ]
+            },
+            {
+              "operation": "observe",
+              "argument": "clear(goal)",
+              "requirements": [
+                "at(forest)"
+              ]
+            },
+            {
+              "operation": "act",
+              "argument": "move(forest, goal)",
+              "requirements": [
+                "at(forest)",
+                "path(forest, goal)",
+                "clear(goal)"
+              ]
+            }
+          ]
+        }
+      ],
+      "selected": {
+        "goal": "at(goal)",
+        "plan": "journey",
+        "priority": 20,
+        "bindings": {
+          "G": "goal",
+          "X": "start",
+          "Y": "forest"
+        },
+        "operation": "observe",
+        "argument": "clear(forest)",
+        "because": [
+          {
+            "conclusion": "at(start)",
+            "source": "program",
+            "premises": []
+          },
+          {
+            "conclusion": "path(start, forest)",
+            "source": "program",
+            "premises": []
+          },
+          {
+            "conclusion": "path(forest, goal)",
+            "source": "program",
+            "premises": []
+          },
+          {
+            "unknown": "clear(forest)"
+          }
+        ],
+        "hypotheses": {
+          "status": "ok",
+          "results": [
+            {
+              "kind": "suppose",
+              "scope": "hypothesis_1",
+              "parent_scope": "base",
+              "assumptions": [
+                "clear(forest)",
+                "clear(goal)"
+              ],
+              "results": [
+                {
+                  "kind": "query",
+                  "scope": "hypothesis_1",
+                  "query": "viable(start, forest, goal)",
+                  "status": "true",
+                  "proof": {
+                    "conclusion": "viable(start, forest, goal)",
+                    "source": "rule_1",
+                    "premises": [
+                      {
+                        "conclusion": "at(start)",
+                        "source": "program",
+                        "premises": []
+                      },
+                      {
+                        "conclusion": "path(start, forest)",
+                        "source": "program",
+                        "premises": []
+                      },
+                      {
+                        "conclusion": "clear(forest)",
+                        "source": "assumption:hypothesis_1",
+                        "premises": []
+                      },
+                      {
+                        "conclusion": "path(forest, goal)",
+                        "source": "program",
+                        "premises": []
+                      },
+                      {
+                        "conclusion": "clear(goal)",
+                        "source": "assumption:hypothesis_1",
+                        "premises": []
+                      }
+                    ]
+                  },
+                  "assumptions_used": [
+                    {
+                      "scope": "hypothesis_1",
+                      "literal": "clear(forest)"
+                    },
+                    {
+                      "scope": "hypothesis_1",
+                      "literal": "clear(goal)"
+                    }
+                  ]
+                }
+              ],
+              "status": "evaluated"
+            }
+          ]
+        },
+        "status": "selected",
+        "requirements": [],
+        "plan_step": 1,
+        "total_steps": 4,
+        "intention": null,
+        "sequence": [
+          {
+            "operation": "observe",
+            "argument": "clear(forest)",
+            "requirements": []
+          },
+          {
+            "operation": "act",
+            "argument": "move(start, forest)",
+            "requirements": [
+              "at(start)",
+              "path(start, forest)",
+              "clear(forest)"
+            ]
+          },
+          {
+            "operation": "observe",
+            "argument": "clear(goal)",
+            "requirements": [
+              "at(forest)"
+            ]
+          },
+          {
+            "operation": "act",
+            "argument": "move(forest, goal)",
+            "requirements": [
+              "at(forest)",
+              "path(forest, goal)",
+              "clear(goal)"
+            ]
+          }
+        ]
+      },
+      "hypotheses_checked": 1,
+      "released_intention": {
+        "id": 1,
+        "goal": "at(goal)",
+        "plan": "journey",
+        "bindings": {
+          "G": "goal",
+          "X": "start",
+          "Y": "bridge"
+        },
+        "next_step": 2,
+        "total_steps": 4,
+        "status": "requirements_failed",
+        "reason": "The next step's requirements are not supported by current beliefs.",
+        "requirements": [
+          {
+            "requirement": "at(start)",
+            "status": "true",
+            "supported": true
+          },
+          {
+            "requirement": "path(start, bridge)",
+            "status": "true",
+            "supported": true
+          },
+          {
+            "requirement": "clear(bridge)",
+            "status": "false",
+            "supported": false
+          }
+        ]
+      }
+    },
+    {
+      "status": "selected",
+      "reason": "Continuing the active intention with requirements checked against current beliefs.",
+      "candidates": [
+        {
+          "goal": "at(goal)",
+          "plan": "journey",
+          "priority": 20,
+          "bindings": {
+            "G": "goal",
+            "X": "start",
+            "Y": "forest"
+          },
+          "operation": "act",
+          "argument": "move(start, forest)",
+          "because": [
+            {
+              "conclusion": "at(start)",
+              "source": "program",
+              "premises": []
+            },
+            {
+              "conclusion": "path(start, forest)",
+              "source": "program",
+              "premises": []
+            },
+            {
+              "conclusion": "clear(forest)",
+              "source": "simulator:step_2",
+              "premises": []
+            }
+          ],
+          "hypotheses": null,
+          "status": "selected",
+          "requirements": [
+            {
+              "requirement": "at(start)",
+              "status": "true",
+              "supported": true
+            },
+            {
+              "requirement": "path(start, forest)",
+              "status": "true",
+              "supported": true
+            },
+            {
+              "requirement": "clear(forest)",
+              "status": "true",
+              "supported": true
+            }
+          ],
+          "plan_step": 2,
+          "total_steps": 4,
+          "intention": 2,
+          "sequence": [
+            {
+              "operation": "observe",
+              "argument": "clear(forest)",
+              "requirements": []
+            },
+            {
+              "operation": "act",
+              "argument": "move(start, forest)",
+              "requirements": [
+                "at(start)",
+                "path(start, forest)",
+                "clear(forest)"
+              ]
+            },
+            {
+              "operation": "observe",
+              "argument": "clear(goal)",
+              "requirements": [
+                "at(forest)"
+              ]
+            },
+            {
+              "operation": "act",
+              "argument": "move(forest, goal)",
+              "requirements": [
+                "at(forest)",
+                "path(forest, goal)",
+                "clear(goal)"
+              ]
+            }
+          ]
+        }
+      ],
+      "selected": {
+        "goal": "at(goal)",
+        "plan": "journey",
+        "priority": 20,
+        "bindings": {
+          "G": "goal",
+          "X": "start",
+          "Y": "forest"
+        },
+        "operation": "act",
+        "argument": "move(start, forest)",
+        "because": [
+          {
+            "conclusion": "at(start)",
+            "source": "program",
+            "premises": []
+          },
+          {
+            "conclusion": "path(start, forest)",
+            "source": "program",
+            "premises": []
+          },
+          {
+            "conclusion": "clear(forest)",
+            "source": "simulator:step_2",
+            "premises": []
+          }
+        ],
+        "hypotheses": null,
+        "status": "selected",
+        "requirements": [
+          {
+            "requirement": "at(start)",
+            "status": "true",
+            "supported": true
+          },
+          {
+            "requirement": "path(start, forest)",
+            "status": "true",
+            "supported": true
+          },
+          {
+            "requirement": "clear(forest)",
+            "status": "true",
+            "supported": true
+          }
+        ],
+        "plan_step": 2,
+        "total_steps": 4,
+        "intention": 2,
+        "sequence": [
+          {
+            "operation": "observe",
+            "argument": "clear(forest)",
+            "requirements": []
+          },
+          {
+            "operation": "act",
+            "argument": "move(start, forest)",
+            "requirements": [
+              "at(start)",
+              "path(start, forest)",
+              "clear(forest)"
+            ]
+          },
+          {
+            "operation": "observe",
+            "argument": "clear(goal)",
+            "requirements": [
+              "at(forest)"
+            ]
+          },
+          {
+            "operation": "act",
+            "argument": "move(forest, goal)",
+            "requirements": [
+              "at(forest)",
+              "path(forest, goal)",
+              "clear(goal)"
+            ]
+          }
+        ]
+      },
+      "hypotheses_checked": 0
+    },
+    {
+      "status": "selected",
+      "reason": "Continuing the active intention with requirements checked against current beliefs.",
+      "candidates": [
+        {
+          "goal": "at(goal)",
+          "plan": "journey",
+          "priority": 20,
+          "bindings": {
+            "G": "goal",
+            "X": "start",
+            "Y": "forest"
+          },
+          "operation": "observe",
+          "argument": "clear(goal)",
+          "because": [
+            {
+              "conclusion": "at(forest)",
+              "source": "simulator:step_3",
+              "premises": []
+            }
+          ],
+          "hypotheses": null,
+          "status": "selected",
+          "requirements": [
+            {
+              "requirement": "at(forest)",
+              "status": "true",
+              "supported": true
+            }
+          ],
+          "plan_step": 3,
+          "total_steps": 4,
+          "intention": 2,
+          "sequence": [
+            {
+              "operation": "observe",
+              "argument": "clear(forest)",
+              "requirements": []
+            },
+            {
+              "operation": "act",
+              "argument": "move(start, forest)",
+              "requirements": [
+                "at(start)",
+                "path(start, forest)",
+                "clear(forest)"
+              ]
+            },
+            {
+              "operation": "observe",
+              "argument": "clear(goal)",
+              "requirements": [
+                "at(forest)"
+              ]
+            },
+            {
+              "operation": "act",
+              "argument": "move(forest, goal)",
+              "requirements": [
+                "at(forest)",
+                "path(forest, goal)",
+                "clear(goal)"
+              ]
+            }
+          ]
+        }
+      ],
+      "selected": {
+        "goal": "at(goal)",
+        "plan": "journey",
+        "priority": 20,
+        "bindings": {
+          "G": "goal",
+          "X": "start",
+          "Y": "forest"
+        },
+        "operation": "observe",
+        "argument": "clear(goal)",
+        "because": [
+          {
+            "conclusion": "at(forest)",
+            "source": "simulator:step_3",
+            "premises": []
+          }
+        ],
+        "hypotheses": null,
+        "status": "selected",
+        "requirements": [
+          {
+            "requirement": "at(forest)",
+            "status": "true",
+            "supported": true
+          }
+        ],
+        "plan_step": 3,
+        "total_steps": 4,
+        "intention": 2,
+        "sequence": [
+          {
+            "operation": "observe",
+            "argument": "clear(forest)",
+            "requirements": []
+          },
+          {
+            "operation": "act",
+            "argument": "move(start, forest)",
+            "requirements": [
+              "at(start)",
+              "path(start, forest)",
+              "clear(forest)"
+            ]
+          },
+          {
+            "operation": "observe",
+            "argument": "clear(goal)",
+            "requirements": [
+              "at(forest)"
+            ]
+          },
+          {
+            "operation": "act",
+            "argument": "move(forest, goal)",
+            "requirements": [
+              "at(forest)",
+              "path(forest, goal)",
+              "clear(goal)"
+            ]
+          }
+        ]
+      },
+      "hypotheses_checked": 0
+    },
+    {
+      "status": "selected",
+      "reason": "Continuing the active intention with requirements checked against current beliefs.",
+      "candidates": [
+        {
+          "goal": "at(goal)",
+          "plan": "journey",
+          "priority": 20,
+          "bindings": {
+            "G": "goal",
+            "X": "start",
+            "Y": "forest"
+          },
+          "operation": "act",
+          "argument": "move(forest, goal)",
+          "because": [
+            {
+              "conclusion": "at(forest)",
+              "source": "simulator:step_3",
+              "premises": []
+            },
+            {
+              "conclusion": "path(forest, goal)",
+              "source": "program",
+              "premises": []
+            },
+            {
+              "conclusion": "clear(goal)",
+              "source": "simulator:step_4",
+              "premises": []
+            }
+          ],
+          "hypotheses": null,
+          "status": "selected",
+          "requirements": [
+            {
+              "requirement": "at(forest)",
+              "status": "true",
+              "supported": true
+            },
+            {
+              "requirement": "path(forest, goal)",
+              "status": "true",
+              "supported": true
+            },
+            {
+              "requirement": "clear(goal)",
+              "status": "true",
+              "supported": true
+            }
+          ],
+          "plan_step": 4,
+          "total_steps": 4,
+          "intention": 2,
+          "sequence": [
+            {
+              "operation": "observe",
+              "argument": "clear(forest)",
+              "requirements": []
+            },
+            {
+              "operation": "act",
+              "argument": "move(start, forest)",
+              "requirements": [
+                "at(start)",
+                "path(start, forest)",
+                "clear(forest)"
+              ]
+            },
+            {
+              "operation": "observe",
+              "argument": "clear(goal)",
+              "requirements": [
+                "at(forest)"
+              ]
+            },
+            {
+              "operation": "act",
+              "argument": "move(forest, goal)",
+              "requirements": [
+                "at(forest)",
+                "path(forest, goal)",
+                "clear(goal)"
+              ]
+            }
+          ]
+        }
+      ],
+      "selected": {
+        "goal": "at(goal)",
+        "plan": "journey",
+        "priority": 20,
+        "bindings": {
+          "G": "goal",
+          "X": "start",
+          "Y": "forest"
+        },
+        "operation": "act",
+        "argument": "move(forest, goal)",
+        "because": [
+          {
+            "conclusion": "at(forest)",
+            "source": "simulator:step_3",
+            "premises": []
+          },
+          {
+            "conclusion": "path(forest, goal)",
+            "source": "program",
+            "premises": []
+          },
+          {
+            "conclusion": "clear(goal)",
+            "source": "simulator:step_4",
+            "premises": []
+          }
+        ],
+        "hypotheses": null,
+        "status": "selected",
+        "requirements": [
+          {
+            "requirement": "at(forest)",
+            "status": "true",
+            "supported": true
+          },
+          {
+            "requirement": "path(forest, goal)",
+            "status": "true",
+            "supported": true
+          },
+          {
+            "requirement": "clear(goal)",
+            "status": "true",
+            "supported": true
+          }
+        ],
+        "plan_step": 4,
+        "total_steps": 4,
+        "intention": 2,
+        "sequence": [
+          {
+            "operation": "observe",
+            "argument": "clear(forest)",
+            "requirements": []
+          },
+          {
+            "operation": "act",
+            "argument": "move(start, forest)",
+            "requirements": [
+              "at(start)",
+              "path(start, forest)",
+              "clear(forest)"
+            ]
+          },
+          {
+            "operation": "observe",
+            "argument": "clear(goal)",
+            "requirements": [
+              "at(forest)"
+            ]
+          },
+          {
+            "operation": "act",
+            "argument": "move(forest, goal)",
+            "requirements": [
+              "at(forest)",
+              "path(forest, goal)",
+              "clear(goal)"
+            ]
+          }
+        ]
+      },
+      "hypotheses_checked": 0
+    }
+  ],
+  "active_intention": null,
+  "intention_events": [
+    {
+      "id": 1,
+      "goal": "at(goal)",
+      "plan": "journey",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "bridge"
+      },
+      "next_step": 1,
+      "total_steps": 4,
+      "status": "committed",
+      "reason": "Selected a plan with fixed bindings.",
+      "after_step": 0
+    },
+    {
+      "id": 1,
+      "goal": "at(goal)",
+      "plan": "journey",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "bridge"
+      },
+      "next_step": 2,
+      "total_steps": 4,
+      "status": "requirements_failed",
+      "reason": "The next step's requirements are not supported by current beliefs.",
+      "after_step": 1,
+      "requirements": [
+        {
+          "requirement": "at(start)",
+          "status": "true",
+          "supported": true
+        },
+        {
+          "requirement": "path(start, bridge)",
+          "status": "true",
+          "supported": true
+        },
+        {
+          "requirement": "clear(bridge)",
+          "status": "false",
+          "supported": false
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "goal": "at(goal)",
+      "plan": "journey",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "next_step": 1,
+      "total_steps": 4,
+      "status": "committed",
+      "reason": "Selected a plan with fixed bindings.",
+      "after_step": 1
+    },
+    {
+      "id": 2,
+      "goal": "at(goal)",
+      "plan": "journey",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "next_step": null,
+      "total_steps": 4,
+      "status": "completed",
+      "reason": "All operations in the plan completed successfully.",
+      "after_step": 5
+    }
+  ],
+  "goals": {
+    "at(goal)": "true"
+  },
+  "beliefs": [
+    "at(goal)",
+    "clear(forest)",
+    "clear(goal)",
+    "not at(forest)",
+    "not at(start)",
+    "not clear(bridge)",
+    "path(bridge, goal)",
+    "path(forest, goal)",
+    "path(start, bridge)",
+    "path(start, forest)"
+  ],
+  "goal_proofs": {
+    "at(goal)": {
+      "conclusion": "at(goal)",
+      "source": "simulator:step_5",
+      "premises": []
+    }
+  },
+  "world_position": "goal",
+  "action_calls": 2,
+  "observation_calls": 3
+}

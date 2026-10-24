@@ -1,0 +1,13 @@
+journey for at(goal) (priority 20): selected.
+  Supported: at(start) [program].
+  Supported: path(start, bridge) [program].
+  Supported: path(bridge, goal) [program].
+  Accepted knowledge leaves clear(bridge) unknown.
+  Suppose clear(bridge), clear(goal) [hypothesis_1]:
+    true: viable(start, bridge, goal)
+      Depends on clear(bridge) [hypothesis_1].
+      Depends on clear(goal) [hypothesis_1].
+  End hypothesis_1; temporary assumptions discarded.
+Plan step 1 of 4.
+Next operation: observe clear(bridge).
+Decision: selected. First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.

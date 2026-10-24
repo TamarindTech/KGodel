@@ -1,10 +1,10 @@
-# KGodel 0.3
+# KGodel 0.4
 
 **An experimental logic language for agents that can revise their beliefs and explain their decisions.**
 
 KGodel combines a small Prolog-inspired syntax with explicit goals, guarded plans, observations, and actions. This working prototype explores the reasoning cycle in a finite simulated world.
 
-KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Version 0.3 lets plans use these hypothetical checks to decide whether they are applicable, and adds explicit plan priorities and a preview of the next decision.
+KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. Version 0.4 adds **multi-step intentions**: agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails.
 
 The first experiment starts with an outdated belief that a bridge is clear. The agent tries the bridge, discovers the blockage, retracts its old belief, checks a forest route, and reaches its destination. Its decision record preserves the evidence used before each action and the observations returned afterward.
 
@@ -52,7 +52,8 @@ agent explorer {
 - `belief` supplies a ground statement accepted at startup.
 - `rule` derives a conclusion from a conjunction of supported statements.
 - `goal` names a condition the agent wants its beliefs to support.
-- `plan` matches a goal, checks guards, then performs exactly one operation.
+- `plan` matches a goal, checks entry guards, then commits to one or more operations.
+- `require` checks current evidence before the immediately following operation.
 - `observe` asks the environment for evidence.
 - `act` asks the environment to perform an action; its outcome supplies evidence.
 - `not clear(bridge)` is explicit negative evidence.
@@ -142,6 +143,31 @@ python -m kgodel run examples/hypothesis_planning.kg
 
 See the [saved planning trace](output/hypothesis-planning.trace.txt) for the complete example. Through the Python API, `agent.deliberate()` previews the next decision against current beliefs without changing the agent. A run's structured trace now includes `decisions`, with each executed event referring to the decision that selected it.
 
+## Commit to a sequence
+
+An observation and its follow-up action can belong to the same plan:
+
+```text
+plan inspect_and_move(X, Y) for at(Y) {
+    when at(X), path(X, Y), unknown(clear(Y)).
+    observe clear(Y).
+    require at(X), path(X, Y), clear(Y).
+    act move(X, Y).
+}
+```
+
+The `when` guards choose the plan and bind its variables. `require` checks accepted evidence immediately before the next operation. If inspection reports a blockage, the agent abandons the remaining sequence and selects again. Entry guards are not invariants: observing `clear(Y)` naturally makes the entry condition `unknown(clear(Y))` stop holding. An operation without `require` has no additional step conditions.
+
+Run the new four-step journey example:
+
+```powershell
+python -m kgodel run examples/multistep_route.kg
+```
+
+The agent abandons the bridge intention after inspection, then follows the forest intention through inspection, movement, another inspection, and arrival. It performs three observations and two successful movements. The [saved trace](output/multistep-route.trace.txt) explains the canceled intention and each continued step.
+
+An active intention keeps its fixed bindings and is not preempted by newly applicable plans. It ends on completion, failure, or satisfaction of its goal. Through Python, calling `agent.run(max_steps=...)` again on the same agent resumes at its next unfinished step; `agent.deliberate()` previews that step or its replacement. This state is held in memory, so restarting the CLI starts a fresh run. See the [0.4 specification](docs/language-v0.4.md) for a complete pause/resume example.
+
 ## Try a different world
 
 Edit the companion world JSON and rerun the same program:
@@ -156,17 +182,17 @@ The agent's map and the actual edges in the world are separate. If an attempted 
 
 Pure queries have no effects. Inference computes a finite closure of the current beliefs and rules, with explicit resource limits. After an observation revises a base belief, the closure is rebuilt, removing conclusions whose support disappeared. If an alternative proof still exists, the conclusion remains supported.
 
-KGodel considers unsatisfied goals in declaration order, then plans by descending priority. Equal priorities preserve declaration order; bindings remain deterministic. Priorities default to 0, so older programs retain their selection order. This is an explicit preference order, not a search for optimal plans. Each plan has one operation. An identical plan instance is not retried for the same goal and base-belief set during an agent session.
+When selecting a new intention, KGodel considers unsatisfied goals in declaration order, then plans by descending priority. Equal priorities preserve declaration order; bindings remain deterministic. Priorities default to 0, so older programs retain their selection order. This is an explicit preference order, not a search for optimal plans. An identical plan instance is not retried for the same goal and base-belief set during an agent session. Multi-step intentions also record states visited during execution, preventing an immediate restart of their completed prefix. A previously unvisited belief set can permit a new attempt.
 
 Observations from the local simulator are trusted. They replace the directly opposing base belief. Contradictions remaining in the derived knowledge stop the run with a diagnostic. This is a deliberately simple revision policy; it is not a general theory of trust or belief revision.
 
 A goal is satisfied when it is supported by the current knowledge. That does not make every supplied initial belief objectively true. In the example, the final goal's proof comes from the simulator's successful movement observation.
 
-Implemented: one agent, ground goals, function-free rules, explicit negation, unknown guards, local simulation, belief revision, proof records, bounded execution, nested hypothetical contexts, conditional plan applicability, explicit priorities, and pure decision previews.
+Implemented: one agent, ground goals, function-free rules, explicit negation, unknown guards, local simulation, belief revision, proof records, bounded execution, nested hypothetical contexts, conditional plan applicability, explicit priorities, pure decision previews, and multi-step intentions with current-evidence requirements and in-memory resumption.
 
-Future experiments: competing evidence, counterfactual belief replacement, computed utility and information gain, multi-step intentions, and optional LLM-generated proposals. Hypothetical checks qualify declared plans; they do not synthesize new plans, predict actual tool outcomes, or grant facts to the accepted belief state. There is no general external-tool interface or real-world action execution.
+Future experiments: competing evidence, counterfactual belief replacement, computed utility and information gain, durable checkpoints, and optional LLM-generated proposals. Hypothetical checks qualify declared plans; they do not synthesize new plans, predict actual tool outcomes, or grant facts to the accepted belief state. There is no general external-tool interface or real-world action execution.
 
-See [the 0.3 planning specification](docs/language-v0.3.md), [the 0.2 hypothesis specification](docs/language-v0.2.md), and [the 0.1 core semantics](docs/language-v0.1.md) for exact behavior. The 0.3 specification supersedes the earlier plan-selection order.
+See [the 0.4 intention specification](docs/language-v0.4.md), [the 0.3 planning specification](docs/language-v0.3.md), [the 0.2 hypothesis specification](docs/language-v0.2.md), and [the 0.1 core semantics](docs/language-v0.1.md) for exact behavior. The 0.4 specification supersedes the single-operation limit; 0.3 supersedes the original selection order.
 
 ## Validate
 
@@ -177,6 +203,8 @@ python -m unittest discover -s tests -v
 The tests cover recursive rules, variable consistency, explicit negation, unknown facts, invalid syntax, stale conclusions, alternative proofs, contradictions, action isolation, failed actions, repeat prevention, execution limits, trace determinism, and the command-line example. Hypothesis tests also cover nested and sibling isolation, conditional proofs, contradictory assumptions, resource limits, variable answers, and exploration of a live agent without changing its later behavior.
 
 Planning tests cover bound hypothesis variables, priority and tie ordering, fallback after unsupported or inconsistent checks, shared decision budgets, pure previews, real observation requirements, decision-history continuity, and the route experiment.
+
+Intention tests cover fixed bindings, local requirements, fresh derived evidence, goal completion, failed operations, retry suppression, priority behavior during commitments, pure continuation previews, and resuming at every pause boundary without replaying operations.
 
 ## Design references
 

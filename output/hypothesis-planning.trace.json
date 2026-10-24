@@ -10,6 +10,9 @@
       "plan": "inspect_route",
       "priority": 10,
       "decision": 1,
+      "intention": 1,
+      "plan_step": 1,
+      "total_steps": 1,
       "bindings": {
         "G": "goal",
         "X": "start",
@@ -49,6 +52,9 @@
       "plan": "inspect_route",
       "priority": 10,
       "decision": 2,
+      "intention": 2,
+      "plan_step": 1,
+      "total_steps": 1,
       "bindings": {
         "G": "goal",
         "X": "start",
@@ -88,6 +94,9 @@
       "plan": "travel",
       "priority": 20,
       "decision": 3,
+      "intention": 3,
+      "plan_step": 1,
+      "total_steps": 1,
       "bindings": {
         "G": "goal",
         "X": "start",
@@ -186,6 +195,9 @@
       "plan": "inspect_route",
       "priority": 10,
       "decision": 4,
+      "intention": 4,
+      "plan_step": 1,
+      "total_steps": 1,
       "bindings": {
         "G": "goal",
         "X": "forest",
@@ -225,6 +237,9 @@
       "plan": "travel",
       "priority": 20,
       "decision": 5,
+      "intention": 5,
+      "plan_step": 1,
+      "total_steps": 1,
       "bindings": {
         "G": "goal",
         "X": "forest",
@@ -362,7 +377,18 @@
               }
             ]
           },
-          "status": "unsupported"
+          "status": "unsupported",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 1,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "observe",
+              "argument": "clear(alley)",
+              "requirements": []
+            }
+          ]
         },
         {
           "goal": "at(goal)",
@@ -451,7 +477,18 @@
               }
             ]
           },
-          "status": "selected"
+          "status": "selected",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 1,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "observe",
+              "argument": "clear(bridge)",
+              "requirements": []
+            }
+          ]
         }
       ],
       "selected": {
@@ -541,7 +578,18 @@
             }
           ]
         },
-        "status": "selected"
+        "status": "selected",
+        "requirements": [],
+        "plan_step": 1,
+        "total_steps": 1,
+        "intention": null,
+        "sequence": [
+          {
+            "operation": "observe",
+            "argument": "clear(bridge)",
+            "requirements": []
+          }
+        ]
       },
       "hypotheses_checked": 2
     },
@@ -599,7 +647,18 @@
               }
             ]
           },
-          "status": "unsupported"
+          "status": "unsupported",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 1,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "observe",
+              "argument": "clear(alley)",
+              "requirements": []
+            }
+          ]
         },
         {
           "goal": "at(goal)",
@@ -688,7 +747,18 @@
               }
             ]
           },
-          "status": "selected"
+          "status": "selected",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 1,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "observe",
+              "argument": "clear(forest)",
+              "requirements": []
+            }
+          ]
         }
       ],
       "selected": {
@@ -778,7 +848,18 @@
             }
           ]
         },
-        "status": "selected"
+        "status": "selected",
+        "requirements": [],
+        "plan_step": 1,
+        "total_steps": 1,
+        "intention": null,
+        "sequence": [
+          {
+            "operation": "observe",
+            "argument": "clear(forest)",
+            "requirements": []
+          }
+        ]
       },
       "hypotheses_checked": 2
     },
@@ -860,7 +941,18 @@
             }
           ],
           "hypotheses": null,
-          "status": "selected"
+          "status": "selected",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 1,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "act",
+              "argument": "move(start, forest)",
+              "requirements": []
+            }
+          ]
         }
       ],
       "selected": {
@@ -937,7 +1029,18 @@
           }
         ],
         "hypotheses": null,
-        "status": "selected"
+        "status": "selected",
+        "requirements": [],
+        "plan_step": 1,
+        "total_steps": 1,
+        "intention": null,
+        "sequence": [
+          {
+            "operation": "act",
+            "argument": "move(start, forest)",
+            "requirements": []
+          }
+        ]
       },
       "hypotheses_checked": 0
     },
@@ -1021,7 +1124,18 @@
               }
             ]
           },
-          "status": "selected"
+          "status": "selected",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 1,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "observe",
+              "argument": "clear(goal)",
+              "requirements": []
+            }
+          ]
         }
       ],
       "selected": {
@@ -1100,7 +1214,18 @@
             }
           ]
         },
-        "status": "selected"
+        "status": "selected",
+        "requirements": [],
+        "plan_step": 1,
+        "total_steps": 1,
+        "intention": null,
+        "sequence": [
+          {
+            "operation": "observe",
+            "argument": "clear(goal)",
+            "requirements": []
+          }
+        ]
       },
       "hypotheses_checked": 1
     },
@@ -1171,7 +1296,18 @@
             }
           ],
           "hypotheses": null,
-          "status": "selected"
+          "status": "selected",
+          "requirements": [],
+          "plan_step": 1,
+          "total_steps": 1,
+          "intention": null,
+          "sequence": [
+            {
+              "operation": "act",
+              "argument": "move(forest, goal)",
+              "requirements": []
+            }
+          ]
         }
       ],
       "selected": {
@@ -1237,9 +1373,173 @@
           }
         ],
         "hypotheses": null,
-        "status": "selected"
+        "status": "selected",
+        "requirements": [],
+        "plan_step": 1,
+        "total_steps": 1,
+        "intention": null,
+        "sequence": [
+          {
+            "operation": "act",
+            "argument": "move(forest, goal)",
+            "requirements": []
+          }
+        ]
       },
       "hypotheses_checked": 0
+    }
+  ],
+  "active_intention": null,
+  "intention_events": [
+    {
+      "id": 1,
+      "goal": "at(goal)",
+      "plan": "inspect_route",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "bridge"
+      },
+      "next_step": 1,
+      "total_steps": 1,
+      "status": "committed",
+      "reason": "Selected a plan with fixed bindings.",
+      "after_step": 0
+    },
+    {
+      "id": 1,
+      "goal": "at(goal)",
+      "plan": "inspect_route",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "bridge"
+      },
+      "next_step": null,
+      "total_steps": 1,
+      "status": "completed",
+      "reason": "All operations in the plan completed successfully.",
+      "after_step": 1
+    },
+    {
+      "id": 2,
+      "goal": "at(goal)",
+      "plan": "inspect_route",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "next_step": 1,
+      "total_steps": 1,
+      "status": "committed",
+      "reason": "Selected a plan with fixed bindings.",
+      "after_step": 1
+    },
+    {
+      "id": 2,
+      "goal": "at(goal)",
+      "plan": "inspect_route",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "next_step": null,
+      "total_steps": 1,
+      "status": "completed",
+      "reason": "All operations in the plan completed successfully.",
+      "after_step": 2
+    },
+    {
+      "id": 3,
+      "goal": "at(goal)",
+      "plan": "travel",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "next_step": 1,
+      "total_steps": 1,
+      "status": "committed",
+      "reason": "Selected a plan with fixed bindings.",
+      "after_step": 2
+    },
+    {
+      "id": 3,
+      "goal": "at(goal)",
+      "plan": "travel",
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "forest"
+      },
+      "next_step": null,
+      "total_steps": 1,
+      "status": "completed",
+      "reason": "All operations in the plan completed successfully.",
+      "after_step": 3
+    },
+    {
+      "id": 4,
+      "goal": "at(goal)",
+      "plan": "inspect_route",
+      "bindings": {
+        "G": "goal",
+        "X": "forest",
+        "Y": "goal"
+      },
+      "next_step": 1,
+      "total_steps": 1,
+      "status": "committed",
+      "reason": "Selected a plan with fixed bindings.",
+      "after_step": 3
+    },
+    {
+      "id": 4,
+      "goal": "at(goal)",
+      "plan": "inspect_route",
+      "bindings": {
+        "G": "goal",
+        "X": "forest",
+        "Y": "goal"
+      },
+      "next_step": null,
+      "total_steps": 1,
+      "status": "completed",
+      "reason": "All operations in the plan completed successfully.",
+      "after_step": 4
+    },
+    {
+      "id": 5,
+      "goal": "at(goal)",
+      "plan": "travel",
+      "bindings": {
+        "G": "goal",
+        "X": "forest",
+        "Y": "goal"
+      },
+      "next_step": 1,
+      "total_steps": 1,
+      "status": "committed",
+      "reason": "Selected a plan with fixed bindings.",
+      "after_step": 4
+    },
+    {
+      "id": 5,
+      "goal": "at(goal)",
+      "plan": "travel",
+      "bindings": {
+        "G": "goal",
+        "X": "forest",
+        "Y": "goal"
+      },
+      "next_step": null,
+      "total_steps": 1,
+      "status": "completed",
+      "reason": "All operations in the plan completed successfully.",
+      "after_step": 5
     }
   ],
   "goals": {

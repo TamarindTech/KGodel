@@ -78,15 +78,29 @@ class Rule:
 
 
 @dataclass(frozen=True)
+class PlanStep:
+    operation: str
+    argument: Atom
+    requirements: tuple[Literal | Unknown, ...] = ()
+
+
+@dataclass(frozen=True)
 class Plan:
     name: str
     parameters: tuple[str, ...]
     target: Atom
     guards: tuple[Literal | Unknown, ...]
-    operation: str
-    argument: Atom
+    steps: tuple[PlanStep, ...]
     priority: int = 0
     hypotheses: tuple[SupposeQuery, ...] = ()
+
+    @property
+    def operation(self) -> str:
+        return self.steps[0].operation
+
+    @property
+    def argument(self) -> Atom:
+        return self.steps[0].argument
 
 
 @dataclass(frozen=True)

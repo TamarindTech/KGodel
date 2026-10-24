@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0
+
+- Added ordered multi-operation plans with optional `require` guards before each operation.
+- Added intentions with fixed bindings, current-evidence checks, cancellation on failure or goal satisfaction, and in-memory resumption at the next unfinished step.
+- Preserved existing single-operation syntax and selection behavior; prevented multi-step plans from restarting their completed prefixes at belief states already visited by the same instance.
+- Extended pure previews to continuing and released intentions, including grounded sequences and requirement diagnostics.
+- Recorded intention lifecycle events, operation cursors, and fresh requirement proofs in execution traces.
+- Added the four-step route experiment, language specification, and 27 tests for continuation, reconsideration, and compatibility.
+
 ## 0.3.0
 
 - Added `suppose` applicability checks inside plans, with variables grounded from accepted guard evidence and the goal match.

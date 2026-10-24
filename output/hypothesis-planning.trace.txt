@@ -1,4 +1,4 @@
-KGodel 0.3.0 | agent explorer
+KGodel 0.4.0 | agent explorer
 
 1. Goal at(goal): selected inspect_route (priority 10).
    inspect_route for at(goal) (priority 10): unsupported.

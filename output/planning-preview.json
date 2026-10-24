@@ -52,7 +52,18 @@
           }
         ]
       },
-      "status": "unsupported"
+      "status": "unsupported",
+      "requirements": [],
+      "plan_step": 1,
+      "total_steps": 1,
+      "intention": null,
+      "sequence": [
+        {
+          "operation": "observe",
+          "argument": "clear(alley)",
+          "requirements": []
+        }
+      ]
     },
     {
       "goal": "at(goal)",
@@ -141,7 +152,18 @@
           }
         ]
       },
-      "status": "selected"
+      "status": "selected",
+      "requirements": [],
+      "plan_step": 1,
+      "total_steps": 1,
+      "intention": null,
+      "sequence": [
+        {
+          "operation": "observe",
+          "argument": "clear(bridge)",
+          "requirements": []
+        }
+      ]
     }
   ],
   "selected": {
@@ -231,7 +253,18 @@
         }
       ]
     },
-    "status": "selected"
+    "status": "selected",
+    "requirements": [],
+    "plan_step": 1,
+    "total_steps": 1,
+    "intention": null,
+    "sequence": [
+      {
+        "operation": "observe",
+        "argument": "clear(bridge)",
+        "requirements": []
+      }
+    ]
   },
   "hypotheses_checked": 2
 }
