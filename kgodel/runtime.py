@@ -7,8 +7,9 @@ import json
 
 from . import __version__
 from .logic import Inference, Knowledge
-from .model import Atom, KGodelError, Literal, Program, Proof, match
+from .model import Atom, KGodelError, Literal, Program, Proof
 from .parser import parse_queries
+from .planning import choose_plan, deliberate, format_decision
 from .querying import evaluate_queries
 
 
@@ -97,6 +98,7 @@ class Agent:
         self.knowledge = Knowledge(program.beliefs)
         self.events: list[dict] = []
         self.attempts: set[tuple] = set()
+        self.decisions: list[dict] = []
 
     def inference(self) -> Inference:
         # Recompute from current base beliefs: old conclusions cannot survive revision.
@@ -106,9 +108,16 @@ class Agent:
         """Explore current knowledge without advancing this agent or its environment."""
         return evaluate_queries(self.knowledge, self.program.rules, parse_queries(source), **limits)
 
-    def run(self, max_steps: int = 50) -> dict:
+    def deliberate(self, *, max_hypotheses: int = 64) -> dict:
+        """Preview the next plan without recording an attempt or performing it."""
+        return deliberate(self.program, self.knowledge, self.attempts,
+                          max_hypotheses=max_hypotheses).report
+
+    def run(self, max_steps: int = 50, *, max_hypotheses: int = 64) -> dict:
         if max_steps < 0:
             raise KGodelError("The step limit must be nonnegative.")
+        if max_hypotheses < 0:
+            raise KGodelError("The hypothesis budget must be nonnegative.")
         status, reason = "step_limit", "Execution budget exhausted; the goal has not been disproved."
         for step in range(max_steps + 1):
             try:
@@ -122,31 +131,15 @@ class Agent:
                 break
             if step == max_steps:
                 break
-            selected = None
-            fingerprint = self.knowledge.fingerprint()
-            try:
-                # Goal order, then source plan order, then sorted literal matches.
-                for goal in pending:
-                    for plan in self.program.plans:
-                        initial = match(plan.target, goal)
-                        if initial is None:
-                            continue
-                        for bindings, evidence in logic.solve(plan.guards, initial):
-                            key = (fingerprint, str(goal), plan.name, tuple(sorted(bindings.items())))
-                            if key not in self.attempts:
-                                selected = (goal, plan, bindings, evidence, key)
-                                break
-                        if selected:
-                            break
-                    if selected:
-                        break
-            except KGodelError as error:
-                status, reason = "reasoning_error", str(error)
+            decision = choose_plan(self.program, self.knowledge, logic, self.attempts,
+                                   max_hypotheses=max_hypotheses)
+            self.decisions.append(decision.report)
+            if decision.selected is None:
+                status, reason = decision.report["status"], decision.report["reason"]
                 break
-            if selected is None:
-                status, reason = "stuck", "No untried plan is applicable to an unsatisfied goal."
-                break
-            goal, plan, bindings, evidence, key = selected
+            selected = decision.selected
+            goal, plan, bindings, evidence, key = (selected.goal, selected.plan, selected.bindings,
+                                                  selected.evidence, selected.key)
             self.attempts.add(key)
             argument = plan.argument.ground(bindings)
             outcome = (self.world.observe(argument) if plan.operation == "observe"
@@ -158,6 +151,8 @@ class Agent:
                 "step": event_number,
                 "goal": str(goal),
                 "plan": plan.name,
+                "priority": plan.priority,
+                "decision": len(self.decisions),
                 "bindings": bindings,
                 "operation": plan.operation,
                 "argument": str(argument),
@@ -175,6 +170,7 @@ class Agent:
             "reason": reason,
             "steps": len(self.events),
             "events": list(self.events),
+            "decisions": list(self.decisions),
             "goals": {str(goal): final_logic.status(Literal(goal)) if final_logic else "unresolved"
                       for goal in self.program.goals},
             "beliefs": list(self.knowledge.fingerprint()),
@@ -190,7 +186,11 @@ class Agent:
 def format_trace(result: dict) -> str:
     lines = [f"KGodel {__version__} | agent {result['agent']}", ""]
     for event in result["events"]:
-        lines.append(f"{event['step']}. Goal {event['goal']}: selected {event['plan']}.")
+        lines.append(f"{event['step']}. Goal {event['goal']}: selected {event['plan']} "
+                     f"(priority {event['priority']}).")
+        decision = result["decisions"][event["decision"] - 1]
+        if any(candidate["hypotheses"] for candidate in decision["candidates"]):
+            lines.extend("   " + line for line in format_decision(decision).splitlines())
         for evidence in event["because"]:
             if "unknown" in evidence:
                 lines.append(f"   Because {evidence['unknown']} is unknown in the current belief state.")
@@ -203,6 +203,10 @@ def format_trace(result: dict) -> str:
             elif change["changed"]:
                 lines.append(f"   Learned {change['accepted']}.")
         lines.append("")
+    if result["decisions"] and (not result["events"]
+            or result["events"][-1]["decision"] < len(result["decisions"])):
+        lines.append("Final deliberation:")
+        lines.extend("   " + line for line in format_decision(result["decisions"][-1]).splitlines())
     lines.append(f"Result: {result['status']}. {result['reason']}")
     lines.append(f"Environment position: {result['world_position']}.")
     return "\n".join(lines)

@@ -9,6 +9,7 @@ from . import __version__
 from .logic import Inference, Knowledge
 from .model import KGodelError
 from .parser import parse, parse_queries
+from .planning import deliberate, format_decision
 from .querying import evaluate_queries, format_query_results
 from .runtime import Agent, RouteWorld, format_trace
 
@@ -25,6 +26,10 @@ def main(argv: list[str] | None = None) -> int:
     commands = parser.add_subparsers(dest="command", required=True)
     check = commands.add_parser("check", help="Parse a program and validate its initial knowledge")
     check.add_argument("program")
+    preview = commands.add_parser("deliberate", help="Preview plan selection without loading a world")
+    preview.add_argument("program")
+    preview.add_argument("--max-hypotheses", type=int, default=64)
+    preview.add_argument("--result-json", help="Save considered plans and conditional evidence")
     for name in ("query", "explain"):
         command = commands.add_parser(name, help="Query initial beliefs without executing any actions")
         command.add_argument("program")
@@ -36,6 +41,8 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("program")
     run.add_argument("--world", help="World JSON; defaults to the program's .world.json companion")
     run.add_argument("--max-steps", type=int, default=50)
+    run.add_argument("--max-hypotheses", type=int, default=64,
+                     help="Maximum hypothetical contexts per decision (default: 64)")
     run.add_argument("--trace-json", help="Save the structured decision and proof record")
     run.add_argument("--trace-text", help="Save the human-readable decision record")
     args = parser.parse_args(argv)
@@ -45,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "run":
             world_path = Path(args.world) if args.world else program_path.with_suffix(".world.json")
             world = RouteWorld.from_json(world_path.read_text(encoding="utf-8-sig"))
-            result = Agent(program, world).run(args.max_steps)
+            result = Agent(program, world).run(args.max_steps, max_hypotheses=args.max_hypotheses)
             rendered = format_trace(result)
             print(rendered)
             if args.trace_json:
@@ -53,6 +60,14 @@ def main(argv: list[str] | None = None) -> int:
             if args.trace_text:
                 save(args.trace_text, rendered)
             return 0 if result["status"] == "achieved" else 1
+
+        if args.command == "deliberate":
+            report = deliberate(program, Knowledge(program.beliefs),
+                                max_hypotheses=args.max_hypotheses).report
+            print(format_decision(report))
+            if args.result_json:
+                save(args.result_json, json.dumps(report, indent=2))
+            return {"selected": 0, "achieved": 0, "stuck": 1, "reasoning_error": 2}[report["status"]]
 
         if args.command == "check":
             Inference(Knowledge(program.beliefs), program.rules)

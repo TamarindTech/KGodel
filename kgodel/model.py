@@ -85,6 +85,8 @@ class Plan:
     guards: tuple[Literal | Unknown, ...]
     operation: str
     argument: Atom
+    priority: int = 0
+    hypotheses: tuple[SupposeQuery, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -108,6 +110,22 @@ class SupposeQuery:
 
 
 Query = ProveQuery | SupposeQuery
+
+
+def query_variables(query: Query) -> set[str]:
+    if isinstance(query, ProveQuery):
+        return query.literal.atom.variables
+    variables = set().union(*(literal.atom.variables for literal in query.assumptions))
+    for child in query.body:
+        variables |= query_variables(child)
+    return variables
+
+
+def ground_query(query: Query, bindings: Bindings) -> Query:
+    if isinstance(query, ProveQuery):
+        return ProveQuery(query.literal.ground(bindings))
+    return SupposeQuery(tuple(literal.ground(bindings) for literal in query.assumptions),
+                        tuple(ground_query(child, bindings) for child in query.body))
 
 
 def match(pattern: Atom, value: Atom, bindings: Bindings | None = None) -> Bindings | None:

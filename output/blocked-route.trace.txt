@@ -1,33 +1,33 @@
-KGodel 0.2.0 | agent explorer
+KGodel 0.3.0 | agent explorer
 
-1. Goal at(goal): selected travel.
+1. Goal at(goal): selected travel (priority 0).
    Because can_move(start, bridge) [rule_5].
    Because next_step(start, bridge, goal) [rule_4].
    act move(start, bridge): Movement failed: bridge is blocked.
    Revised clear(bridge) -> not clear(bridge).
 
-2. Goal at(goal): selected inspect_route.
+2. Goal at(goal): selected inspect_route (priority 0).
    Because at(start) [program].
    Because next_step(start, forest, goal) [rule_4].
    Because clear(forest) is unknown in the current belief state.
    observe clear(forest): Observed clear(forest).
    Learned clear(forest).
 
-3. Goal at(goal): selected travel.
+3. Goal at(goal): selected travel (priority 0).
    Because can_move(start, forest) [rule_5].
    Because next_step(start, forest, goal) [rule_4].
    act move(start, forest): Moved from start to forest.
    Revised at(start) -> not at(start).
    Learned at(forest).
 
-4. Goal at(goal): selected inspect_route.
+4. Goal at(goal): selected inspect_route (priority 0).
    Because at(forest) [simulator:step_3].
    Because next_step(forest, goal, goal) [rule_3].
    Because clear(goal) is unknown in the current belief state.
    observe clear(goal): Observed clear(goal).
    Learned clear(goal).
 
-5. Goal at(goal): selected travel.
+5. Goal at(goal): selected travel (priority 0).
    Because can_move(forest, goal) [rule_5].
    Because next_step(forest, goal, goal) [rule_3].
    act move(forest, goal): Moved from forest to goal.

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0
+
+- Added `suppose` applicability checks inside plans, with variables grounded from accepted guard evidence and the goal match.
+- Added explicit plan priorities, preserving declaration order for ties and existing programs.
+- Added pure `deliberate` previews through the command line and the agent API.
+- Recorded considered candidates, rejected hypotheses, conditional proofs, and selected operations in decision histories.
+- Bounded hypothetical evaluation across candidates within each decision; errors stop selection rather than silently choosing a fallback.
+- Added a route experiment that skips an unhelpful inspection, observes a blockage, and reaches the goal through an alternative route.
+
 ## 0.2.0
 
 - Added nested `suppose` scopes for pure hypothetical reasoning.

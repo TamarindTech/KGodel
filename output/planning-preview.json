@@ -1,0 +1,237 @@
+{
+  "status": "selected",
+  "reason": "First applicable untried plan by goal order, descending priority, declaration order, and deterministic bindings.",
+  "candidates": [
+    {
+      "goal": "at(goal)",
+      "plan": "inspect_route",
+      "priority": 10,
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "alley"
+      },
+      "operation": "observe",
+      "argument": "clear(alley)",
+      "because": [
+        {
+          "conclusion": "at(start)",
+          "source": "program",
+          "premises": []
+        },
+        {
+          "conclusion": "path(start, alley)",
+          "source": "program",
+          "premises": []
+        },
+        {
+          "unknown": "clear(alley)"
+        }
+      ],
+      "hypotheses": {
+        "status": "ok",
+        "results": [
+          {
+            "kind": "suppose",
+            "scope": "hypothesis_1",
+            "parent_scope": "base",
+            "assumptions": [
+              "clear(alley)"
+            ],
+            "results": [
+              {
+                "kind": "query",
+                "scope": "hypothesis_1",
+                "query": "promising(start, alley, goal)",
+                "status": "unknown",
+                "proof": null,
+                "assumptions_used": []
+              }
+            ],
+            "status": "evaluated"
+          }
+        ]
+      },
+      "status": "unsupported"
+    },
+    {
+      "goal": "at(goal)",
+      "plan": "inspect_route",
+      "priority": 10,
+      "bindings": {
+        "G": "goal",
+        "X": "start",
+        "Y": "bridge"
+      },
+      "operation": "observe",
+      "argument": "clear(bridge)",
+      "because": [
+        {
+          "conclusion": "at(start)",
+          "source": "program",
+          "premises": []
+        },
+        {
+          "conclusion": "path(start, bridge)",
+          "source": "program",
+          "premises": []
+        },
+        {
+          "unknown": "clear(bridge)"
+        }
+      ],
+      "hypotheses": {
+        "status": "ok",
+        "results": [
+          {
+            "kind": "suppose",
+            "scope": "hypothesis_1",
+            "parent_scope": "base",
+            "assumptions": [
+              "clear(bridge)"
+            ],
+            "results": [
+              {
+                "kind": "query",
+                "scope": "hypothesis_1",
+                "query": "promising(start, bridge, goal)",
+                "status": "true",
+                "proof": {
+                  "conclusion": "promising(start, bridge, goal)",
+                  "source": "rule_5",
+                  "premises": [
+                    {
+                      "conclusion": "usable_edge(start, bridge)",
+                      "source": "rule_1",
+                      "premises": [
+                        {
+                          "conclusion": "path(start, bridge)",
+                          "source": "program",
+                          "premises": []
+                        },
+                        {
+                          "conclusion": "clear(bridge)",
+                          "source": "assumption:hypothesis_1",
+                          "premises": []
+                        }
+                      ]
+                    },
+                    {
+                      "conclusion": "reachable(bridge, goal)",
+                      "source": "rule_2",
+                      "premises": [
+                        {
+                          "conclusion": "path(bridge, goal)",
+                          "source": "program",
+                          "premises": []
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "assumptions_used": [
+                  {
+                    "scope": "hypothesis_1",
+                    "literal": "clear(bridge)"
+                  }
+                ]
+              }
+            ],
+            "status": "evaluated"
+          }
+        ]
+      },
+      "status": "selected"
+    }
+  ],
+  "selected": {
+    "goal": "at(goal)",
+    "plan": "inspect_route",
+    "priority": 10,
+    "bindings": {
+      "G": "goal",
+      "X": "start",
+      "Y": "bridge"
+    },
+    "operation": "observe",
+    "argument": "clear(bridge)",
+    "because": [
+      {
+        "conclusion": "at(start)",
+        "source": "program",
+        "premises": []
+      },
+      {
+        "conclusion": "path(start, bridge)",
+        "source": "program",
+        "premises": []
+      },
+      {
+        "unknown": "clear(bridge)"
+      }
+    ],
+    "hypotheses": {
+      "status": "ok",
+      "results": [
+        {
+          "kind": "suppose",
+          "scope": "hypothesis_1",
+          "parent_scope": "base",
+          "assumptions": [
+            "clear(bridge)"
+          ],
+          "results": [
+            {
+              "kind": "query",
+              "scope": "hypothesis_1",
+              "query": "promising(start, bridge, goal)",
+              "status": "true",
+              "proof": {
+                "conclusion": "promising(start, bridge, goal)",
+                "source": "rule_5",
+                "premises": [
+                  {
+                    "conclusion": "usable_edge(start, bridge)",
+                    "source": "rule_1",
+                    "premises": [
+                      {
+                        "conclusion": "path(start, bridge)",
+                        "source": "program",
+                        "premises": []
+                      },
+                      {
+                        "conclusion": "clear(bridge)",
+                        "source": "assumption:hypothesis_1",
+                        "premises": []
+                      }
+                    ]
+                  },
+                  {
+                    "conclusion": "reachable(bridge, goal)",
+                    "source": "rule_2",
+                    "premises": [
+                      {
+                        "conclusion": "path(bridge, goal)",
+                        "source": "program",
+                        "premises": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "assumptions_used": [
+                {
+                  "scope": "hypothesis_1",
+                  "literal": "clear(bridge)"
+                }
+              ]
+            }
+          ],
+          "status": "evaluated"
+        }
+      ]
+    },
+    "status": "selected"
+  },
+  "hypotheses_checked": 2
+}
