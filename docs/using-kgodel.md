@@ -1,4 +1,4 @@
-# Using KGodel 0.6
+# Using KGodel 0.7
 
 KGodel has two entry points: `python -m kgodel` and, after installation, the `kgodel` console command. Both call the same interpreter and accept the same arguments. Python 3.10 or newer is required.
 
@@ -92,6 +92,7 @@ Every request occupies one line. A hypothetical request can contain nested scope
 | `:trace` | Show the last cumulative execution record. |
 | `:save PATH` | Export that record as JSON. Paths containing spaces may be quoted. |
 | `:checkpoint PATH` | Save a resumable agent and world, even before the first operation. |
+| `:compare PATH` | Compare the named checkpoint with the live agent, without advancing it. |
 | `:help` | Show the command reference. |
 | `:quit` | Exit the session. |
 
@@ -118,6 +119,22 @@ The pause command returns 1 because the goal is unfinished. `resume` loads the c
 
 Checkpoints are self-contained and need no original `.kg` or world file. A saved trace from `:save` or `--trace-json` cannot be resumed. Invalid, truncated, oversized, and unsupported checkpoint formats produce a diagnostic. The language and intention semantics remain those of 0.4; persistence currently supports only the built-in local route simulator. See [the session format and Python API](sessions-v0.6.md) for precise guarantees and limits.
 
+## Compare evidence and progress
+
+```powershell
+python -m kgodel demo --max-steps 3 --checkpoint before.json
+python -m kgodel resume before.json --checkpoint after.json
+python -m kgodel compare before.json after.json --query "at(goal)" --explain --result-json comparison.json
+```
+
+The report compares base beliefs, derived conclusions, goal support, active intentions, histories, and the simulated world. `--query` accepts a ground literal and can be repeated, including an explicit negative literal such as `not clear(bridge)`. `--explain` prints proof trees for goals, requested queries, and changed derived conclusions. The JSON report contains those proofs even without `--explain`.
+
+In the shell, `:compare PATH` uses the checkpoint as the baseline and the current agent as the comparison target. Paths containing spaces may be quoted. It uses the default inference budgets, leaves the live agent and its last trace unchanged, and saves no files. Use the command-line form for custom budgets, extra queries, or JSON export.
+
+Comparison exits with 0 when both sides finish reasoning, whether or not state differs; 1 when a conflict or inference limit leaves a partial report; and 2 for invalid input or file errors. `--max-facts` and `--max-work` set nonnegative inference limits separately for each side, defaulting to 10000 facts and 200000 work units. A partial report retains base-belief and world differences while marking unresolved answers explicitly. It never treats an inference error as logical falsity.
+
+The input checkpoints are read-only; an output path resolving to either input, including a hard link, is rejected. Existing comparison output files are replaced when explicitly named. Schema-1 checkpoints from KGodel 0.6 remain supported. See [the comparison reference](comparison-v0.7.md) for proof-selection details and how histories from different scenarios are compared.
+
 ## Test a built distribution
 
 ```powershell
@@ -126,6 +143,6 @@ python -m pip wheel . --no-deps --wheel-dir dist
 python tools/verify_install.py dist
 ```
 
-The verifier requires a wheel path or a directory containing exactly one KGodel wheel. It creates a fresh temporary environment, installs the local wheel without using a package index, and runs from a directory outside the repository. It checks that the imported package comes from the temporary environment, validates metadata and both command entry points, runs every bundled demo, steps a shell session, and restores a checkpoint in separate command-line and shell processes. The resumed trace must equal an uninterrupted run.
+The verifier requires a wheel path or a directory containing exactly one KGodel wheel. It creates a fresh temporary environment, installs the local wheel without using a package index, and runs from a directory outside the repository. It checks that the imported package comes from the temporary environment, validates metadata and both command entry points, runs every bundled demo, steps a shell session, restores a checkpoint in separate processes, and compares saved and live states. The resumed trace must equal an uninterrupted run.
 
 The normal test suite needs only Python's standard library. Wheel creation needs the declared setuptools build dependency. GitHub Actions is configured to perform both checks on Windows and Linux using Python 3.10 and 3.13.

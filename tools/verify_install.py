@@ -67,7 +67,9 @@ def verify(wheel: Path):
         run(console, "demo", "--max-steps", "3", "--checkpoint", checkpoint, expected_code=1)
         paused = checkpoint.read_bytes()
         resumed_trace = outside / "resumed.json"
-        run(python, "-I", "-m", "kgodel", "resume", checkpoint, "--trace-json", resumed_trace)
+        finished = outside / "finished session.json"
+        run(python, "-I", "-m", "kgodel", "resume", checkpoint, "--trace-json", resumed_trace,
+            "--checkpoint", finished)
         resumed = json.loads(resumed_trace.read_text(encoding="utf-8"))
         uninterrupted = json.loads((outside / "multistep-route.json").read_text(encoding="utf-8"))
         assert resumed == uninterrupted, resumed
@@ -75,7 +77,21 @@ def verify(wheel: Path):
         transcript = run(console, "shell", "--resume", checkpoint,
                          input=":trace\n:explain at(forest)\n:run\n:quit\n")
         assert "simulator:step_3" in transcript and "Result: achieved" in transcript, transcript
-        print(f"{module_version}: installation, demos, shell, and cross-process session restart verified outside checkout")
+        comparison = outside / "comparison.json"
+        rendered = run(console, "compare", checkpoint, finished, "--query", "at(goal)",
+                       "--explain", "--result-json", comparison)
+        assert "at(goal): unknown -> true" in rendered, rendered
+        report = json.loads(comparison.read_text(encoding="utf-8"))
+        assert report["status"] == "ok" and report["changed"], report
+        assert report["history"]["operations"]["common_prefix"] == 3, report
+        assert checkpoint.read_bytes() == paused
+        partial = run(python, "-I", "-m", "kgodel", "compare", checkpoint, finished,
+                      "--max-work", "0", expected_code=1)
+        assert "Comparison: partial" in partial, partial
+        transcript = run(console, "shell", "--resume", checkpoint,
+                         input=f':run\n:compare "{checkpoint}"\n:quit\n')
+        assert "position: forest -> goal" in transcript, transcript
+        print(f"{module_version}: installation, demos, shell, session restart, and comparisons verified outside checkout")
 
 
 if __name__ == "__main__":

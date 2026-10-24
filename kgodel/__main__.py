@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 
 from . import __version__
+from .comparison import compare_agents, format_comparison
 from .demos import DEFAULT_DEMO, DEMOS, load_demo
 from .logic import Inference, Knowledge
 from .model import KGodelError
@@ -81,8 +82,29 @@ def main(argv: list[str] | None = None) -> int:
     resume = commands.add_parser("resume", help="Continue a saved session at its next unfinished operation")
     resume.add_argument("session")
     execution_options(resume)
+    compare = commands.add_parser("compare", help="Compare saved beliefs, proofs, plans, and world state")
+    compare.add_argument("before", help="Baseline checkpoint")
+    compare.add_argument("after", help="Checkpoint to compare with the baseline")
+    compare.add_argument("--query", action="append", default=[], help="Ground literal to compare; repeatable")
+    compare.add_argument("--explain", action="store_true", help="Print supporting or opposing proof trees")
+    compare.add_argument("--max-facts", type=int, default=10000)
+    compare.add_argument("--max-work", type=int, default=200000)
+    compare.add_argument("--result-json", help="Save the comparison report")
     args = parser.parse_args(argv)
     try:
+        if args.command == "compare":
+            if args.result_json:
+                target = Path(args.result_json)
+                for source in (Path(args.before), Path(args.after)):
+                    if target.resolve() == source.resolve() or (target.exists() and source.exists()
+                                                                and target.samefile(source)):
+                        raise KGodelError("Comparison output must not overwrite an input checkpoint.")
+            report = compare_agents(load_session(args.before), load_session(args.after), queries=args.query,
+                                    max_facts=args.max_facts, max_work=args.max_work)
+            print(format_comparison(report, explain=args.explain))
+            if args.result_json:
+                save(args.result_json, json.dumps(report, indent=2))
+            return 0 if report["status"] == "ok" else 1
         if args.command == "demo":
             if args.list:
                 if args.name or args.trace_json or args.trace_text or args.checkpoint:

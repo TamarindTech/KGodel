@@ -6,11 +6,12 @@ import json
 from pathlib import Path
 
 from . import __version__
+from .comparison import compare_agents, format_comparison
 from .model import KGodelError, Literal
 from .planning import format_decision
 from .querying import format_query_results
 from .runtime import Agent, format_trace
-from .sessions import save_session
+from .sessions import load_session, save_session
 
 
 HELP = """Queries inspect current beliefs without executing operations:
@@ -28,6 +29,7 @@ Commands:
   :trace                 Show the most recent cumulative execution record
   :save PATH             Save that execution record as JSON
   :checkpoint PATH       Save the agent and world for a later restart
+  :compare PATH          Compare a saved baseline with this live agent
   :help                  Show this help
   :quit                  End this session
 
@@ -108,11 +110,13 @@ class ShellSession:
                 active = result["active_intention"]
                 lines.append(f"Next: {active['plan']} step {active['next_step']} of {active['total_steps']}.")
             return "\n".join(lines)
-        if command == ":checkpoint":
+        if command in (":checkpoint", ":compare"):
             if len(argument) >= 2 and argument[0] == argument[-1] and argument[0] in "\"'":
                 argument = argument[1:-1]
             if not argument:
-                raise KGodelError(":checkpoint requires a file path.")
+                raise KGodelError(f"{command} requires a file path.")
+            if command == ":compare":
+                return format_comparison(compare_agents(load_session(argument), self.agent))
             save_session(self.agent, argument)
             return f"Saved resumable session to {argument}."
         if command in (":trace", ":save"):

@@ -2,7 +2,7 @@
   <img src="docs/assets/kgodel-logo-transparent.svg" alt="KGödel — Agentic Logic Programming" width="640">
 </p>
 
-# KGodel 0.6
+# KGodel 0.7
 
 **An experimental logic language for agents that can revise their beliefs and explain their decisions.**
 
@@ -10,7 +10,7 @@ New to KGodel? Read the [introduction for developers and non-developers](docs/in
 
 KGodel combines a small Prolog-inspired syntax with explicit goals, guarded plans, observations, and actions. This working prototype explores the reasoning cycle in a finite simulated world.
 
-KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. **Multi-step intentions** let agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails. Version 0.6 adds saved sessions: close the interpreter and later continue with the same beliefs, simulator state, and unfinished intention.
+KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. **Multi-step intentions** let agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails. Saved sessions preserve progress across restarts. Version 0.7 adds comparisons of saved or live states, including belief revisions, changed conclusions, and the evidence behind them.
 
 The first experiment starts with an outdated belief that a bridge is clear. The agent tries the bridge, discovers the blockage, retracts its old belief, checks a forest route, and reaches its destination. Its decision record preserves the evidence used before each action and the observations returned afterward.
 
@@ -95,6 +95,20 @@ python -m kgodel resume session.json --checkpoint session.json
 ```
 
 Checkpoints contain the program, current beliefs and their sources, world, attempt history, execution records, and active intention. The original program and world files are not needed to resume. Saving replaces the specified file atomically; resuming only writes a new checkpoint when `--checkpoint` is supplied. Budgets apply to each new invocation and are not stored. See [saved-session semantics and the Python API](docs/sessions-v0.6.md).
+
+## Understand what changed
+
+Save an agent before it reaches its goal, continue into a second checkpoint, and compare them:
+
+```powershell
+python -m kgodel demo --max-steps 3 --checkpoint before.json
+python -m kgodel resume before.json --checkpoint after.json
+python -m kgodel compare before.json after.json --query "at(goal)" --explain
+```
+
+The report shows movement from the forest to the goal, newly accepted evidence, the completed intention, and `at(goal): unknown -> true` with its supporting proof. Comparison performs no simulator operations. In the shell, `:compare before.json` compares a saved baseline with the live agent.
+
+Comparison also helps examine failed assumptions: after the blocked-route demo discovers the blockage, `clear(bridge)` becomes false and `can_move(start, bridge)` becomes unknown because its proof no longer holds. If another proof keeps a conclusion true, the report shows the changed evidence. Add `--result-json comparison.json` to export the report. See [comparison semantics and examples](docs/comparison-v0.7.md).
 
 ## The language
 
@@ -258,7 +272,7 @@ Observations from the local simulator are trusted. They replace the directly opp
 
 A goal is satisfied when it is supported by the current knowledge. That does not make every supplied initial belief objectively true. In the example, the final goal's proof comes from the simulator's successful movement observation.
 
-Implemented: one agent, ground goals, function-free rules, explicit negation, unknown guards, local simulation, belief revision, proof records, bounded execution, nested hypothetical contexts, conditional plan applicability, explicit priorities, pure decision previews, multi-step intentions with current-evidence requirements, saved sessions, bundled demos, and an interactive shell.
+Implemented: one agent, ground goals, function-free rules, explicit negation, unknown guards, local simulation, belief revision, proof records, bounded execution, nested hypothetical contexts, conditional plan applicability, explicit priorities, pure decision previews, multi-step intentions with current-evidence requirements, saved sessions, state and proof comparisons, bundled demos, and an interactive shell.
 
 Future experiments: competing evidence, counterfactual belief replacement, computed utility and information gain, and optional LLM-generated proposals. Hypothetical checks qualify declared plans; they do not synthesize new plans, predict actual tool outcomes, or grant facts to the accepted belief state. There is no general external-tool interface or real-world action execution.
 
@@ -283,7 +297,7 @@ python -m pip wheel . --no-deps --wheel-dir dist
 python tools/verify_install.py dist
 ```
 
-The verifier installs the wheel into a temporary environment and exercises the module command, console command, every bundled demo, a stepped shell session, and checkpoint resumption in separate processes from an unrelated directory. Session tests also cover every demo pause boundary, retained proof sources, conflicts, retry suppression, malformed files, and failed writes. The `dist` directory must contain exactly one KGodel wheel, or pass a specific wheel path. GitHub Actions runs the unit suite and this installation check on Windows and Linux with Python 3.10 and 3.13.
+The verifier installs the wheel into a temporary environment and exercises the module command, console command, every bundled demo, a stepped shell session, checkpoint resumption in separate processes, and state comparisons from an unrelated directory. Session tests also cover every demo pause boundary, retained proof sources, conflicts, retry suppression, malformed files, and failed writes. Comparison tests cover revised beliefs, withdrawn conclusions, alternative proofs, differing scenarios, bounded reasoning, and input preservation. The `dist` directory must contain exactly one KGodel wheel, or pass a specific wheel path. GitHub Actions runs the unit suite and this installation check on Windows and Linux with Python 3.10 and 3.13.
 
 ## Design references
 

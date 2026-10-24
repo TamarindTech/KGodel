@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.0
+
+- Added pure comparisons of saved and live agent states, including belief additions, removals, sign reversals, changed evidence, derived conclusions, goals, active intentions, and simulator state.
+- Added `compare BEFORE AFTER`, repeatable ground `--query` arguments, `--explain`, JSON export, and the shell command `:compare PATH`.
+- Compared full proof trees so alternative support remains visible when a conclusion stays true.
+- Compared history prefixes and both differing tails without assuming the inputs share an execution lineage.
+- Added independent inference budgets and partial reports that retain inspectable state while marking failed reasoning unresolved.
+- Kept input checkpoints read-only, including protection against output aliases, and retained compatibility with schema-1 sessions from 0.6.
+- Removed hidden inference during checkpoint loading so comparison budgets govern the actual reasoning work.
+- Added 21 comparison tests and installed-package checks for CLI, shell, JSON export, and incomplete reasoning.
+
 ## 0.6.0
 
 - Added self-contained JSON session checkpoints for the built-in route simulator, preserving program semantics, current beliefs and proof sources, world state, attempts, histories, and active intentions.

@@ -260,9 +260,15 @@ def _restore(data):
         agent._last_outcome = (outcome[0], _string(outcome[1]))
     _require(not agent.events or outcome is not None, "operations require a recorded outcome")
     _validate_history(agent)
-    record = agent.execution_record()
-    if record:
-        format_trace(record)
+    # Validate renderable history without inference. Callers such as comparison
+    # apply their own reasoning budgets after loading; a load must not spend a
+    # separate, hidden default inference budget first.
+    if agent._last_outcome:
+        format_trace({"agent": program.name, "events": agent.events, "decisions": agent.decisions,
+                      "intention_events": agent.intention_events,
+                      "active_intention": agent.intention.as_dict() if agent.intention else None,
+                      "status": agent._last_outcome[0], "reason": agent._last_outcome[1],
+                      "world_position": world.position})
     return agent
 
 

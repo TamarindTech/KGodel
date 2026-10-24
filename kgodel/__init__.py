@@ -1,3 +1,3 @@
 """KGodel: an experimental language for inspectable agent reasoning."""
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"
