@@ -2,16 +2,38 @@
 
 from __future__ import annotations
 
-from .model import Bindings, KGodelError, Literal, Proof, Rule, Unknown, match
+from .model import Bindings, KGodelError, KnowledgeConflict, Literal, Proof, Rule, Unknown, match
 
 
 class Knowledge:
     def __init__(self, beliefs: tuple[Literal, ...] = ()):
         self.facts: dict[Literal, Proof] = {}
         for belief in beliefs:
+            if belief.atom.variables:
+                raise KGodelError("Beliefs must be ground.")
             if belief.opposite() in self.facts:
-                raise KGodelError(f"Conflicting initial beliefs: {belief} and {belief.opposite()}.")
+                raise KnowledgeConflict(f"Conflicting initial beliefs: {belief} and {belief.opposite()}.")
             self.facts[belief] = Proof(belief, "program")
+
+    def copy(self) -> Knowledge:
+        child = Knowledge()
+        # Proofs and their premises are immutable; only the fact dictionary is copied.
+        child.facts = dict(self.facts)
+        return child
+
+    def assuming(self, assumptions: tuple[Literal, ...], scope: str) -> Knowledge:
+        """Build an additive hypothesis without modifying the parent context."""
+        if not assumptions:
+            raise KGodelError("A hypothesis requires at least one assumption.")
+        child = self.copy()
+        for literal in assumptions:
+            if literal.atom.variables:
+                raise KGodelError("Assumptions must be ground.")
+            if literal.opposite() in child.facts:
+                raise KnowledgeConflict(f"Assumption {literal} contradicts {literal.opposite()}.")
+            # Existing support remains authoritative when an assumption is redundant.
+            child.facts.setdefault(literal, Proof(literal, f"assumption:{scope}"))
+        return child
 
     def observe(self, literal: Literal, source: str) -> dict:
         if literal.atom.variables:
@@ -46,7 +68,7 @@ class Inference:
                 for bindings, evidence in list(self.solve(rule.body)):
                     conclusion = rule.head.ground(bindings)
                     if conclusion.opposite() in self.proofs:
-                        raise KGodelError(f"Knowledge conflict: {conclusion} contradicts {conclusion.opposite()}.")
+                        raise KnowledgeConflict(f"Knowledge conflict: {conclusion} contradicts {conclusion.opposite()}.")
                     if conclusion not in self.proofs:
                         if len(self.proofs) >= max_facts:
                             raise KGodelError("Inference fact limit exceeded.")

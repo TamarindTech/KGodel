@@ -1,8 +1,10 @@
-# KGodel 0.1
+# KGodel 0.2
 
 **An experimental logic language for agents that can revise their beliefs and explain their decisions.**
 
 KGodel combines a small Prolog-inspired syntax with explicit goals, guarded plans, observations, and actions. This working prototype explores the reasoning cycle in a finite simulated world.
+
+Version 0.2 adds **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Nested contexts remain isolated from accepted beliefs and from the environment.
 
 The first experiment starts with an outdated belief that a bridge is clear. The agent tries the bridge, discovers the blockage, retracts its old belief, checks a forest route, and reaches its destination. Its decision record preserves the evidence used before each action and the observations returned afterward.
 
@@ -56,7 +58,7 @@ agent explorer {
 - `not clear(bridge)` is explicit negative evidence.
 - `unknown(clear(bridge))` succeeds only when neither polarity is supported.
 
-Names beginning with uppercase letters are variables. Lowercase names and double-quoted strings are constants. `%` and `//` introduce line comments. Version 0.1 is a function-free subset: it does not implement full Prolog.
+Names beginning with uppercase letters are variables. Lowercase names and double-quoted strings are constants. `%` and `//` introduce line comments. KGodel is a function-free subset: it does not implement full Prolog.
 
 ## Query and explain
 
@@ -79,6 +81,38 @@ python -m kgodel run examples/blocked_route.kg --trace-text output/blocked-route
 
 The JSON contains the full nested proof supporting each guard, substitutions, observations, belief revisions, and final goal proofs. The text trace presents a shorter summary.
 
+## Explore a hypothesis
+
+Ask whether movement would be supported if the forest were clear:
+
+```text
+prove(can_move(start, forest)).
+
+suppose(clear(forest)) {
+    prove(can_move(start, forest)).
+}
+
+prove(can_move(start, forest)).
+```
+
+The answers are **unknown, true within the hypothesis, unknown again**. The conditional proof identifies `clear(forest)` as an assumption. The agent neither learns that the forest is clear nor performs a movement.
+
+Run the example, which also demonstrates a nested hypothesis:
+
+```powershell
+python -m kgodel explain examples/blocked_route.kg --file examples/forest_hypothesis.kgq
+```
+
+Use `query` for shorter output or append `--result-json output/forest-hypothesis.results.json` to save the structured results. The saved [readable example](output/forest-hypothesis.results.txt) and [structured results](output/forest-hypothesis.results.json) include conditional proofs and their assumption dependencies. A single query can also be passed directly:
+
+```powershell
+python -m kgodel query examples/blocked_route.kg "suppose(clear(forest)) { prove(can_move(start, forest)). }"
+```
+
+An assumption that conflicts with accepted evidence produces an `inconsistent` scope. It does not replace that evidence. The [conflict example](examples/inconsistent_hypothesis.kgq) demonstrates that later queries still see the original beliefs.
+
+For an agent already running through the Python API, `agent.query(...)` evaluates the same syntax against its current, revised beliefs. Hypothetical queries are pure: they do not advance the agent, alter its goals, or invoke its environment.
+
 ## Try a different world
 
 Edit the companion world JSON and rerun the same program:
@@ -93,17 +127,17 @@ The agent's map and the actual edges in the world are separate. If an attempted 
 
 Pure queries have no effects. Inference computes a finite closure of the current beliefs and rules, with explicit resource limits. After an observation revises a base belief, the closure is rebuilt, removing conclusions whose support disappeared. If an alternative proof still exists, the conclusion remains supported.
 
-Version 0.1 uses source goal order, source plan order, and deterministic matching to choose an applicable plan. It does not search for optimal plans. Each plan has one operation. An identical plan instance is not retried for the same goal and base-belief set during an agent session.
+KGodel uses source goal order, source plan order, and deterministic matching to choose an applicable plan. It does not search for optimal plans. Each plan has one operation. An identical plan instance is not retried for the same goal and base-belief set during an agent session.
 
 Observations from the local simulator are trusted. They replace the directly opposing base belief. Contradictions remaining in the derived knowledge stop the run with a diagnostic. This is a deliberately simple revision policy; it is not a general theory of trust or belief revision.
 
 A goal is satisfied when it is supported by the current knowledge. That does not make every supplied initial belief objectively true. In the example, the final goal's proof comes from the simulator's successful movement observation.
 
-Implemented: one agent, ground goals, function-free rules, explicit negation, unknown guards, local simulation, belief revision, proof records, and bounded execution.
+Implemented: one agent, ground goals, function-free rules, explicit negation, unknown guards, local simulation, belief revision, proof records, bounded execution, and nested hypothetical query contexts.
 
-Future experiments: isolated hypotheses (`suppose`), competing evidence, plan ranking, multi-step intentions, and optional LLM-generated proposals. These features are not implemented in 0.1. There is no general external-tool interface or real-world action execution.
+Future experiments: competing evidence, counterfactual belief replacement, plan ranking, multi-step intentions, and optional LLM-generated proposals. Hypothetical reasoning is currently available through queries; plans do not yet use it automatically to select actions. There is no general external-tool interface or real-world action execution.
 
-See [the language specification](docs/language-v0.1.md) for exact behavior and research questions.
+See [the 0.2 hypothesis specification](docs/language-v0.2.md) and the unchanged [0.1 core semantics](docs/language-v0.1.md) for exact behavior.
 
 ## Validate
 
@@ -111,8 +145,8 @@ See [the language specification](docs/language-v0.1.md) for exact behavior and r
 python -m unittest discover -s tests -v
 ```
 
-The tests cover recursive rules, variable consistency, explicit negation, unknown facts, invalid syntax, stale conclusions, alternative proofs, contradictions, action isolation, failed actions, repeat prevention, execution limits, trace determinism, and the command-line example.
+The tests cover recursive rules, variable consistency, explicit negation, unknown facts, invalid syntax, stale conclusions, alternative proofs, contradictions, action isolation, failed actions, repeat prevention, execution limits, trace determinism, and the command-line example. Hypothesis tests also cover nested and sibling isolation, conditional proofs, contradictory assumptions, resource limits, variable answers, and exploration of a live agent without changing its later behavior.
 
 ## Design references
 
-KGodel is an experiment, with no claim that its components are novel. [Jason / AgentSpeak](https://jason-lang.github.io/) is a relevant precedent for logic-based agent plans and beliefs. [SWI-Prolog's account of tabled execution](https://www.swi-prolog.org/pldoc/man?section=tabling) discusses recursive inference and the importance of changing knowledge. KGodel 0.1 itself uses bottom-up fixed-point inference, not SWI-Prolog or tabled resolution.
+KGodel is an experiment, with no claim that its components are novel. [Jason / AgentSpeak](https://jason-lang.github.io/) is a relevant precedent for logic-based agent plans and beliefs. [SWI-Prolog's account of tabled execution](https://www.swi-prolog.org/pldoc/man?section=tabling) discusses recursive inference and the importance of changing knowledge. KGodel itself uses bottom-up fixed-point inference, not SWI-Prolog or tabled resolution.

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import re
 
-from .model import Atom, KGodelError, Literal, Plan, Program, Rule, Unknown, Var
+from .model import Atom, KGodelError, Literal, Plan, Program, ProveQuery, Query, Rule, SupposeQuery, Unknown, Var
 
 
 TOKEN = re.compile(r'\s+|%[^\n]*|//[^\n]*|:-|[A-Za-z_][A-Za-z0-9_]*|"(?:\\.|[^"\\])*"|[{}(),.]')
@@ -154,7 +154,7 @@ class Parser:
             elif kind == "goal":
                 goal = self.atom()
                 if goal.variables:
-                    self.fail("Goals must be ground in version 0.1")
+                    self.fail("Goals must be ground in this version")
                 goals.append(goal)
                 self.take(".")
             elif kind == "rule":
@@ -177,8 +177,42 @@ class Parser:
                 self.fail(f"Expected belief, rule, goal, or plan; found {kind!r}")
         self.take("}")
         if self.peek() != "<end>":
-            self.fail("Only one agent is supported in version 0.1")
+            self.fail("Only one agent is supported in this version")
         return Program(name, tuple(beliefs), tuple(rules), tuple(goals), tuple(plans))
+
+    def queries(self, *, nested: bool = False, depth: int = 0) -> tuple[Query, ...]:
+        statements = []
+        end = "}" if nested else "<end>"
+        while self.peek() != end:
+            if self.peek() == "suppose":
+                if depth >= 16:
+                    self.fail("Hypothesis nesting limit exceeded (16)")
+                self.take("suppose")
+                self.take("(")
+                assumptions = [self.literal()]
+                while self.accept(","):
+                    assumptions.append(self.literal())
+                self.take(")")
+                if any(literal.atom.variables for literal in assumptions):
+                    self.fail("Assumptions must be ground")
+                self.take("{")
+                body = self.queries(nested=True, depth=depth + 1)
+                self.take("}")
+                self.accept(".")
+                statements.append(SupposeQuery(tuple(assumptions), body))
+            else:
+                if self.accept("prove"):
+                    self.take("(")
+                    literal = self.literal()
+                    self.take(")")
+                else:
+                    literal = self.literal()
+                statements.append(ProveQuery(literal))
+                if not self.accept(".") and (nested or self.peek() != "<end>"):
+                    self.fail("Expected '.' after a query")
+        if not statements:
+            self.fail("Expected at least one query")
+        return tuple(statements)
 
 
 def parse(source: str) -> Program:
@@ -192,3 +226,8 @@ def parse_query(source: str) -> Literal:
     if parser.peek() != "<end>":
         parser.fail("Expected the end of the query")
     return query
+
+
+def parse_queries(source: str) -> tuple[Query, ...]:
+    """Parse a bare query, a prove expression, or a sequence of scoped queries."""
+    return Parser(source).queries()

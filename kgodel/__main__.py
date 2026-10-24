@@ -5,9 +5,11 @@ import json
 from pathlib import Path
 import sys
 
+from . import __version__
 from .logic import Inference, Knowledge
-from .model import KGodelError, Proof
-from .parser import parse, parse_query
+from .model import KGodelError
+from .parser import parse, parse_queries
+from .querying import evaluate_queries, format_query_results
 from .runtime import Agent, RouteWorld, format_trace
 
 
@@ -19,13 +21,17 @@ def save(path: str, content: str):
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="kgodel", description="KGodel experimental agent logic language")
+    parser.add_argument("--version", action="version", version=f"KGodel {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
     check = commands.add_parser("check", help="Parse a program and validate its initial knowledge")
     check.add_argument("program")
     for name in ("query", "explain"):
         command = commands.add_parser(name, help="Query initial beliefs without executing any actions")
         command.add_argument("program")
-        command.add_argument("query")
+        request = command.add_mutually_exclusive_group(required=True)
+        request.add_argument("query", nargs="?", help="A literal, prove expression, or suppose block")
+        request.add_argument("--file", help="Read a sequence of queries from a .kgq file")
+        command.add_argument("--result-json", help="Save query answers, assumptions, and proofs")
     run = commands.add_parser("run", help="Run an agent in the local route simulator")
     run.add_argument("program")
     run.add_argument("--world", help="World JSON; defaults to the program's .world.json companion")
@@ -48,32 +54,17 @@ def main(argv: list[str] | None = None) -> int:
                 save(args.trace_text, rendered)
             return 0 if result["status"] == "achieved" else 1
 
-        logic = Inference(Knowledge(program.beliefs), program.rules)
         if args.command == "check":
+            Inference(Knowledge(program.beliefs), program.rules)
             print(f"Valid: agent {program.name}; {len(program.beliefs)} beliefs, "
                   f"{len(program.rules)} rules, {len(program.goals)} goals, {len(program.plans)} plans.")
             return 0
-        query = parse_query(args.query)
-        if query.atom.variables:
-            solutions = list(logic.solve((query,)))
-            if not solutions:
-                print("No supported bindings. This does not establish explicit falsity.")
-            for bindings, evidence in solutions:
-                print(", ".join(f"{name} = {value}" for name, value in sorted(bindings.items())))
-                if args.command == "explain":
-                    for proof in evidence:
-                        if isinstance(proof, Proof):
-                            print("\n".join(proof.lines()))
-        else:
-            status = logic.status(query)
-            print(f"{status}: {query}")
-            if args.command == "explain":
-                proof = logic.explanation(query if status == "true" else query.opposite())
-                if proof:
-                    print("\n".join(proof.lines()))
-                else:
-                    print("Neither the statement nor its explicit negation has supporting evidence.")
-        return 0
+        source = Path(args.file).read_text(encoding="utf-8-sig") if args.file else args.query
+        report = evaluate_queries(Knowledge(program.beliefs), program.rules, parse_queries(source))
+        print(format_query_results(report, explain=args.command == "explain"))
+        if args.result_json:
+            save(args.result_json, json.dumps(report, indent=2))
+        return {"ok": 0, "inconsistent": 1, "error": 2}[report["status"]]
     except (KGodelError, OSError) as error:
         print(f"KGodel error: {error}", file=sys.stderr)
         return 2

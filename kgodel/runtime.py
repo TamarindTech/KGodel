@@ -5,8 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 
+from . import __version__
 from .logic import Inference, Knowledge
 from .model import Atom, KGodelError, Literal, Program, Proof, match
+from .parser import parse_queries
+from .querying import evaluate_queries
 
 
 @dataclass
@@ -99,6 +102,10 @@ class Agent:
         # Recompute from current base beliefs: old conclusions cannot survive revision.
         return Inference(self.knowledge, self.program.rules)
 
+    def query(self, source: str, **limits) -> dict:
+        """Explore current knowledge without advancing this agent or its environment."""
+        return evaluate_queries(self.knowledge, self.program.rules, parse_queries(source), **limits)
+
     def run(self, max_steps: int = 50) -> dict:
         if max_steps < 0:
             raise KGodelError("The step limit must be nonnegative.")
@@ -181,7 +188,7 @@ class Agent:
 
 
 def format_trace(result: dict) -> str:
-    lines = [f"KGodel 0.1 | agent {result['agent']}", ""]
+    lines = [f"KGodel {__version__} | agent {result['agent']}", ""]
     for event in result["events"]:
         lines.append(f"{event['step']}. Goal {event['goal']}: selected {event['plan']}.")
         for evidence in event["because"]:

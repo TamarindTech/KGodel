@@ -9,6 +9,10 @@ class KGodelError(Exception):
     """A source, knowledge, or execution error that can be shown to the user."""
 
 
+class KnowledgeConflict(KGodelError):
+    """Both polarities of a statement are supported in the same context."""
+
+
 @dataclass(frozen=True)
 class Var:
     name: str
@@ -90,6 +94,20 @@ class Program:
     rules: tuple[Rule, ...]
     goals: tuple[Atom, ...]
     plans: tuple[Plan, ...]
+
+
+@dataclass(frozen=True)
+class ProveQuery:
+    literal: Literal
+
+
+@dataclass(frozen=True)
+class SupposeQuery:
+    assumptions: tuple[Literal, ...]
+    body: tuple[ProveQuery | SupposeQuery, ...]
+
+
+Query = ProveQuery | SupposeQuery
 
 
 def match(pattern: Atom, value: Atom, bindings: Bindings | None = None) -> Bindings | None:
