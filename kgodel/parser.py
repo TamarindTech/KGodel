@@ -5,12 +5,13 @@ from __future__ import annotations
 import json
 import re
 
-from .model import (Atom, ClassDefinition, KGodelError, Literal, Method, ObjectDefinition, Plan,
+from .model import (Atom, ClassDefinition, ExpressionQuery, GoalExpression, KGodelError, Literal, Method, ObjectDefinition, Plan,
                     PlanStep, Program, ProveQuery, Query, Rule, SelfRef, SlotRef, SuperRef,
                     SupposeQuery, Term, Unknown, Var, query_variables)
 
 
-TOKEN = re.compile(r'\s+|%[^\n]*|//[^\n]*|:-|[A-Za-z_][A-Za-z0-9_]*|[0-9]+|"(?:\\.|[^"\\])*"|[{}(),.\[\]:=@^]')
+TOKEN = re.compile(r"\s+|%[^\n]*|//[^\n]*|:-|\?-|[A-Za-z_][A-Za-z0-9_]*|[0-9]+"
+                   r'''|"(?:\\.|[^"\\])*"|'(?:\\.|''|[^'\\])*'|[{}(),;.\[\]:=@^]''')
 
 
 class Parser:
@@ -30,6 +31,7 @@ class Parser:
             position = token.end()
         self.index = 0
         self.in_method = False
+        self.expression_nodes = 0
 
     def fail(self, message: str, position: int | None = None):
         if position is None:
@@ -50,6 +52,28 @@ class Parser:
         self.index += 1
         return value
 
+    def quoted_atom(self) -> str:
+        value = self.take()
+        if value.startswith("'"):
+            result, index = [], 1
+            escapes = {"n": "\n", "r": "\r", "t": "\t", "b": "\b", "f": "\f",
+                       "\\": "\\", "'": "'", '"': '"'}
+            while index < len(value) - 1:
+                char = value[index]
+                if char == "\\":
+                    index += 1
+                    if value[index] not in escapes:
+                        self.fail(f"Unsupported quoted-atom escape \\{value[index]}")
+                    result.append(escapes[value[index]])
+                elif char == "'":
+                    result.append("'")
+                    index += 1  # The tokenizer guarantees a doubled apostrophe.
+                else:
+                    result.append(char)
+                index += 1
+            return "".join(result)
+        self.fail("Expected a single-quoted constant")
+
     def accept(self, value: str) -> bool:
         if self.peek() == value:
             self.take()
@@ -69,13 +93,15 @@ class Parser:
         if self.in_method and self.accept("self"):
             return SelfRef()
         value = self.peek()
+        if value.startswith("'"):
+            return self.quoted_atom()
         if value.startswith('"'):
             self.take()
             try:
                 return json.loads(value)
             except json.JSONDecodeError as error:
                 self.fail(f"Invalid quoted constant: {error.msg}")
-        if re.fullmatch(r"[A-Z][A-Za-z0-9_]*", value):
+        if re.fullmatch(r"[A-Z_][A-Za-z0-9_]*", value):
             return Var(self.take())
         return self.identifier()
 
@@ -134,7 +160,7 @@ class Parser:
                 selector += ":"
                 while True:
                     parameter = self.term()
-                    if not isinstance(parameter, Var):
+                    if not isinstance(parameter, Var) or parameter.name == "_":
                         self.fail("Method parameters must be variables")
                     parameters.append(parameter.name)
                     if self.peek() == "{":
@@ -196,7 +222,7 @@ class Parser:
             if self.peek() != ")":
                 while True:
                     parameter = self.term()
-                    if not isinstance(parameter, Var):
+                    if not isinstance(parameter, Var) or parameter.name == "_":
                         self.fail("Plan parameters must be variables")
                     parameters.append(parameter.name)
                     if not self.accept(","):
@@ -249,6 +275,10 @@ class Parser:
             used |= guard.atom.variables
         hypothetical_variables = set().union(*(query_variables(query) for query in hypotheses))
         used |= hypothetical_variables
+        if ("_" in target.variables | step_variables | hypothetical_variables
+                or any(isinstance(guard, Unknown) and "_" in guard.atom.variables for guard in guards)):
+            self.fail("Anonymous variables are only allowed in signed plan entry guards")
+        used.discard("_")
         if used != set(parameters):
             self.fail(f"Plan {name} must declare exactly its variables: {', '.join(sorted(used)) or '(none)'}")
         bound = set(target.variables)
@@ -263,6 +293,19 @@ class Parser:
             self.fail(f"Plan {name} has unbound variables: {', '.join(sorted(needed - bound))}")
         return Plan(name, tuple(parameters), target, tuple(guards), tuple(steps),
                     priority, tuple(hypotheses))
+
+    def rule_definition(self, head: Literal, number: int) -> Rule:
+        self.take(":-")
+        body = [self.literal()]
+        while self.accept(","):
+            body.append(self.literal())
+        self.take(".")
+        body_variables = set().union(*(literal.atom.variables for literal in body))
+        if "_" in head.atom.variables:
+            self.fail("Anonymous variables are not allowed in rule heads")
+        if not head.atom.variables <= body_variables:
+            self.fail("Every rule-head variable must occur in the rule body")
+        return Rule(f"rule_{number}", head, tuple(body))
 
     def program(self) -> Program:
         self.take("agent")
@@ -289,22 +332,22 @@ class Parser:
                 self.take(".")
             elif kind == "rule":
                 head = self.literal()
-                self.take(":-")
-                body = [self.literal()]
-                while self.accept(","):
-                    body.append(self.literal())
-                self.take(".")
-                body_variables = set().union(*(literal.atom.variables for literal in body))
-                if not head.atom.variables <= body_variables:
-                    self.fail("Every rule-head variable must occur in the rule body")
-                rules.append(Rule(f"rule_{len(rules) + 1}", head, tuple(body)))
+                rules.append(self.rule_definition(head, len(rules) + 1))
             elif kind == "plan":
                 plan = self.plan()
                 if any(existing.name == plan.name for existing in plans):
                     self.fail(f"Duplicate plan name {plan.name}")
                 plans.append(plan)
             else:
-                self.fail(f"Expected belief, rule, goal, plan, class, or object; found {kind!r}")
+                self.index -= 1
+                head = self.literal()
+                if self.peek() == ":-":
+                    rules.append(self.rule_definition(head, len(rules) + 1))
+                else:
+                    if head.atom.variables:
+                        self.fail("Facts must be ground: variables are not allowed")
+                    self.take(".")
+                    beliefs.append(head)
         self.take("}")
         if self.peek() != "<end>":
             self.fail("Only one agent is supported in this version")
@@ -335,21 +378,55 @@ class Parser:
         statements = []
         end = "}" if nested else "<end>"
         while self.peek() != end:
+            self.accept("?-")
             if self.peek() == "suppose":
                 statements.append(self.hypothesis(depth=depth, allow_variables=allow_variables))
             else:
+                self.expression_nodes = 0
                 if self.accept("prove"):
                     self.take("(")
-                    literal = self.literal()
+                    expression = self.goal_expression()
                     self.take(")")
                 else:
-                    literal = self.literal()
-                statements.append(ProveQuery(literal))
+                    expression = self.goal_expression()
+                statements.append(ProveQuery(expression) if isinstance(expression, Literal) else ExpressionQuery(expression))
                 if not self.accept(".") and (nested or self.peek() != "<end>"):
                     self.fail("Expected '.' after a query")
         if not statements:
             self.fail("Expected at least one query")
         return tuple(statements)
+
+    def goal_expression(self, depth: int = 0) -> Literal | GoalExpression:
+        if depth >= 64:
+            self.fail("Query grouping depth exceeds 64")
+        alternatives = []
+        while True:
+            conjunction = []
+            while True:
+                if self.accept("("):
+                    item = self.goal_expression(depth + 1)
+                    self.take(")")
+                else:
+                    self.expression_nodes += 1
+                    if self.expression_nodes > 256:
+                        self.fail("Query expression size exceeds 256 literals")
+                    item = self.literal()
+                conjunction.append(item)
+                if not self.accept(","):
+                    break
+            alternatives.append(conjunction[0] if len(conjunction) == 1 else GoalExpression("and", tuple(conjunction)))
+            if not self.accept(";"):
+                break
+        expression = alternatives[0] if len(alternatives) == 1 else GoalExpression("or", tuple(alternatives))
+        if depth == 0:
+            pending = [(expression, 0)]
+            while pending:
+                item, level = pending.pop()
+                if isinstance(item, GoalExpression):
+                    if level >= 32:
+                        self.fail("Query expression depth exceeds 32")
+                    pending.extend((child, level + 1) for child in item.operands)
+        return expression
 
 
 def parse(source: str, *, legacy_super: bool = False) -> Program:

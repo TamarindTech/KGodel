@@ -13,14 +13,14 @@ import tempfile
 
 from . import __version__
 from .logic import Knowledge
-from .model import KGodelError, Literal, Proof, ProveQuery
+from .model import ExpressionQuery, KGodelError, Literal, Proof, ProveQuery
 from .parser import parse, parse_query
 from .planning import Candidate, Intention, format_decision
 from .runtime import Agent, RouteWorld, format_trace
 
 
 FORMAT = "kgodel-session"
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 MAX_BYTES = 32 * 1024 * 1024
 
 
@@ -53,6 +53,8 @@ def _literal(value, *, allow_internal=False):
 def _query_source(query):
     if isinstance(query, ProveQuery):
         return f"prove({query.literal})."
+    if isinstance(query, ExpressionQuery):
+        return f"prove({query.expression})."
     return ("suppose(" + ", ".join(map(str, query.assumptions)) + ") { "
             + " ".join(_query_source(child) for child in query.body) + " }")
 
@@ -230,7 +232,7 @@ def _validate_history(agent):
 def _restore(data):
     _fields(data, "format schema_version kgodel_version program world beliefs attempts events decisions intention intention_events next_intention_id last_outcome")
     _require(data["format"] == FORMAT, "not a KGodel session checkpoint")
-    _require(type(data["schema_version"]) is int and data["schema_version"] in (1, 2, SCHEMA_VERSION),
+    _require(type(data["schema_version"]) is int and data["schema_version"] in (1, 2, 3, SCHEMA_VERSION),
              "unsupported session schema version")
     _string(data["kgodel_version"])
     program = parse(_string(data["program"]), legacy_super=data["schema_version"] < 3)

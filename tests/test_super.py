@@ -252,7 +252,7 @@ class SuperIntegrationTests(unittest.TestCase):
         agent.run(1)
         self.assertIsNotNone(agent.intention)
         serialized = dumps_session(agent)
-        self.assertEqual(json.loads(serialized)["schema_version"], 3)
+        self.assertEqual(json.loads(serialized)["schema_version"], 4)
         self.assertIn("^RoutePolicy", serialized)
         restored = loads_session(serialized)
         self.assertEqual(restored.program, agent.program)

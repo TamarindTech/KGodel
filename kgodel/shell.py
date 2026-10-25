@@ -19,6 +19,8 @@ from .sessions import load_session, save_session
 
 HELP = """Queries inspect current beliefs without executing operations:
   clear(forest).
+  ?- path(start, Place), (clear(Place); open(Place)).
+  ?- path(_, _).
   suppose(clear(forest)) { prove(clear(forest)). }
   :query EXPRESSION       Query current beliefs (also accepts bare expressions)
   :explain EXPRESSION     Include supporting proofs

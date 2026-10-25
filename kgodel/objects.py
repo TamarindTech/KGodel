@@ -7,8 +7,8 @@ No method executes host code or simulator operations.
 
 from __future__ import annotations
 
-from .model import (Atom, KGodelError, Literal, Program, ProveQuery, Rule, SelfRef,
-                    SlotRef, SuperRef, Var, render_term)
+from .model import (Atom, ExpressionQuery, KGodelError, Literal, Program, ProveQuery, Rule, SelfRef,
+                    SlotRef, SuperRef, Var, expression_literals, render_term)
 
 
 class ObjectSpace:
@@ -104,6 +104,9 @@ class ObjectSpace:
         for query in queries:
             if isinstance(query, ProveQuery):
                 self.validate_atom(query.literal.atom)
+            elif isinstance(query, ExpressionQuery):
+                for literal in expression_literals(query.expression):
+                    self.validate_atom(literal.atom)
             else:
                 for literal in query.assumptions:
                     self.validate_atom(literal.atom)

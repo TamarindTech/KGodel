@@ -279,7 +279,7 @@ class ObjectIntegrationTests(unittest.TestCase):
         agent = load_demo("object-routes")
         agent.run(1)
         serialized = dumps_session(agent)
-        self.assertEqual(json.loads(serialized)["schema_version"], 3)
+        self.assertEqual(json.loads(serialized)["schema_version"], 4)
         restored = loads_session(serialized)
         self.assertEqual(restored.program, agent.program)
         self.assertEqual(restored.intention, agent.intention)

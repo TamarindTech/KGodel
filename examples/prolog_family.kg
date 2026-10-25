@@ -1,0 +1,17 @@
+% A pure logic program: query it without a simulator or goals.
+agent family {
+    parent(alice, bob).
+    parent(alice, carol).
+    parent(bob, 'Mary Jane').
+    parent(carol, david).
+    parent(david, emma).
+
+    artist(bob).
+    scientist(carol).
+    scientist('Mary Jane').
+    not retired(alice).
+
+    ancestor(X, Y) :- parent(X, Y).
+    ancestor(X, Y) :- parent(X, Z), ancestor(Z, Y).
+    has_child(X) :- parent(X, _).
+}

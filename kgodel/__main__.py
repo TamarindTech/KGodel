@@ -76,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
         command = commands.add_parser(name, help="Query initial beliefs without executing any actions")
         command.add_argument("program")
         request = command.add_mutually_exclusive_group(required=True)
-        request.add_argument("query", nargs="?", help="A literal, prove expression, or suppose block")
+        request.add_argument("query", nargs="?", help="A query with comma/semicolon, prove expression, or suppose block")
         request.add_argument("--file", help="Read a sequence of queries from a .kgq file")
         command.add_argument("--result-json", help="Save query answers, assumptions, and proofs")
     run = commands.add_parser("run", help="Run an agent in the local route simulator")

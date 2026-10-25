@@ -2,7 +2,7 @@
   <img src="docs/assets/kgodel-logo-transparent.svg" alt="KGödel — Agentic Logic Programming" width="640">
 </p>
 
-# KGodel 0.10
+# KGodel 0.11
 
 **An experimental logic language for agents that can revise their beliefs and explain their decisions.**
 
@@ -10,7 +10,7 @@ New to KGodel? Read the [introduction for developers and non-developers](docs/in
 
 KGodel combines a small Prolog-inspired syntax with explicit goals, guarded plans, observations, and actions. This working prototype explores the reasoning cycle in a finite simulated world.
 
-KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. **Multi-step intentions** let agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails. Saved sessions preserve progress across restarts, and comparisons expose changed beliefs and proofs. **Smalltalk-inspired logical objects** provide classes, instance variables, inheritance, overriding, and `self`/`super` message sending. Version 0.10 adds **abductive reasoning**: find minimal combinations of supplied assumptions that would make a conclusion provable.
+KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. **Multi-step intentions** let agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails. Saved sessions preserve progress across restarts, and comparisons expose changed beliefs and proofs. **Smalltalk-inspired logical objects** provide classes, instance variables, inheritance, overriding, and `self`/`super` message sending. **Abductive reasoning** finds minimal combinations of supplied assumptions that would make a conclusion provable. Version 0.11 adds **Prolog-style query composition**, anonymous variables, quoted constants, and shorthand facts and rules.
 
 The first experiment starts with an outdated belief that a bridge is clear. The agent tries the bridge, discovers the blockage, retracts its old belief, checks a forest route, and reaches its destination. Its decision record preserves the evidence used before each action and the observations returned afterward.
 
@@ -176,6 +176,30 @@ python -m kgodel abduce --program examples/super_routes.kg --file examples/route
 
 The search returns subset-minimal explanations, rejects inconsistent combinations, and reports its bounds and any unfinished reasoning. It accepts up to 16 distinct ground candidates; the default maximum is three assumptions per explanation. `--demo` uses an installed experiment and `--resume` inspects a checkpoint's current beliefs. See [abduction semantics, limits, and the Python API](docs/abduction-v0.10.md).
 
+## Prolog-style reasoning
+
+Write facts and recursive rules directly inside an agent:
+
+```text
+agent family {
+    parent(alice, bob).
+    parent(bob, 'Mary Jane').
+    ancestor(X, Y) :- parent(X, Y).
+    ancestor(X, Y) :- parent(X, Z), ancestor(Z, Y).
+    has_child(X) :- parent(X, _).
+}
+```
+
+Queries combine conditions with `,` (and), alternatives with `;` (or), and parentheses for grouping. Each `_` matches independently without creating a named binding. `_Name` is an ordinary named variable. The `?-` query prefix is optional.
+
+```powershell
+python -m kgodel query examples/prolog_family.kg "?- parent(alice, Parent), parent(Parent, Child)."
+python -m kgodel query examples/prolog_family.kg "?- ancestor(alice, Person), (artist(Person); scientist(Person))."
+python -m kgodel explain examples/prolog_family.kg --file examples/prolog_family.kgq
+```
+
+These features also work in the interactive shell and temporary `suppose` contexts. The [Prolog feature guide](docs/prolog-v0.11.md) explains precedence, variable scope, proofs, and the differences from full Prolog.
+
 ## The language
 
 ```text
@@ -209,7 +233,7 @@ agent explorer {
 - `not clear(bridge)` is explicit negative evidence.
 - `unknown(clear(bridge))` succeeds only when neither polarity is supported.
 
-Names beginning with uppercase letters are variables. Lowercase names and double-quoted strings are constants. `%` and `//` introduce line comments. KGodel is a function-free subset: it does not implement full Prolog.
+Names beginning with uppercase letters or underscores are variables; `_` alone is anonymous. Lowercase names and single- or double-quoted strings are constants. `%` and `//` introduce line comments. KGodel is a function-free subset: it does not implement full Prolog.
 
 ## Query and explain
 

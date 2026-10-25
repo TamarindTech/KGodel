@@ -1,4 +1,4 @@
-# Using KGodel 0.10
+# Using KGodel 0.11
 
 KGodel has two entry points: `python -m kgodel` and, after installation, the `kgodel` console command. Both call the same interpreter and accept the same arguments. Python 3.10 or newer is required.
 
@@ -135,7 +135,7 @@ In the shell, `:compare PATH` uses the checkpoint as the baseline and the curren
 
 Comparison exits with 0 when both sides finish reasoning, whether or not state differs; 1 when a conflict or inference limit leaves a partial report; and 2 for invalid input or file errors. `--max-facts` and `--max-work` set nonnegative inference limits separately for each side, defaulting to 10000 facts and 200000 work units. A partial report retains base-belief and world differences while marking unresolved answers explicitly. It never treats an inference error as logical falsity.
 
-The input checkpoints are read-only; an output path resolving to either input, including a hard link, is rejected. Existing comparison output files are replaced when explicitly named. Schema-1 checkpoints from KGodel 0.6/0.7 and schema-2 checkpoints from 0.8 remain supported. New saves use schema 3, which also preserves superclass messages and their proofs. See [the comparison reference](comparison-v0.7.md) for proof-selection details and how histories from different scenarios are compared.
+The input checkpoints are read-only; an output path resolving to either input, including a hard link, is rejected. Existing comparison output files are replaced when explicitly named. Checkpoints with schemas 1, 2, and 3 remain supported. New saves use schema 4, which preserves the expanded Prolog-style syntax as well as object and superclass proofs. See [the comparison reference](comparison-v0.7.md) for proof-selection details and how histories from different scenarios are compared.
 
 ## Explore logical objects
 
@@ -166,6 +166,18 @@ python -m kgodel shell --demo super-routes
 ```
 
 Methods can send `[super selector]` to reuse the implementation above their defining class. The demo adds approval and open-route conditions through three classes. Its proof annotations, such as `^RoutePolicy`, identify where parent lookup starts. The bridge query is unknown because its open-route condition lacks evidence. The forest route succeeds after four simulator operations. See [superclass semantics, proof annotations, and checkpoint compatibility](super-v0.9.md).
+
+## Combine Prolog-style queries
+
+Use comma for joined conditions, semicolon for alternatives, and parentheses to group them. Comma binds more tightly. An anonymous `_` matches independently without adding a named binding:
+
+```powershell
+python -m kgodel query examples/prolog_family.kg "?- parent(alice, Parent), parent(Parent, Child)."
+python -m kgodel query examples/prolog_family.kg "?- ancestor(alice, Person), (artist(Person); scientist(Person))."
+python -m kgodel explain examples/prolog_family.kg --file examples/prolog_family.kgq
+```
+
+The same syntax works in shell queries, `:explain`, and `Agent.query`. Single-quoted constants and named underscore variables are supported. See the [Prolog feature guide](prolog-v0.11.md) for binding rules, proof output, limits, and saved-session compatibility.
 
 ## Find hypothetical explanations
 

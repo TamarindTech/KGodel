@@ -75,7 +75,7 @@ Proof records connect conclusions to rules and evidence sources. Execution trace
 
 ## What you can use today
 
-KGodel 0.10 includes a Python interpreter, five bundled route experiments, an interactive shell, saved sessions, state comparisons, Smalltalk-inspired logical objects with superclass reasoning, bounded abductive reasoning, and readable or JSON execution records. It runs locally with Python 3.10 or newer and requires no API keys or third-party runtime dependencies.
+KGodel 0.11 includes a Python interpreter, five bundled route experiments, an interactive shell, saved sessions, state comparisons, Smalltalk-inspired logical objects with superclass reasoning, bounded abductive reasoning, Prolog-style composed queries, and readable or JSON execution records. It runs locally with Python 3.10 or newer and requires no API keys or third-party runtime dependencies.
 
 From the repository root, install the checkout:
 
@@ -100,10 +100,12 @@ Version 0.9 adds `super`: a specialized policy can reuse the general policy's re
 
 The new abductive search helps answer "what would need to be true?" Given a list of possibilities, KGodel finds minimal combinations that would support a conclusion. For example, a bridge move may require both evidence that the bridge is clear and that the route is open. Each explanation includes a proof, but remains hypothetical: the agent still needs actual observations before treating those conditions as established. Developers can use `Agent.abduce`; everyone can try the shell's `:abduce` command in the [missing-assumptions guide](abduction-v0.10.md).
 
+Version 0.11 makes it easier to ask questions about several relationships at once. For example, "find Alice's descendants who are artists or scientists" becomes `ancestor(alice, Person), (artist(Person); scientist(Person))`. The comma means "and," the semicolon means "or," and `Person` holds each supported answer. An underscore can stand for a detail you do not need to name. The [family-tree example and Prolog guide](prolog-v0.11.md) show how these questions retain their supporting evidence.
+
 ## Where the experiment is heading
 
 The current prototype focuses on one agent in a local route simulator. It implements a limited logic language rather than full Prolog. Checkpoints preserve experiment state across restarts; traces provide a readable account of what happened. Saving is explicit, so changes since the last checkpoint are lost when you close the process.
 
-Future research directions include comparing conflicting evidence sources, richer plan evaluation, and validating proposals from language models. LLM integration, general external tools, and multi-agent communication are not implemented in version 0.10.
+Future research directions include comparing conflicting evidence sources, richer plan evaluation, and validating proposals from language models. LLM integration, general external tools, and multi-agent communication are not implemented in version 0.11.
 
 KGodel gives developers a small language to experiment with and gives other participants a way to examine the agent's assumptions, evidence, and behavior. Both can use the same concrete question to guide the work: **what supports this decision, and what should happen when that support changes?**

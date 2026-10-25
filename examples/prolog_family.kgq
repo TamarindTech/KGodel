@@ -1,0 +1,19 @@
+% Join relationships across two generations.
+?- parent(alice, Parent), parent(Parent, Child).
+
+% Parentheses group alternatives; comma binds more tightly than semicolon.
+?- ancestor(alice, Person), (artist(Person); scientist(Person)).
+
+% Each anonymous variable matches independently, with no named bindings.
+?- parent(_, _).
+
+% A named underscore variable behaves like any other named variable.
+?- parent(_Parent, 'Mary Jane').
+
+% Explicit negative evidence differs from missing information.
+?- not retired(alice), has_child(alice).
+
+% Temporary assumptions work with composed queries, too.
+suppose(artist(david)) {
+    ancestor(alice, Person), artist(Person).
+}

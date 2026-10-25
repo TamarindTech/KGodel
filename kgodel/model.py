@@ -84,6 +84,8 @@ class Atom:
             terms = (*self.args, self.receiver)
             if any(isinstance(term, (SlotRef, SelfRef, SuperRef)) for term in terms):
                 raise KGodelError("Method references must be resolved before inference.")
+            if "_" in self.variables:
+                raise KGodelError("Anonymous variables cannot be grounded into facts or operations.")
             return Atom(self.name, tuple(bindings[t.name] if isinstance(t, Var) else t for t in self.args),
                         bindings[self.receiver.name] if isinstance(self.receiver, Var) else self.receiver,
                         self.lookup_class)
@@ -192,17 +194,54 @@ class ProveQuery:
 
 
 @dataclass(frozen=True)
+class GoalExpression:
+    operator: str
+    operands: tuple[Literal | GoalExpression, ...]
+
+    def __post_init__(self):
+        if self.operator not in {"and", "or"} or len(self.operands) < 2:
+            raise KGodelError("A goal expression needs an and/or operator and at least two operands.")
+
+    def __str__(self) -> str:
+        separator = ", " if self.operator == "and" else "; "
+        return "(" + separator.join(map(str, self.operands)) + ")"
+
+    @property
+    def variables(self) -> set[str]:
+        return set().union(*(item.atom.variables if isinstance(item, Literal) else item.variables
+                             for item in self.operands))
+
+    def ground(self, bindings: Bindings) -> GoalExpression:
+        return GoalExpression(self.operator, tuple(item.ground(bindings) for item in self.operands))
+
+
+@dataclass(frozen=True)
+class ExpressionQuery:
+    expression: GoalExpression
+
+
+@dataclass(frozen=True)
 class SupposeQuery:
     assumptions: tuple[Literal, ...]
-    body: tuple[ProveQuery | SupposeQuery, ...]
+    body: tuple[ProveQuery | ExpressionQuery | SupposeQuery, ...]
 
 
-Query = ProveQuery | SupposeQuery
+Query = ProveQuery | ExpressionQuery | SupposeQuery
+
+
+def expression_literals(expression: Literal | GoalExpression):
+    if isinstance(expression, Literal):
+        yield expression
+    else:
+        for operand in expression.operands:
+            yield from expression_literals(operand)
 
 
 def query_variables(query: Query) -> set[str]:
     if isinstance(query, ProveQuery):
         return query.literal.atom.variables
+    if isinstance(query, ExpressionQuery):
+        return query.expression.variables
     variables = set().union(*(literal.atom.variables for literal in query.assumptions))
     for child in query.body:
         variables |= query_variables(child)
@@ -212,6 +251,8 @@ def query_variables(query: Query) -> set[str]:
 def ground_query(query: Query, bindings: Bindings) -> Query:
     if isinstance(query, ProveQuery):
         return ProveQuery(query.literal.ground(bindings))
+    if isinstance(query, ExpressionQuery):
+        return ExpressionQuery(query.expression.ground(bindings))
     return SupposeQuery(tuple(literal.ground(bindings) for literal in query.assumptions),
                         tuple(ground_query(child, bindings) for child in query.body))
 
@@ -229,6 +270,8 @@ def match(pattern: Atom, value: Atom, bindings: Bindings | None = None) -> Bindi
         if isinstance(actual, Var):
             raise KGodelError("Matching requires a ground value.")
         if isinstance(expected, Var):
+            if expected.name == "_":
+                continue  # Every anonymous occurrence matches independently.
             if expected.name in result and result[expected.name] != actual:
                 return None
             result[expected.name] = actual
