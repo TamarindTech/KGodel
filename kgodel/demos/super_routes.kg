@@ -1,0 +1,55 @@
+% Each policy adds a condition by sending to its parent's implementation.
+agent explorer {
+    class RoutePolicy {
+        slot destination.
+        method candidateFrom: From to: To {
+            at(From).
+            path(From, To).
+        }
+        method mayMoveFrom: From to: To {
+            [self candidateFrom: From to: To].
+            clear(To).
+        }
+        method finished { at(@destination). }
+    }
+
+    class ApprovedPolicy extends RoutePolicy {
+        slot permission.
+        method candidateFrom: From to: To {
+            [super candidateFrom: From to: To].
+            approved(To, @permission).
+        }
+    }
+
+    class OpenRoutePolicy extends ApprovedPolicy {
+        method candidateFrom: From to: To {
+            [super candidateFrom: From to: To].
+            open(To).
+        }
+    }
+
+    object relaxed : RoutePolicy { destination = goal. }
+    object approved : ApprovedPolicy { destination = goal. permission = reviewed. }
+    object cautious : OpenRoutePolicy { destination = goal. permission = reviewed. }
+
+    belief at(start).
+    belief path(start, bridge).
+    belief path(bridge, goal).
+    belief path(start, forest).
+    belief path(forest, goal).
+    belief approved(bridge, reviewed).
+    belief approved(forest, reviewed).
+    belief approved(goal, reviewed).
+    belief open(forest).
+    belief open(goal).
+
+    goal [cautious finished].
+
+    plan inspect_and_move(From, To) for [cautious finished] {
+        when [cautious candidateFrom: From to: To], unknown(clear(To)).
+        suppose(clear(To)) { prove([cautious mayMoveFrom: From to: To]). }
+        observe clear(To).
+        require [cautious mayMoveFrom: From to: To].
+        act move(From, To).
+    }
+}

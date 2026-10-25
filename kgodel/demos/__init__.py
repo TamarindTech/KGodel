@@ -12,6 +12,7 @@ DEMOS = {
     "hypothesis-planning": ("hypothesis_planning", "Use hypothetical checks to choose useful observations."),
     "multistep-route": ("multistep_route", "Commit to a sequence and reconsider a blocked route."),
     "object-routes": ("object_routes", "Send logical messages to inherited route-policy objects."),
+    "super-routes": ("super_routes", "Extend parent reasoning with super across three policy classes."),
 }
 DEFAULT_DEMO = "multistep-route"
 

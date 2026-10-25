@@ -114,7 +114,8 @@ def compare_agents(before: Agent, after: Agent, *, queries=(), max_facts=10000, 
     if complete:
         # Include an atom if at least one side derives either sign without a base fact.
         atoms = {literal.atom for logic, agent in ((left, before), (right, after))
-                 for literal in logic.proofs if literal not in agent.knowledge.facts}
+                 for literal in logic.proofs if literal not in agent.knowledge.facts
+                 and literal.atom.lookup_class is None}
         for atom in sorted(atoms, key=str):
             row = _question(left, right, Literal(atom))
             if row["truth_changed"] or row["evidence_changed"]:

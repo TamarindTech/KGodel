@@ -1,4 +1,4 @@
-# Using KGodel 0.8
+# Using KGodel 0.9
 
 KGodel has two entry points: `python -m kgodel` and, after installation, the `kgodel` console command. Both call the same interpreter and accept the same arguments. Python 3.10 or newer is required.
 
@@ -135,7 +135,7 @@ In the shell, `:compare PATH` uses the checkpoint as the baseline and the curren
 
 Comparison exits with 0 when both sides finish reasoning, whether or not state differs; 1 when a conflict or inference limit leaves a partial report; and 2 for invalid input or file errors. `--max-facts` and `--max-work` set nonnegative inference limits separately for each side, defaulting to 10000 facts and 200000 work units. A partial report retains base-belief and world differences while marking unresolved answers explicitly. It never treats an inference error as logical falsity.
 
-The input checkpoints are read-only; an output path resolving to either input, including a hard link, is rejected. Existing comparison output files are replaced when explicitly named. Schema-1 checkpoints from KGodel 0.6 and 0.7 remain supported. New saves use schema 2, which also preserves object declarations. See [the comparison reference](comparison-v0.7.md) for proof-selection details and how histories from different scenarios are compared.
+The input checkpoints are read-only; an output path resolving to either input, including a hard link, is rejected. Existing comparison output files are replaced when explicitly named. Schema-1 checkpoints from KGodel 0.6/0.7 and schema-2 checkpoints from 0.8 remain supported. New saves use schema 3, which also preserves superclass messages and their proofs. See [the comparison reference](comparison-v0.7.md) for proof-selection details and how histories from different scenarios are compared.
 
 ## Explore logical objects
 
@@ -150,6 +150,22 @@ The file-based commands use the examples in the checkout. The bundled shell work
 Methods are pure logical queries. A known message without supporting or opposing evidence is unknown; a missing receiver or selector is an input error. The shell reports such errors and stays open. Methods may send messages to `self` or another declared object, and inherited `self` sends use subclass overrides. Only the existing `:step` and `:run` commands advance the simulator.
 
 Use `:checkpoint PATH` at any pause point to retain the object program and active intention. `:compare PATH` can show changing message answers, and the CLI accepts message literals in `--query`. See [the object-language guide](objects-v0.8.md) for the syntax and current limits.
+
+## Extend a parent policy
+
+```powershell
+python -m kgodel shell --demo super-routes
+```
+
+```text
+:explain [cautious candidateFrom: start to: forest]
+[cautious candidateFrom: start to: bridge].
+:step
+:checkpoint super-session.json
+:run
+```
+
+Methods can send `[super selector]` to reuse the implementation above their defining class. The demo adds approval and open-route conditions through three classes. Its proof annotations, such as `^RoutePolicy`, identify where parent lookup starts. The bridge query is unknown because its open-route condition lacks evidence. The forest route succeeds after four simulator operations. See [superclass semantics, proof annotations, and checkpoint compatibility](super-v0.9.md).
 
 ## Test a built distribution
 

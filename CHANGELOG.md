@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0
+
+- Added method-level `super` sends with lookup starting above the defining class, preserving the original receiver and dynamic `self` dispatch.
+- Kept parent-method support separate from public messages so superclass answers cannot bypass subclass conditions; retained explicit negative support, alternative clauses, recursion, and inference budgets.
+- Added nested superclass proof annotations and a three-level `super-routes` demo with hypothetical checks and resumable intentions.
+- Added checkpoint schema 3 while retaining schema-1/schema-2 loading, including legacy objects literally named `super`.
+- Added dispatch and integration tests plus installed-wheel checks for superclass explanations and cross-process resume.
+- Updated the introduction, usage guide, README, and superclass reasoning reference.
+
 ## 0.8.0
 
 - Added Smalltalk-inspired class and object declarations, read-only instance variables, single inheritance, selector overriding, and unary/keyword messages.

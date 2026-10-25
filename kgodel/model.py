@@ -28,7 +28,12 @@ class SelfRef:
     pass
 
 
-Term = str | Var | SlotRef | SelfRef
+@dataclass(frozen=True)
+class SuperRef:
+    """A method receiver whose lookup starts above the defining class."""
+
+
+Term = str | Var | SlotRef | SelfRef | SuperRef
 Bindings = dict[str, str]
 
 
@@ -39,6 +44,8 @@ def render_term(term: Term) -> str:
         return "@" + term.name
     if isinstance(term, SelfRef):
         return "self"
+    if isinstance(term, SuperRef):
+        return "super"
     return term if re.fullmatch(r"[a-z][A-Za-z0-9_]*", term) else json.dumps(term)
 
 
@@ -47,20 +54,25 @@ class Atom:
     name: str
     args: tuple[Term, ...] = ()
     receiver: Term | None = None
+    # Compiler-only namespace: parent support must not satisfy a normal send.
+    lookup_class: str | None = None
 
     def __str__(self) -> str:
         return self.render()
 
     def render(self, *, in_method: bool = False) -> str:
         def term_text(term):
-            # Only method source reserves bare self. Ordinary literals keep
-            # their pre-object spelling, including old checkpoint attempt keys.
-            return json.dumps(term) if in_method and isinstance(term, str) and term == "self" else render_term(term)
+            # Quote literal receiver names that have special method meanings.
+            # Ordinary literals retain their old checkpoint fingerprint spelling.
+            if in_method and isinstance(term, str) and term in {"self", "super"}:
+                return json.dumps(term)
+            return render_term(term)
 
         if self.receiver is not None:
             message = self.name if not self.args else " ".join(
                 f"{part}: {term_text(value)}" for part, value in zip(self.name.split(":"), self.args))
-            return f"[{term_text(self.receiver)} {message}]"
+            lookup = f" ^{self.lookup_class}" if self.lookup_class else ""
+            return f"[{term_text(self.receiver)}{lookup} {message}]"
         return self.name + ("(" + ", ".join(map(term_text, self.args)) + ")" if self.args else "")
 
     @property
@@ -70,10 +82,11 @@ class Atom:
     def ground(self, bindings: Bindings) -> Atom:
         try:
             terms = (*self.args, self.receiver)
-            if any(isinstance(term, (SlotRef, SelfRef)) for term in terms):
-                raise KGodelError("Method instance variables must be resolved before inference.")
+            if any(isinstance(term, (SlotRef, SelfRef, SuperRef)) for term in terms):
+                raise KGodelError("Method references must be resolved before inference.")
             return Atom(self.name, tuple(bindings[t.name] if isinstance(t, Var) else t for t in self.args),
-                        bindings[self.receiver.name] if isinstance(self.receiver, Var) else self.receiver)
+                        bindings[self.receiver.name] if isinstance(self.receiver, Var) else self.receiver,
+                        self.lookup_class)
         except KeyError as error:
             raise KGodelError(f"Unbound variable {error.args[0]} in {self}.") from error
 
@@ -206,6 +219,7 @@ def ground_query(query: Query, bindings: Bindings) -> Query:
 def match(pattern: Atom, value: Atom, bindings: Bindings | None = None) -> Bindings | None:
     """Match a possibly variable pattern against a ground atom."""
     if (pattern.name != value.name or len(pattern.args) != len(value.args)
+            or pattern.lookup_class != value.lookup_class
             or (pattern.receiver is None) != (value.receiver is None)):
         return None
     result = dict(bindings or {})

@@ -1,5 +1,7 @@
 # KGodel 0.8: Smalltalk-inspired logical objects
 
+This guide describes the object model introduced in 0.8. KGodel 0.9 also supports [`super` messages](super-v0.9.md) and writes schema-3 checkpoints; the version-specific boundaries below describe 0.8.
+
 This extension adds classes, instances, single inheritance, and message sending to KGodel. The interpreter remains Python. A method defines logical support for a message; its answer is true, false, unknown, or a set of supported variable bindings, accompanied by proof records.
 
 ## A complete example

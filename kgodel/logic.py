@@ -83,6 +83,7 @@ class Inference:
             candidates = [(literal, proof) for literal, proof in self.proofs.items()
                           if literal.negative == guard.negative
                           and literal.atom.name == guard.atom.name
+                          and literal.atom.lookup_class == guard.atom.lookup_class
                           and (literal.atom.receiver is None) == (guard.atom.receiver is None)
                           and len(literal.atom.args) == len(guard.atom.args)]
             candidates.sort(key=lambda item: str(item[0]))

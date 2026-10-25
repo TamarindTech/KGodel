@@ -8,7 +8,7 @@ No method executes host code or simulator operations.
 from __future__ import annotations
 
 from .model import (Atom, KGodelError, Literal, Program, ProveQuery, Rule, SelfRef,
-                    SlotRef, Var, render_term)
+                    SlotRef, SuperRef, Var, render_term)
 
 
 class ObjectSpace:
@@ -52,6 +52,18 @@ class ObjectSpace:
                     local.setdefault(method.selector, []).append((definition.name, index, method))
                 methods.update(local)
             self.slots[name], self.methods[name] = tuple(slots), methods
+        # A super send has a lexical owner, even when its method is inherited.
+        # Validate every declaration, including classes with no instances yet.
+        for definition in program.classes:
+            for method in definition.methods:
+                for literal in method.body:
+                    atom = literal.atom
+                    if atom.lookup_class is not None:
+                        raise KGodelError("Superclass lookup annotations are reserved for stored proofs.")
+                    if any(isinstance(term, SuperRef) for term in atom.args):
+                        raise KGodelError("Super is only allowed as a method message receiver.")
+                    if isinstance(atom.receiver, SuperRef):
+                        self.super_start(definition.name, atom.name)
         for instance in program.objects:
             if instance.class_name not in self.classes:
                 raise KGodelError(f"Unknown class {instance.class_name} for object {instance.name}.")
@@ -62,7 +74,19 @@ class ObjectSpace:
                 expected = ", ".join(self.slots[instance.class_name]) or "(none)"
                 raise KGodelError(f"Object {instance.name} must initialize exactly these instance variables: {expected}.")
 
+    def super_start(self, owner: str, selector: str) -> str:
+        parent = self.classes[owner].parent
+        if parent is None:
+            raise KGodelError(f"Super send in {owner} requires a superclass.")
+        if selector not in self.methods[parent]:
+            raise KGodelError(f"Superclass of {owner} does not understand message {selector}.")
+        return parent
+
     def validate_atom(self, atom: Atom):
+        if atom.lookup_class is not None:
+            raise KGodelError("Superclass lookup annotations are reserved for stored proofs.")
+        if any(isinstance(term, SuperRef) for term in (*atom.args, atom.receiver)):
+            raise KGodelError("Super is only allowed as a method message receiver.")
         if atom.receiver is None:
             return
         if isinstance(atom.receiver, Var):
@@ -89,6 +113,7 @@ class ObjectSpace:
         rules = []
         for instance in self.program.objects:
             values = dict(instance.slots)
+            pending, requested = [], set()
 
             def resolve(term):
                 if isinstance(term, SelfRef):
@@ -97,17 +122,38 @@ class ObjectSpace:
                     return values[term.name]
                 return term
 
-            for clauses in self.methods[instance.class_name].values():
+            def compile_clauses(clauses, lookup_class=None):
                 for owner, index, method in clauses:
-                    body = tuple(Literal(Atom(item.atom.name, tuple(resolve(t) for t in item.atom.args),
-                                              resolve(item.atom.receiver)), item.negative) for item in method.body)
-                    for literal in body:
-                        self.validate_atom(literal.atom)
+                    body = []
+                    for item in method.body:
+                        atom = item.atom
+                        arguments = tuple(resolve(term) for term in atom.args)
+                        if isinstance(atom.receiver, SuperRef):
+                            parent = self.super_start(owner, atom.name)
+                            target = (parent, atom.name)
+                            if target not in requested:
+                                requested.add(target)
+                                pending.append(target)
+                            resolved = Atom(atom.name, arguments, instance.name, parent)
+                        else:
+                            resolved = Atom(atom.name, arguments, resolve(atom.receiver))
+                            self.validate_atom(resolved)
+                        body.append(Literal(resolved, item.negative))
                     head = Literal(Atom(method.selector, tuple(Var(name) for name in method.parameters),
-                                        instance.name), method.negative)
-                    rules.append(Rule(f"method:{owner}>>{method.selector}@{instance.name}#{index}", head, body))
+                                        instance.name, lookup_class), method.negative)
+                    rules.append(Rule(f"method:{owner}>>{method.selector}@{instance.name}#{index}", head, tuple(body)))
                     if len(rules) > 10000:
                         raise KGodelError("Instantiated method rule limit exceeded (10000).")
+
+            for clauses in self.methods[instance.class_name].values():
+                compile_clauses(clauses)
+            # Expand only ancestor selectors referenced by super. Repeated sends
+            # share support; ordinary self sends still use the public namespace.
+            cursor = 0
+            while cursor < len(pending):
+                parent, selector = pending[cursor]
+                cursor += 1
+                compile_clauses(self.methods[parent][selector], parent)
         return tuple(rules)
 
     def validate_program(self):

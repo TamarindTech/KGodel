@@ -75,7 +75,7 @@ Proof records connect conclusions to rules and evidence sources. Execution trace
 
 ## What you can use today
 
-KGodel 0.8 includes a Python interpreter, four bundled route experiments, an interactive shell, saved sessions, state comparisons, Smalltalk-inspired logical objects, and readable or JSON execution records. It runs locally with Python 3.10 or newer and requires no API keys or third-party runtime dependencies.
+KGodel 0.9 includes a Python interpreter, five bundled route experiments, an interactive shell, saved sessions, state comparisons, Smalltalk-inspired logical objects with superclass reasoning, and readable or JSON execution records. It runs locally with Python 3.10 or newer and requires no API keys or third-party runtime dependencies.
 
 From the repository root, install the checkout:
 
@@ -96,10 +96,12 @@ You can also ask what changed. Save a checkpoint, continue the experiment, and e
 
 Objects provide another way to organize the agent's reasoning. For example, a route-policy object can answer whether a destination is worth checking. A cautious subclass can require approval while reusing inherited methods. Sending `[cautious candidateFrom: start to: forest]` asks a logical question and returns supporting evidence. Try `python -m kgodel shell --demo object-routes` and enter `:objects` to inspect the example. In this first version, instance values are read-only and methods answer questions without performing actions.
 
+Version 0.9 adds `super`: a specialized policy can reuse the general policy's reasoning and then impose an extra condition. One class can establish that a route exists, another can require approval, and a third can require evidence that it is open. The explanation shows how each class contributed. Try `python -m kgodel shell --demo super-routes` and enter `:explain [cautious candidateFrom: start to: forest]`. Developers can find the syntax and lookup rules in the [superclass reasoning guide](super-v0.9.md).
+
 ## Where the experiment is heading
 
 The current prototype focuses on one agent in a local route simulator. It implements a limited logic language rather than full Prolog. Checkpoints preserve experiment state across restarts; traces provide a readable account of what happened. Saving is explicit, so changes since the last checkpoint are lost when you close the process.
 
-Future research directions include comparing conflicting evidence sources, richer plan evaluation, and validating proposals from language models. LLM integration, general external tools, and multi-agent communication are not implemented in version 0.8.
+Future research directions include comparing conflicting evidence sources, richer plan evaluation, and validating proposals from language models. LLM integration, general external tools, and multi-agent communication are not implemented in version 0.9.
 
 KGodel gives developers a small language to experiment with and gives other participants a way to examine the agent's assumptions, evidence, and behavior. Both can use the same concrete question to guide the work: **what supports this decision, and what should happen when that support changes?**

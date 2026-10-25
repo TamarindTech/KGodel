@@ -6,16 +6,18 @@ import json
 import re
 
 from .model import (Atom, ClassDefinition, KGodelError, Literal, Method, ObjectDefinition, Plan,
-                    PlanStep, Program, ProveQuery, Query, Rule, SelfRef, SlotRef,
+                    PlanStep, Program, ProveQuery, Query, Rule, SelfRef, SlotRef, SuperRef,
                     SupposeQuery, Term, Unknown, Var, query_variables)
 
 
-TOKEN = re.compile(r'\s+|%[^\n]*|//[^\n]*|:-|[A-Za-z_][A-Za-z0-9_]*|[0-9]+|"(?:\\.|[^"\\])*"|[{}(),.\[\]:=@]')
+TOKEN = re.compile(r'\s+|%[^\n]*|//[^\n]*|:-|[A-Za-z_][A-Za-z0-9_]*|[0-9]+|"(?:\\.|[^"\\])*"|[{}(),.\[\]:=@^]')
 
 
 class Parser:
-    def __init__(self, source: str):
+    def __init__(self, source: str, *, allow_internal: bool = False, legacy_super: bool = False):
         self.source = source
+        self.allow_internal = allow_internal
+        self.legacy_super = legacy_super
         self.tokens: list[tuple[str, int]] = []
         position = 0
         while position < len(source):
@@ -79,7 +81,13 @@ class Parser:
 
     def atom(self) -> Atom:
         if self.accept("["):
-            receiver = self.term()
+            receiver = (SuperRef() if self.in_method and not self.legacy_super and self.accept("super")
+                        else self.term())
+            lookup_class = None
+            if self.accept("^"):
+                if not self.allow_internal:
+                    self.fail("Superclass lookup annotations are reserved for stored proofs")
+                lookup_class = self.class_name()
             first = self.identifier()
             selector, arguments = first, []
             if self.accept(":"):
@@ -90,7 +98,7 @@ class Parser:
                     self.take(":")
                     arguments.append(self.term())
             self.take("]")
-            return Atom(selector, tuple(arguments), receiver)
+            return Atom(selector, tuple(arguments), receiver, lookup_class)
         name = self.identifier()
         arguments = []
         if self.accept("("):
@@ -344,12 +352,12 @@ class Parser:
         return tuple(statements)
 
 
-def parse(source: str) -> Program:
-    return Parser(source).program()
+def parse(source: str, *, legacy_super: bool = False) -> Program:
+    return Parser(source, legacy_super=legacy_super).program()
 
 
-def parse_query(source: str) -> Literal:
-    parser = Parser(source)
+def parse_query(source: str, *, allow_internal: bool = False) -> Literal:
+    parser = Parser(source, allow_internal=allow_internal)
     query = parser.literal()
     parser.accept(".")
     if parser.peek() != "<end>":

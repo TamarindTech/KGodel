@@ -103,7 +103,21 @@ def verify(wheel: Path):
                        "--query", "[cautious finished]", "--explain")
         assert "[cautious finished]: unknown -> true" in rendered, rendered
         assert "method:RoutePolicy>>finished@cautious" in rendered, rendered
-        print(f"{module_version}: installation, demos, objects, shell, session restart, and comparisons verified outside checkout")
+        super_checkpoint = outside / "super session.json"
+        transcript = run(console, "shell", "--demo", "super-routes", input="\n".join([
+            ":explain [cautious candidateFrom: start to: forest]",
+            "[cautious candidateFrom: start to: bridge].", ":step",
+            ':checkpoint "super session.json"', ":quit", ""]))
+        assert "[cautious ^ApprovedPolicy candidateFrom: start to: forest]" in transcript, transcript
+        assert "[cautious ^RoutePolicy candidateFrom: start to: forest]" in transcript, transcript
+        assert "unknown: [cautious candidateFrom: start to: bridge]" in transcript, transcript
+        saved = json.loads(super_checkpoint.read_text(encoding="utf-8"))
+        assert saved["schema_version"] == 3 and saved["intention"] is not None, saved
+        super_trace = outside / "super resumed.json"
+        run(console, "resume", super_checkpoint, "--trace-json", super_trace)
+        expected = json.loads((outside / "super-routes.json").read_text(encoding="utf-8"))
+        assert json.loads(super_trace.read_text(encoding="utf-8")) == expected
+        print(f"{module_version}: installation, demos, objects, super dispatch, shell, session restart, and comparisons verified outside checkout")
 
 
 if __name__ == "__main__":
