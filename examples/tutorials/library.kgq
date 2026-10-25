@@ -1,0 +1,6 @@
+% Answers, explicit opposition, and missing evidence are distinct.
+?- recommended(alice, Book).
+?- available('Small Worlds').
+?- available('Field Notes').
+?- book(Book), (available(Book); not available(Book)).
+?- likes(_, _).

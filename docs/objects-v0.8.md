@@ -1,6 +1,6 @@
 # KGodel 0.8: Smalltalk-inspired logical objects
 
-This guide describes the object model introduced in 0.8. KGodel 0.9 also supports [`super` messages](super-v0.9.md) and writes schema-3 checkpoints; the version-specific boundaries below describe 0.8.
+This guide describes the object model introduced in 0.8. Current KGodel 0.11 also supports [`super` messages](super-v0.9.md), [composed queries](prolog-v0.11.md), and schema-4 checkpoints. The version-specific persistence and boundary sections below describe 0.8. Start with the [current object tutorial](tutorials/04-objects-and-messages.md) for a guided example.
 
 This extension adds classes, instances, single inheritance, and message sending to KGodel. The interpreter remains Python. A method defines logical support for a message; its answer is true, false, unknown, or a set of supported variable bindings, accompanied by proof records.
 
@@ -145,11 +145,11 @@ For direct use of `Inference` or `evaluate_queries`, pass `program.effective_rul
 
 For the finite declared object set, the interpreter instantiates effective methods into signed, function-free rules. Inherited self sends refer to the actual instance, preserving receiver-based dispatch. Each method proof source records `method:Class>>selector@object#clause`. Ordinary rule and observation proofs remain premises, including the assumptions used inside hypothetical scopes. Conclusions are recomputed after belief revision.
 
-Checkpoint schema 2 embeds class declarations, object configuration, and message-bearing rules, goals, histories, and active intentions. Loading restores the original program and resumes at its unfinished step without replaying observations. New saves use schema 2; schema-1 checkpoints from 0.6 and 0.7 still load. Older versions cannot read schema 2. An object program claiming schema 1 is rejected.
+Version 0.8 introduced checkpoint schema 2 to embed class declarations, object configuration, and message-bearing rules, goals, histories, and active intentions. Loading restores the original program and resumes at its unfinished step without replaying observations. KGodel 0.11 writes schema 4 and continues to read schemas 1–3. Versions before 0.8 cannot read schema 2. An object program claiming schema 1 is rejected.
 
 Comparisons include changes to class definitions and instance configuration, as well as changed message support and proofs. A comparison query may refer to an object absent from one side; on that side it is treated as an unsupported logical statement so additions and removals remain comparable. Direct program and agent query validation remains stricter.
 
-## Current boundaries
+## Boundaries in version 0.8
 
 This is a logical object layer, not an implementation of the complete Smalltalk language. There are no mutable slots, runtime allocation, class-side methods, metaclasses, `super`, binary selectors, cascades, closures, implicit returns, or arbitrary returned objects. Logical methods return truth/proof information and supported bindings. Instance-variable inspection is explicit and values are not security secrets.
 

@@ -1,0 +1,16 @@
+% Tutorial 2: a knowledge base that needs no simulated world.
+agent library {
+    book('Logic for Agents').
+    book('Small Worlds').
+    book('Field Notes').
+    topic('Logic for Agents', logic).
+    topic('Small Worlds', logic).
+    topic('Field Notes', travel).
+    available('Logic for Agents').
+    not available('Small Worlds').
+    likes(alice, logic).
+    likes(bob, travel).
+
+    recommended(Person, Book) :- likes(Person, Topic), topic(Book, Topic), available(Book).
+    has_interest(Person) :- likes(Person, _).
+}

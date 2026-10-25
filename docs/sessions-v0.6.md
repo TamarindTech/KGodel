@@ -1,5 +1,7 @@
 # KGodel 0.6: saved sessions
 
+Historical format note: the schema-1 description below records version 0.6. KGodel 0.11 writes schema 4 and reads schemas 1–4, preserving objects, superclass proofs, and composed plan hypotheses. Loading/writing guarantees and APIs below still apply. See the [current persistence tutorial](tutorials/06-sessions-and-comparison.md) and [usage guide](using-kgodel.md).
+
 A checkpoint is a snapshot of one agent and its local route simulator between execution calls. It can be opened in another process, without the original program or world files. Loading restores data and does not invoke `act`, `observe`, or `Agent.run`.
 
 ## Command-line use
@@ -61,7 +63,7 @@ Operation and hypothesis budgets are per invocation and are **not stored**. A ne
 
 ## Format and validation
 
-The format is UTF-8 JSON with `format: "kgodel-session"`, integer `schema_version: 1`, and informational `kgodel_version`. Compatibility is decided by schema version. There is no automatic migration from unsupported schemas, and traces from earlier versions are not checkpoints.
+The format is UTF-8 JSON with `format: "kgodel-session"`, an integer `schema_version`, and informational `kgodel_version`. Version 0.6 wrote schema 1; current KGodel 0.11 writes schema 4 and reads schemas 1–4. Compatibility is decided by schema version. There is no automatic migration from unsupported schemas, and traces from earlier versions are not checkpoints.
 
 Loading checks the embedded program, field types, ground beliefs, plan bindings, attempt keys, cursor bounds, operation references, intention lifecycle, and simulator counters. It rejects duplicate JSON keys, nonstandard numeric constants, invalid encoding, and files larger than 32 MiB. Proof nesting is bounded at 128. Failures produce `KGodelError`; filesystem failures use `OSError` and are reported cleanly by the CLI and shell.
 

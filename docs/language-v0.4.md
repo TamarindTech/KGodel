@@ -1,5 +1,7 @@
 # KGodel 0.4: multi-step intentions
 
+Versioned reference: intention semantics remain current. Later releases add disk checkpoints, logical object messages, and composed hypothesis queries. See the [planning tutorial](tutorials/05-goals-and-plans.md), [persistence tutorial](tutorials/06-sessions-and-comparison.md), and [documentation home](README.md).
+
 Version 0.4 extends the [0.3 planning specification](language-v0.3.md) with ordered operations, per-step requirements, and an in-memory commitment called an **intention**. Existing single-operation programs keep their behavior. Inference, explicit negation, hypothesis isolation, and goal ordering are unchanged.
 
 ## Syntax

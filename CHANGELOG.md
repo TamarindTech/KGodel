@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Added a documentation home, an eight-part tutorial course with exercises and worked answers, a command/exit-code reference, troubleshooting, and a glossary for KGodel 0.11.
+- Added runnable library, policy, first-route, delivery, and Python integration examples with query and abduction request files.
+- Clarified historical language boundaries and current schema-4 persistence, refreshed usage navigation, and added tutorial verification to Windows/Linux CI.
+
 ## 0.11.0
 
 - Added conjunctive and disjunctive queries with shared variable bindings, comma-before-semicolon precedence, grouped expressions, and an optional `?-` prefix.

@@ -1,5 +1,7 @@
 # KGodel 0.3: hypothetical plan applicability
 
+Versioned reference: the selection and hypothetical-check semantics still apply. [Version 0.4](language-v0.4.md) adds ordered operations and intentions, and [0.11](prolog-v0.11.md) adds composed queries in hypothesis bodies. See the [current planning tutorial](tutorials/05-goals-and-plans.md) or [documentation home](README.md).
+
 Status: implemented by the reference interpreter. This extends the [0.2 hypothesis semantics](language-v0.2.md) and updates plan selection from the [0.1 core](language-v0.1.md).
 
 ## Plan syntax

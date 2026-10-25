@@ -1,0 +1,13 @@
+% Tutorial 5: inspect, check the evidence, then move.
+agent first_route {
+    at(start).
+    path(start, goal).
+    goal at(goal).
+
+    plan inspect_and_move(From, To) for at(To) {
+        when at(From), path(From, To), unknown(clear(To)).
+        observe clear(To).
+        require clear(To).
+        act move(From, To).
+    }
+}

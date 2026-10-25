@@ -1,5 +1,7 @@
 # KGodel 0.2: isolated hypothetical reasoning
 
+Historical extension: the scope and isolation semantics still apply. Later releases added [plan hypotheses](language-v0.3.md) and [composed queries](prolog-v0.11.md). Statements about future planning work below describe 0.2. See the [current tutorial](tutorials/03-hypotheses-and-abduction.md) or [documentation home](README.md).
+
 Status: implemented in the local reference interpreter. This document adds query scopes to the [0.1 core language](language-v0.1.md); its program grammar, inference rules, and agent scheduling remain in effect.
 
 ## Meaning

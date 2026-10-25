@@ -1,0 +1,44 @@
+% Tutorial 8: compose a policy, inspect assumptions, then execute a journey.
+agent delivery {
+    class RoutePolicy {
+        slot destination.
+        method candidateFrom: From to: To { at(From). path(From, To). }
+        method mayMoveFrom: From to: To {
+            [self candidateFrom: From to: To].
+            clear(To).
+        }
+        method finished { at(@destination). }
+    }
+    class ApprovedPolicy extends RoutePolicy {
+        method candidateFrom: From to: To {
+            [super candidateFrom: From to: To].
+            approved(To).
+        }
+    }
+    class OpenPolicy extends ApprovedPolicy {
+        method candidateFrom: From to: To {
+            [super candidateFrom: From to: To].
+            open(To).
+        }
+    }
+    object courier : OpenPolicy { destination = camp. }
+
+    at(depot).
+    path(depot, bridge). path(bridge, camp).
+    path(depot, forest). path(forest, camp).
+    approved(bridge). approved(forest). approved(camp).
+    open(forest). open(camp).
+    goal [courier finished].
+
+    plan inspect_and_move(From, To) for [courier finished] priority 10 {
+        when [courier candidateFrom: From to: To], unknown(clear(To)).
+        suppose(clear(To)) { [courier mayMoveFrom: From to: To], open(To). }
+        observe clear(To).
+        require [courier mayMoveFrom: From to: To].
+        act move(From, To).
+    }
+    plan move_known_clear(From, To) for [courier finished] priority 5 {
+        when [courier mayMoveFrom: From to: To].
+        act move(From, To).
+    }
+}
