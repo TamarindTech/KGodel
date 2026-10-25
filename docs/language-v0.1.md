@@ -1,6 +1,6 @@
 # KGodel 0.1 language specification
 
-Historical specification: this records the original core. KGodel 0.11 adds composed queries, hypotheses, multi-step plans, objects, and persistence. Use the [documentation home](README.md) for the current feature map and the [tutorials](tutorials/README.md) to learn today's syntax. Version-specific limits below apply to 0.1.
+Historical specification: this records the original core. KGodel 0.12 adds composed queries, hypotheses, multi-step plans, objects, and persistence. Use the [documentation home](README.md) for the current feature map and the [tutorials](tutorials/README.md) to learn today's syntax. Version-specific limits below apply to 0.1.
 
 Status: experimental, implemented by the Python reference interpreter in this project.
 

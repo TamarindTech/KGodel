@@ -5,12 +5,13 @@ from __future__ import annotations
 import json
 import re
 
-from .model import (Atom, ClassDefinition, ExpressionQuery, GoalExpression, KGodelError, Literal, Method, ObjectDefinition, Plan,
+from .model import (Atom, ClassDefinition, Comparison, COMPARISON_OPPOSITES, ExpressionQuery,
+                    GoalExpression, KGodelError, Literal, Method, ObjectDefinition, Plan,
                     PlanStep, Program, ProveQuery, Query, Rule, SelfRef, SlotRef, SuperRef,
                     SupposeQuery, Term, Unknown, Var, query_variables)
 
 
-TOKEN = re.compile(r"\s+|%[^\n]*|//[^\n]*|:-|\?-|[A-Za-z_][A-Za-z0-9_]*|[0-9]+"
+TOKEN = re.compile(r"\s+|%[^\n]*|//[^\n]*|:-|\?-|\\==|==|@=<|@>=|@<|@>|[A-Za-z_][A-Za-z0-9_]*|[0-9]+"
                    r'''|"(?:\\.|[^"\\])*"|'(?:\\.|''|[^'\\])*'|[{}(),;.\[\]:=@^]''')
 
 
@@ -171,7 +172,7 @@ class Parser:
             self.in_method = True
             body = []
             while self.peek() != "}":
-                body.append(self.literal())
+                body.append(self.condition())
                 self.take(".")
             self.in_method = False
             self.take("}")
@@ -179,7 +180,8 @@ class Parser:
                 self.fail("A method requires at least one logical condition")
             if len(parameters) != len(set(parameters)):
                 self.fail("Method parameter names must be unique")
-            bound = set().union(*(literal.atom.variables for literal in body))
+            bound = set().union(*(item.variables for item in body if isinstance(item, Literal)))
+            self.validate_comparisons(body, bound)
             if not set(parameters) <= bound:
                 self.fail("Every method parameter must occur in its body")
             methods.append(Method(selector, tuple(parameters), tuple(body), negative))
@@ -207,13 +209,28 @@ class Parser:
         negative = self.accept("not")
         return Literal(self.atom(), negative)
 
-    def guard(self) -> Literal | Unknown:
+    def condition(self) -> Literal | Comparison:
+        if self.peek() not in {"not", "["}:
+            start = self.index
+            left = self.term()
+            if self.peek() in COMPARISON_OPPOSITES:
+                operator = self.take()
+                return Comparison(left, operator, self.term())
+            self.index = start
+        return self.literal()
+
+    def validate_comparisons(self, conditions, bound):
+        needed = set().union(*(item.variables for item in conditions if isinstance(item, Comparison)))
+        if not needed <= bound:
+            self.fail("Comparison variables must be bound by signed literals: " + ", ".join(sorted(needed - bound)))
+
+    def guard(self) -> Literal | Comparison | Unknown:
         if self.accept("unknown"):
             self.take("(")
             atom = self.atom()
             self.take(")")
             return Unknown(atom)
-        return self.literal()
+        return self.condition()
 
     def plan(self) -> Plan:
         name = self.identifier()
@@ -269,10 +286,10 @@ class Parser:
         for step in steps:
             step_variables |= step.argument.variables
             for requirement in step.requirements:
-                step_variables |= requirement.atom.variables
+                step_variables |= requirement.variables
         used = target.variables | step_variables
         for guard in guards:
-            used |= guard.atom.variables
+            used |= guard.variables
         hypothetical_variables = set().union(*(query_variables(query) for query in hypotheses))
         used |= hypothetical_variables
         if ("_" in target.variables | step_variables | hypothetical_variables
@@ -287,8 +304,8 @@ class Parser:
                 bound |= guard.atom.variables
         needed = step_variables | hypothetical_variables
         for guard in guards:
-            if isinstance(guard, Unknown):
-                needed |= guard.atom.variables
+            if isinstance(guard, (Unknown, Comparison)):
+                needed |= guard.variables
         if not needed <= bound:
             self.fail(f"Plan {name} has unbound variables: {', '.join(sorted(needed - bound))}")
         return Plan(name, tuple(parameters), target, tuple(guards), tuple(steps),
@@ -296,11 +313,12 @@ class Parser:
 
     def rule_definition(self, head: Literal, number: int) -> Rule:
         self.take(":-")
-        body = [self.literal()]
+        body = [self.condition()]
         while self.accept(","):
-            body.append(self.literal())
+            body.append(self.condition())
         self.take(".")
-        body_variables = set().union(*(literal.atom.variables for literal in body))
+        body_variables = set().union(*(item.variables for item in body if isinstance(item, Literal)))
+        self.validate_comparisons(body, body_variables)
         if "_" in head.atom.variables:
             self.fail("Anonymous variables are not allowed in rule heads")
         if not head.atom.variables <= body_variables:
@@ -396,7 +414,7 @@ class Parser:
             self.fail("Expected at least one query")
         return tuple(statements)
 
-    def goal_expression(self, depth: int = 0) -> Literal | GoalExpression:
+    def goal_expression(self, depth: int = 0) -> Literal | Comparison | GoalExpression:
         if depth >= 64:
             self.fail("Query grouping depth exceeds 64")
         alternatives = []
@@ -409,8 +427,8 @@ class Parser:
                 else:
                     self.expression_nodes += 1
                     if self.expression_nodes > 256:
-                        self.fail("Query expression size exceeds 256 literals")
-                    item = self.literal()
+                        self.fail("Query expression size exceeds 256 conditions")
+                    item = self.condition()
                 conjunction.append(item)
                 if not self.accept(","):
                     break
@@ -440,6 +458,16 @@ def parse_query(source: str, *, allow_internal: bool = False) -> Literal:
     if parser.peek() != "<end>":
         parser.fail("Expected the end of the query")
     return query
+
+
+def parse_condition(source: str, *, allow_internal: bool = False) -> Literal | Comparison:
+    """Parse one literal or comparison, including a stored proof conclusion."""
+    parser = Parser(source, allow_internal=allow_internal)
+    condition = parser.condition()
+    parser.accept(".")
+    if parser.peek() != "<end>":
+        parser.fail("Expected the end of the condition")
+    return condition
 
 
 def parse_queries(source: str) -> tuple[Query, ...]:

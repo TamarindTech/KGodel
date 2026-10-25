@@ -13,14 +13,14 @@ import tempfile
 
 from . import __version__
 from .logic import Knowledge
-from .model import ExpressionQuery, KGodelError, Literal, Proof, ProveQuery
-from .parser import parse, parse_query
+from .model import Comparison, ExpressionQuery, KGodelError, Literal, Proof, ProveQuery
+from .parser import parse, parse_condition, parse_query
 from .planning import Candidate, Intention, format_decision
 from .runtime import Agent, RouteWorld, format_trace
 
 
 FORMAT = "kgodel-session"
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 MAX_BYTES = 32 * 1024 * 1024
 
 
@@ -71,7 +71,8 @@ def program_source(program):
             signature = method.selector if not method.parameters else " ".join(
                 f"{part}: {parameter}" for part, parameter in zip(method.selector.split(":"), method.parameters))
             lines.append(f"method {'not ' if method.negative else ''}{signature} {{")
-            lines += [("not " if literal.negative else "") + literal.atom.render(in_method=True) + "."
+            lines += [(literal.render(in_method=True) if isinstance(literal, Comparison)
+                       else ("not " if literal.negative else "") + literal.atom.render(in_method=True)) + "."
                       for literal in method.body]
             lines.append("}")
         lines.append("}")
@@ -102,8 +103,13 @@ def _proof(value, depth=0):
     _require(depth < 128, "proof nesting exceeds 128")
     _fields(value, "conclusion source premises")
     _require(isinstance(value["premises"], list), "proof premises must be a list")
-    return Proof(_literal(value["conclusion"], allow_internal=True), _string(value["source"]),
-                 tuple(_proof(child, depth + 1) for child in value["premises"]))
+    conclusion = parse_condition(_string(value["conclusion"]), allow_internal=True)
+    _require(not conclusion.variables, "proof conclusions must be ground")
+    source = _string(value["source"])
+    if isinstance(conclusion, Comparison):
+        _require(conclusion.holds() and source == "builtin:" + conclusion.operator
+                 and not value["premises"], "invalid comparison evidence")
+    return Proof(conclusion, source, tuple(_proof(child, depth + 1) for child in value["premises"]))
 
 
 def _evidence(values):
@@ -232,7 +238,7 @@ def _validate_history(agent):
 def _restore(data):
     _fields(data, "format schema_version kgodel_version program world beliefs attempts events decisions intention intention_events next_intention_id last_outcome")
     _require(data["format"] == FORMAT, "not a KGodel session checkpoint")
-    _require(type(data["schema_version"]) is int and data["schema_version"] in (1, 2, 3, SCHEMA_VERSION),
+    _require(type(data["schema_version"]) is int and data["schema_version"] in (1, 2, 3, 4, SCHEMA_VERSION),
              "unsupported session schema version")
     _string(data["kgodel_version"])
     program = parse(_string(data["program"]), legacy_super=data["schema_version"] < 3)
@@ -254,8 +260,8 @@ def _restore(data):
     agent = Agent(program, world)
     _require(isinstance(data["beliefs"], list), "beliefs must be a list")
     proofs = [_proof(value) for value in data["beliefs"]]
-    _require(all(proof.conclusion.atom.lookup_class is None for proof in proofs),
-             "superclass lookup evidence cannot be an accepted belief")
+    _require(all(isinstance(proof.conclusion, Literal) and proof.conclusion.atom.lookup_class is None for proof in proofs),
+             "comparison or superclass lookup evidence cannot be an accepted belief")
     agent.knowledge = Knowledge(tuple(proof.conclusion for proof in proofs))
     _require(len(agent.knowledge.facts) == len(proofs), "duplicate stored beliefs")
     agent.knowledge.facts = {proof.conclusion: proof for proof in proofs}

@@ -1,4 +1,4 @@
-# Using KGodel 0.11
+# Using KGodel 0.12
 
 [Documentation home](README.md) · [Step-by-step tutorials](tutorials/README.md) · [Command reference](reference.md) · [Troubleshooting](troubleshooting.md)
 
@@ -139,7 +139,7 @@ In the shell, `:compare PATH` uses the checkpoint as the baseline and the curren
 
 Comparison exits with 0 when both sides finish reasoning, whether or not state differs; 1 when a conflict or inference limit leaves a partial report; and 2 for invalid input or file errors. `--max-facts` and `--max-work` set nonnegative inference limits separately for each side, defaulting to 10000 facts and 200000 work units. A partial report retains base-belief and world differences while marking unresolved answers explicitly. It never treats an inference error as logical falsity.
 
-The input checkpoints are read-only; an output path resolving to either input, including a hard link, is rejected. Existing comparison output files are replaced when explicitly named. Checkpoints with schemas 1, 2, and 3 remain supported. New saves use schema 4, which preserves the expanded Prolog-style syntax as well as object and superclass proofs. See [the comparison reference](comparison-v0.7.md) for proof-selection details and how histories from different scenarios are compared.
+The input checkpoints are read-only; an output path resolving to either input, including a hard link, is rejected. Existing comparison output files are replaced when explicitly named. Checkpoints with schemas 1–4 remain supported. New saves use schema 5, which also preserves term-comparison proof leaves. See [the comparison reference](comparison-v0.7.md) for proof-selection details and how histories from different scenarios are compared.
 
 ## Explore logical objects
 
@@ -182,6 +182,10 @@ python -m kgodel explain examples/prolog_family.kg --file examples/prolog_family
 ```
 
 The same syntax works in shell queries, `:explain`, and `Agent.query`. Single-quoted constants and named underscore variables are supported. See the [Prolog feature guide](prolog-v0.11.md) for binding rules, proof output, limits, and saved-session compatibility.
+
+## Compare bound values
+
+Term filters are available inside queries and logical conditions: `parent(alice, Child), Child \== bob` keeps supported children whose names differ from Bob. `First @< Second` can choose one orientation of a pair. Both operands must already be bound; these tests do not assign variables. Try `python -m kgodel explain examples/tutorials/comparisons.kg --file examples/tutorials/comparisons.kgq` and follow the [comparison tutorial](tutorials/09-term-comparisons.md).
 
 ## Find hypothetical explanations
 

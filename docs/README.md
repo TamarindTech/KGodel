@@ -1,13 +1,13 @@
 # KGodel documentation
 
-This is the documentation home for **KGodel 0.11**. KGodel is an experimental language for inspectable agent reasoning: facts and rules describe knowledge, queries explain support, and plans act through a local simulator.
+This is the documentation home for **KGodel 0.12**. KGodel is an experimental language for inspectable agent reasoning: facts and rules describe knowledge, queries explain support, and plans act through a local simulator.
 
 ## Choose a starting point
 
 | You want to… | Start here |
 | --- | --- |
 | Understand the idea without programming | [Introduction for developers and non-developers](introduction.md) |
-| Learn by running and changing examples | [Eight-part tutorial course](tutorials/README.md) |
+| Learn by running and changing examples | [Nine-part tutorial course](tutorials/README.md) |
 | Install KGodel or use the interactive shell | [Usage guide](using-kgodel.md) |
 | Find a command, exit code, or file format | [Command reference](reference.md) |
 | Resolve an error or an unexpected answer | [Troubleshooting](troubleshooting.md) |
@@ -22,12 +22,13 @@ Read these after a tutorial when you need precise behavior. Each versioned filen
 
 | Area | Reference | Current behavior |
 | --- | --- | --- |
+| Term comparisons | [Equality, difference, and ordering](comparisons-v0.12.md) | Pure filters over bound constants, with computed proofs |
 | Prolog-style syntax | [Queries, variables, and shorthand declarations](prolog-v0.11.md) | Conjunction/disjunction, grouping, anonymous matches, quoted constants |
 | Hypotheses | [Scoped reasoning](language-v0.2.md) | Isolated assumptions; also usable in plans since 0.3 |
 | Planning | [Selection](language-v0.3.md) and [intentions](language-v0.4.md) | Priorities, conditional checks, ordered operations, fresh requirements |
 | Logical objects | [Objects](objects-v0.8.md) and [superclass reasoning](super-v0.9.md) | Read-only slots, single inheritance, dynamic `self`, lexical `super` |
 | Abduction | [Missing-assumption search](abduction-v0.10.md) | Bounded, subset-minimal explanations over supplied candidates |
-| Persistence | [Session structure](sessions-v0.6.md) and [current usage](using-kgodel.md) | Writes schema 4; reads schemas 1–4 |
+| Persistence | [Session structure](sessions-v0.6.md) and [current usage](using-kgodel.md) | Writes schema 5; reads schemas 1–5, including comparison evidence |
 | Comparison | [Comparing evidence and progress](comparison-v0.7.md) | Pure comparison of saved/live state and proofs |
 | Core reasoning | [Original core specification](language-v0.1.md) | Finite signed inference; later references extend syntax and scheduling |
 

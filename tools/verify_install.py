@@ -114,7 +114,7 @@ def verify(wheel: Path):
         assert "unknown: [cautious candidateFrom: start to: bridge]" in transcript, transcript
         assert "Explanation 1: assume clear(bridge), open(bridge)." in transcript, transcript
         saved = json.loads(super_checkpoint.read_text(encoding="utf-8"))
-        assert saved["schema_version"] == 4 and saved["intention"] is not None, saved
+        assert saved["schema_version"] == 5 and saved["intention"] is not None, saved
         super_trace = outside / "super resumed.json"
         run(console, "resume", super_checkpoint, "--trace-json", super_trace)
         expected = json.loads((outside / "super-routes.json").read_text(encoding="utf-8"))
@@ -134,25 +134,26 @@ def verify(wheel: Path):
         assert "Abduction: partial" in partial, partial
         assert super_checkpoint.read_bytes() == saved_bytes
         prolog = outside / "prolog.kg"
-        prolog.write_text("""agent route {
+        prolog.write_text(r"""agent route {
             at(start). path(start, goal). label('Mary Jane', accepted).
-            has_label(X) :- label(X, _).
+            has_label(X) :- label(X, _), X \== ignored.
             goal at(goal).
             plan travel(_From, _To) for at(_To) {
-                when at(_From), path(_From, _To), label(_, _).
-                suppose(clear(_To)) { path(_From, _To), (clear(_To); open(_To)). }
+                when at(_From), path(_From, _To), label(_, _), _From \== _To.
+                suppose(clear(_To)) { path(_From, _To), (clear(_To); open(_To)), _From \== _To. }
                 observe clear(_To).
-                require clear(_To).
+                require clear(_To), _From \== _To.
                 act move(_From, _To).
             }
         }""", encoding="utf-8")
         prolog.with_suffix(".world.json").write_text(json.dumps({
             "position": "start", "edges": [["start", "goal"]], "blocked": []}), encoding="utf-8")
         request = outside / "prolog.kgq"
-        request.write_text("?- (label(Name, _); has_label(Name)), path(_, _).", encoding="utf-8")
+        request.write_text(r"?- (label(Name, _); has_label(Name)), path(_, _), Name \== 'Nobody'.", encoding="utf-8")
         prolog_report = outside / "prolog query.json"
         rendered = run(console, "explain", prolog, "--file", request, "--result-json", prolog_report)
         assert "query:and" in rendered and "query:or" in rendered, rendered
+        assert "builtin:" in rendered, rendered
         report = json.loads(prolog_report.read_text(encoding="utf-8"))
         assert [row["bindings"] for row in report["results"][0]["answers"]] == [{"Name": "Mary Jane"}], report
         prolog_checkpoint = outside / "prolog session.json"
@@ -160,7 +161,7 @@ def verify(wheel: Path):
             "?- path(_, _).", ":step", ':checkpoint "prolog session.json"', ":quit", ""]))
         assert "true (no named bindings)" in transcript, transcript
         saved = json.loads(prolog_checkpoint.read_text(encoding="utf-8"))
-        assert saved["schema_version"] == 4 and saved["intention"] is not None, saved
+        assert saved["schema_version"] == 5 and saved["intention"] is not None, saved
         prolog_trace = outside / "prolog resumed.json"
         run(python, "-I", "-m", "kgodel", "resume", prolog_checkpoint, "--trace-json", prolog_trace)
         result = json.loads(prolog_trace.read_text(encoding="utf-8"))

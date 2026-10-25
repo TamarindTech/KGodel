@@ -1,0 +1,8 @@
+?- sibling_pair(First, Second).
+?- parent(alice, Child), (Child == bob; Child == david).
+?- [family otherChild: Child].
+?- bob == carol.
+?- '10' @< '2'.
+suppose(parent(alice, emma)) {
+    sibling_pair(carol, Other).
+}

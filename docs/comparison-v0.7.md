@@ -1,6 +1,6 @@
 # KGodel 0.7: comparing agent states
 
-Versioned reference: comparison semantics remain current. KGodel 0.11 also compares logical object messages and loads checkpoint schemas 1–4. See the [current comparison tutorial](tutorials/06-sessions-and-comparison.md) and [command reference](reference.md).
+Versioned reference: comparison semantics remain current. KGodel 0.12 also compares logical object messages and loads checkpoint schemas 1–5. See the [current comparison tutorial](tutorials/06-sessions-and-comparison.md) and [command reference](reference.md).
 
 Comparison makes the effects of evidence and execution inspectable across two states. It operates on saved checkpoints or Python `Agent` instances, and never runs plans, performs observations, moves the simulator, or changes either agent.
 

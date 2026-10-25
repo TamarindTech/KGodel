@@ -1,5 +1,7 @@
 # Prolog-style features in KGodel 0.11
 
+Versioned reference: this describes syntax introduced in 0.11. KGodel 0.12 also adds [ground term comparisons](comparisons-v0.12.md) and writes schema-5 checkpoints while reading schemas 1–5. The schema-4 section below describes 0.11.
+
 [Documentation home](README.md) · [Step-by-step logic tutorial](tutorials/02-logic-and-queries.md) · [Command reference](reference.md)
 
 KGodel now supports composed queries, anonymous variables, single-quoted constants, and shorter fact and rule declarations. These build on the existing recursive, function-free rules and explicit signed evidence.

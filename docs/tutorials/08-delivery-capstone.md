@@ -111,4 +111,4 @@ The inspection plan cannot start for forest because its unknown guard fails. `mo
 
 You now have an experiment in which a policy explains eligibility, a hypothesis exposes conditional support, actual evidence controls execution, and checkpoints preserve the reasoning history. Use the [command reference](../reference.md) and [feature guides](../README.md) when adapting it to your own research questions.
 
-[← Python API](07-python-api.md) · [Course index](README.md) · [Documentation home](../README.md)
+[← Python API](07-python-api.md) · [Course index](README.md) · [Next: term comparisons →](09-term-comparisons.md)

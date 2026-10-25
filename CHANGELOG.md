@@ -1,10 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.12.0
 
-- Added a documentation home, an eight-part tutorial course with exercises and worked answers, a command/exit-code reference, troubleshooting, and a glossary for KGodel 0.11.
+- Added ground equality, difference, and lexical-order comparisons (`==`, `\==`, `@<`, `@=<`, `@>`, `@>=`) to queries, rule/method bodies, plan entry guards, requirements, and hypothetical checks.
+- Kept comparisons pure and non-binding, validated safe rule/method/plan variables, charged inference work for each test, and retained computed supporting/opposing evidence in proofs.
+- Added checkpoint schema 5 for comparison proof leaves while retaining schema-1 through schema-4 loading and resumable intentions.
+- Added 36 comparison semantic/integration tests, a ninth tutorial with runnable sibling/pair examples, and installed-package/tutorial verification of the new syntax.
+
+- Added a documentation home, a tutorial course with exercises and worked answers, a command/exit-code reference, troubleshooting, and a glossary; the course now covers nine lessons for KGodel 0.12.
 - Added runnable library, policy, first-route, delivery, and Python integration examples with query and abduction request files.
-- Clarified historical language boundaries and current schema-4 persistence, refreshed usage navigation, and added tutorial verification to Windows/Linux CI.
+- Clarified historical language boundaries and current persistence compatibility, refreshed usage navigation, and added tutorial verification to Windows/Linux CI.
 
 ## 0.11.0
 

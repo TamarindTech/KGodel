@@ -1,6 +1,6 @@
 # 1. Install and ask your first question
 
-By the end, you will run a query, recognize a proof, and explore a simulated agent. You need Python 3.10 or newer and a checkout of KGodel 0.11. No API key is required.
+By the end, you will run a query, recognize a proof, and explore a simulated agent. You need Python 3.10 or newer and a checkout of KGodel 0.12. No API key is required.
 
 ## Install the checkout
 
@@ -19,7 +19,7 @@ python -m pip install -e .
 python -m kgodel --version
 ```
 
-The final command should print `KGodel 0.11.0`. An editable installation reads this checkout as you change it. Keep the checkout in place. KGodel is not published to PyPI; these commands install this repository.
+The final command should print `KGodel 0.12.0`. An editable installation reads this checkout as you change it. Keep the checkout in place. KGodel is not published to PyPI; these commands install this repository.
 
 To use an isolated environment on Windows without activating a script:
 

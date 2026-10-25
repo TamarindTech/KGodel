@@ -86,7 +86,7 @@ def verify():
         delivery = EXAMPLES / "delivery.kg"
         for program in (library, policies, first, delivery):
             assert "Valid: agent" in cli("check", program)
-        assert cli("--version").strip() == "KGodel 0.11.0"
+        assert cli("--version").strip() == "KGodel 0.12.0"
         assert "super-routes" in cli("demo", "--list")
 
         # Lessons 1 and 2: bindings, explicit opposition, unknown, and recursion.
@@ -143,7 +143,7 @@ def verify():
         assert paused["status"] == "step_limit" and paused["steps"] == 1
         saved = before.read_bytes()
         data = json.loads(saved)
-        assert data["schema_version"] == 4 and data["intention"] is not None
+        assert data["schema_version"] == 5 and data["intention"] is not None
         transcript = cli("shell", "--resume", before, input=":status\n:explain clear(goal)\n:preview\n:quit\n")
         assert "true: clear(goal)" in transcript and "move(start, goal)" in transcript
         finished = report("resume", before, "--checkpoint", after, execution=True)
@@ -208,6 +208,28 @@ def verify():
         known = changed_program("delivery.kg", "clear(forest).")
         result = report("run", known, "--world", EXAMPLES / "delivery.world.json", execution=True)
         assert result["status"] == "achieved" and result["steps"] == 3
+
+        # Lesson 9: computed comparisons, distinct pairs, methods, and scoped evidence.
+        comparisons = EXAMPLES / "comparisons.kg"
+        assert "Valid: agent" in cli("check", comparisons)
+        results = report("explain", comparisons, "--file", EXAMPLES / "comparisons.kgq")["results"]
+        assert [item["status"] for item in results] == ["answers", "answers", "answers", "false", "true", "evaluated"]
+        assert [item["bindings"] for item in results[0]["answers"]] == [
+            {"First": "bob", "Second": "carol"}, {"First": "bob", "Second": "david"},
+            {"First": "carol", "Second": "david"}]
+        assert "builtin:" in json.dumps(results[0]["answers"][0]["proof"])
+        assert [item["bindings"] for item in results[1]["answers"]] == [{"Child": "bob"}, {"Child": "david"}]
+        assert [item["bindings"] for item in results[2]["answers"]] == [{"Child": "carol"}, {"Child": "david"}]
+        temporary = results[5]["results"][0]["answers"]
+        assert [item["bindings"] for item in temporary] == [{"Other": "david"}, {"Other": "emma"}]
+        assert temporary[0]["assumptions_used"] == []
+        assert temporary[1]["assumptions_used"] == [{"scope": "hypothesis_1", "literal": "parent(alice, emma)"}]
+        assert len(query(comparisons, "sibling(First, Second)")["answers"]) == 6
+        assert query(comparisons, "sibling(bob, bob)")["status"] == "unknown"
+        assert report("query", comparisons, "Child == bob", expected=2)["status"] == "error"
+        later = changed_program("comparisons.kg", "later_child(Child) :- parent(alice, Child), Child @>= carol.")
+        assert [item["bindings"] for item in query(later, "later_child(Child)")["answers"]] == [
+            {"Child": "carol"}, {"Child": "david"}]
 
     print(f"Tutorials verified: {commands} successful command checks; {links} local Markdown link targets checked.")
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .logic import Inference, Knowledge
-from .model import (Atom, Bindings, KGodelError, Literal, Plan, PlanStep, Program, Proof,
+from .model import (Atom, Bindings, Comparison, KGodelError, Literal, Plan, PlanStep, Program, Proof,
                     Unknown, ground_query, match)
 from .querying import evaluate_queries, format_query_results
 
@@ -53,8 +53,12 @@ def check_requirements(step: PlanStep, bindings: Bindings, logic: Inference) -> 
     """Requirements test fixed bindings against accepted knowledge; they never bind variables."""
     evidence, checks = [], []
     for requirement in step.requirements:
-        atom = requirement.atom.ground(bindings)
-        if isinstance(requirement, Unknown):
+        if isinstance(requirement, Comparison):
+            supported, proof = logic.compare(requirement, bindings)
+            status = "true" if supported else "false"
+            label = str(requirement.ground(bindings))
+        elif isinstance(requirement, Unknown):
+            atom = requirement.atom.ground(bindings)
             status = logic.status(Literal(atom))
             supported = status == "unknown"
             label = str(Unknown(atom))

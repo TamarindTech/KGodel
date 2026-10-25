@@ -17,7 +17,7 @@ Two different files were written:
 | `before.json` | A checkpoint containing the program, beliefs, proofs, world, histories, and intention cursor |
 | `before.trace.json` | An execution report for inspection; not a resumable session |
 
-The `schema_version` field of a new checkpoint is 4. KGodel 0.11 also reads schemas 1–3. The program and world are embedded, so reopening a checkpoint needs no original source files. Hand-editing checkpoints is unsupported.
+The `schema_version` field of a new checkpoint is 5. KGodel 0.12 also reads schemas 1–4. The program and world are embedded, so reopening a checkpoint needs no original source files. Hand-editing checkpoints is unsupported.
 
 ## Inspect before continuing
 

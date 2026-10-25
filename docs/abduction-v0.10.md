@@ -1,6 +1,6 @@
 # KGodel 0.10: find missing assumptions
 
-Versioned reference: these abduction semantics remain current in KGodel 0.11. Targets and candidate assumptions are still single ground literals; composed queries belong to the query API. See the [hypothesis and abduction tutorial](tutorials/03-hypotheses-and-abduction.md) and [command reference](reference.md).
+Versioned reference: these abduction semantics remain current in KGodel 0.12. Targets and candidate assumptions are still single ground literals; composed queries belong to the query API. See the [hypothesis and abduction tutorial](tutorials/03-hypotheses-and-abduction.md) and [command reference](reference.md).
 
 Abduction asks: **which hypothetical assumptions would make this conclusion provable?** KGodel searches an explicit, finite set of candidates, checks each proposed explanation for consistency, and returns a conditional proof. It does not change accepted beliefs or perform observations and actions.
 
