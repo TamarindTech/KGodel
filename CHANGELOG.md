@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.0
+
+- Added Smalltalk-inspired class and object declarations, read-only instance variables, single inheritance, selector overriding, and unary/keyword messages.
+- Added pure logical methods, including explicit negative clauses, recursive message reasoning, variable receivers, object composition, and inherited `self` dispatch to subclass overrides.
+- Integrated message literals with rules, goals, plan guards, step requirements, hypothetical queries, and comparisons; method proofs identify the defining class, receiver, selector, and clause.
+- Added `Agent.send`, the `objects PROGRAM` command, and shell `:objects` inspection.
+- Added the bundled `object-routes` experiment demonstrating relaxed and cautious route policies.
+- Added checkpoint schema 2 for object programs while continuing to read schema-1 sessions.
+- Added 27 object tests and installed-package checks for object queries, inspection, restart, and proof comparison.
+
 ## 0.7.0
 
 - Added pure comparisons of saved and live agent states, including belief additions, removals, sign reversals, changed evidence, derived conclusions, goals, active intentions, and simulator state.

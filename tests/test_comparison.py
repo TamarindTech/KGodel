@@ -300,6 +300,7 @@ class ComparisonCommandTests(unittest.TestCase):
     def test_comparison_accepts_schema_one_checkpoint_from_version_six(self):
         source = json.loads(dumps_session(load_demo()))
         source["kgodel_version"] = "0.6.0"
+        source["schema_version"] = 1
         restored = loads_session(json.dumps(source))
         self.assertFalse(compare_agents(restored, load_demo())["changed"])
 

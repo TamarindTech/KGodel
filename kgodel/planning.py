@@ -121,7 +121,7 @@ def choose_plan(program: Program, knowledge: Knowledge, logic: Inference,
                         continue
                     if plan.hypotheses:
                         queries = tuple(ground_query(query, bindings) for query in plan.hypotheses)
-                        assessment = evaluate_queries(knowledge, program.rules, queries,
+                        assessment = evaluate_queries(knowledge, program.effective_rules, queries,
                             max_contexts=max_hypotheses - report["hypotheses_checked"])
                         candidate["hypotheses"] = assessment
                         records = list(walk_results(assessment["results"]))
@@ -186,7 +186,7 @@ def choose_next(program: Program, knowledge: Knowledge, logic: Inference,
 def deliberate(program: Program, knowledge: Knowledge, attempts: set[tuple] | None = None, *,
                max_hypotheses: int = 64, intention: Intention | None = None) -> Decision:
     snapshot = knowledge.copy()
-    logic = Inference(snapshot, program.rules)
+    logic = Inference(snapshot, program.effective_rules)
     return choose_next(program, snapshot, logic, attempts, intention, max_hypotheses=max_hypotheses)
 
 

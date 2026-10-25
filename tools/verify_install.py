@@ -91,7 +91,19 @@ def verify(wheel: Path):
         transcript = run(console, "shell", "--resume", checkpoint,
                          input=f':run\n:compare "{checkpoint}"\n:quit\n')
         assert "position: forest -> goal" in transcript, transcript
-        print(f"{module_version}: installation, demos, shell, session restart, and comparisons verified outside checkout")
+        object_checkpoint = outside / "object session.json"
+        transcript = run(console, "shell", "--demo", "object-routes", input="\n".join([
+            ":objects", "[cautious candidateFrom: start to: forest].", ":step",
+            ':checkpoint "object session.json"', ":quit", ""]))
+        assert "Class ApprovedPolicy extends RoutePolicy" in transcript, transcript
+        assert "true: [cautious candidateFrom: start to: forest]" in transcript, transcript
+        object_finished = outside / "object finished.json"
+        run(console, "resume", object_checkpoint, "--checkpoint", object_finished)
+        rendered = run(console, "compare", object_checkpoint, object_finished,
+                       "--query", "[cautious finished]", "--explain")
+        assert "[cautious finished]: unknown -> true" in rendered, rendered
+        assert "method:RoutePolicy>>finished@cautious" in rendered, rendered
+        print(f"{module_version}: installation, demos, objects, shell, session restart, and comparisons verified outside checkout")
 
 
 if __name__ == "__main__":

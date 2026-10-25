@@ -1,4 +1,4 @@
-# Using KGodel 0.7
+# Using KGodel 0.8
 
 KGodel has two entry points: `python -m kgodel` and, after installation, the `kgodel` console command. Both call the same interpreter and accept the same arguments. Python 3.10 or newer is required.
 
@@ -53,6 +53,7 @@ python -m kgodel demo --list
 python -m kgodel demo blocked-route
 python -m kgodel demo hypothesis-planning
 python -m kgodel demo multistep-route
+python -m kgodel demo object-routes
 ```
 
 `demo` without a name uses `multistep-route`. Each invocation creates a fresh agent and world from packaged resources, independent of your working directory. The editable examples in the repository remain available for experimenting with source and world files.
@@ -89,6 +90,7 @@ Every request occupies one line. A hypothetical request can contain nested scope
 | `:run [N]` | Execute at most N more operations, default 50. |
 | `:status` | Show current goal support, operation counts, and the intention cursor. |
 | `:beliefs` | Show accepted base beliefs and their evidence sources. |
+| `:objects` | Inspect classes, inherited methods, objects, and instance-variable values. |
 | `:trace` | Show the last cumulative execution record. |
 | `:save PATH` | Export that record as JSON. Paths containing spaces may be quoted. |
 | `:checkpoint PATH` | Save a resumable agent and world, even before the first operation. |
@@ -133,7 +135,21 @@ In the shell, `:compare PATH` uses the checkpoint as the baseline and the curren
 
 Comparison exits with 0 when both sides finish reasoning, whether or not state differs; 1 when a conflict or inference limit leaves a partial report; and 2 for invalid input or file errors. `--max-facts` and `--max-work` set nonnegative inference limits separately for each side, defaulting to 10000 facts and 200000 work units. A partial report retains base-belief and world differences while marking unresolved answers explicitly. It never treats an inference error as logical falsity.
 
-The input checkpoints are read-only; an output path resolving to either input, including a hard link, is rejected. Existing comparison output files are replaced when explicitly named. Schema-1 checkpoints from KGodel 0.6 remain supported. See [the comparison reference](comparison-v0.7.md) for proof-selection details and how histories from different scenarios are compared.
+The input checkpoints are read-only; an output path resolving to either input, including a hard link, is rejected. Existing comparison output files are replaced when explicitly named. Schema-1 checkpoints from KGodel 0.6 and 0.7 remain supported. New saves use schema 2, which also preserves object declarations. See [the comparison reference](comparison-v0.7.md) for proof-selection details and how histories from different scenarios are compared.
+
+## Explore logical objects
+
+```powershell
+python -m kgodel objects examples/object_routes.kg
+python -m kgodel explain examples/object_routes.kg "[cautious candidateFrom: start to: forest]"
+python -m kgodel shell --demo object-routes
+```
+
+The file-based commands use the examples in the checkout. The bundled shell works from any directory after installation. Enter `:objects` to inspect the class hierarchy and configured instances. `[Receiver candidateFrom: start to: Place].` enumerates supported receiver/destination bindings; `:explain [cautious candidateFrom: start to: forest]` shows the method and accepted evidence supporting the answer.
+
+Methods are pure logical queries. A known message without supporting or opposing evidence is unknown; a missing receiver or selector is an input error. The shell reports such errors and stays open. Methods may send messages to `self` or another declared object, and inherited `self` sends use subclass overrides. Only the existing `:step` and `:run` commands advance the simulator.
+
+Use `:checkpoint PATH` at any pause point to retain the object program and active intention. `:compare PATH` can show changing message answers, and the CLI accepts message literals in `--query`. See [the object-language guide](objects-v0.8.md) for the syntax and current limits.
 
 ## Test a built distribution
 

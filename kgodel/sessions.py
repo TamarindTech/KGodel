@@ -20,7 +20,7 @@ from .runtime import Agent, RouteWorld, format_trace
 
 
 FORMAT = "kgodel-session"
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 MAX_BYTES = 32 * 1024 * 1024
 
 
@@ -60,6 +60,23 @@ def _query_source(query):
 def program_source(program):
     """Render executable syntax; reparsing also validates API-created programs."""
     lines = [f"agent {program.name} {{"]
+    from .model import render_term
+    for definition in program.classes:
+        parent = f" extends {definition.parent}" if definition.parent else ""
+        lines.append(f"class {definition.name}{parent} {{")
+        lines += [f"slot {slot}." for slot in definition.slots]
+        for method in definition.methods:
+            signature = method.selector if not method.parameters else " ".join(
+                f"{part}: {parameter}" for part, parameter in zip(method.selector.split(":"), method.parameters))
+            lines.append(f"method {'not ' if method.negative else ''}{signature} {{")
+            lines += [("not " if literal.negative else "") + literal.atom.render(in_method=True) + "."
+                      for literal in method.body]
+            lines.append("}")
+        lines.append("}")
+    for instance in program.objects:
+        lines.append(f"object {instance.name} : {instance.class_name} {{")
+        lines += [f"{name} = {render_term(value)}." for name, value in instance.slots]
+        lines.append("}")
     lines += [f"belief {belief}." for belief in program.beliefs]
     lines += [f"rule {rule.head} :- {', '.join(map(str, rule.body))}." for rule in program.rules]
     lines += [f"goal {goal}." for goal in program.goals]
@@ -213,10 +230,12 @@ def _validate_history(agent):
 def _restore(data):
     _fields(data, "format schema_version kgodel_version program world beliefs attempts events decisions intention intention_events next_intention_id last_outcome")
     _require(data["format"] == FORMAT, "not a KGodel session checkpoint")
-    _require(type(data["schema_version"]) is int and data["schema_version"] == SCHEMA_VERSION,
+    _require(type(data["schema_version"]) is int and data["schema_version"] in (1, SCHEMA_VERSION),
              "unsupported session schema version")
     _string(data["kgodel_version"])
     program = parse(_string(data["program"]))
+    _require(data["schema_version"] >= 2 or not (program.classes or program.objects),
+             "object programs require session schema 2")
     world_data = data["world"]
     _fields(world_data, "position edges blocked nodes action_calls observation_calls")
     nodes = world_data["nodes"]

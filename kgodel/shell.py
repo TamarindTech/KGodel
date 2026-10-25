@@ -8,6 +8,7 @@ from pathlib import Path
 from . import __version__
 from .comparison import compare_agents, format_comparison
 from .model import KGodelError, Literal
+from .objects import ObjectSpace, format_objects
 from .planning import format_decision
 from .querying import format_query_results
 from .runtime import Agent, format_trace
@@ -26,6 +27,7 @@ Commands:
   :run [N]               Perform up to N further operations (default: 50)
   :status                Show current goals and the active intention
   :beliefs               Show accepted base beliefs and their sources
+  :objects               Inspect objects and their inherited methods
   :trace                 Show the most recent cumulative execution record
   :save PATH             Save that execution record as JSON
   :checkpoint PATH       Save the agent and world for a later restart
@@ -70,7 +72,7 @@ class ShellSession:
             return format_query_results(self.agent.query(line, max_contexts=self.max_hypotheses))
         parts = line.split(maxsplit=1)
         command, argument = parts[0], parts[1].strip() if len(parts) > 1 else ""
-        no_arguments = {":help", ":quit", ":preview", ":status", ":beliefs", ":trace"}
+        no_arguments = {":help", ":quit", ":preview", ":status", ":beliefs", ":trace", ":objects"}
         if command in no_arguments and argument:
             raise KGodelError(f"{command} does not take an argument.")
         if command == ":quit":
@@ -84,6 +86,8 @@ class ShellSession:
         if command == ":beliefs":
             return "\n".join(f"{literal} [{proof.source}]" for literal, proof in
                              sorted(self.agent.knowledge.facts.items(), key=lambda item: str(item[0]))) or "No base beliefs."
+        if command == ":objects":
+            return format_objects(ObjectSpace(self.agent.program).describe())
         if command in (":query", ":explain"):
             if not argument:
                 raise KGodelError(f"{command} requires a query expression.")

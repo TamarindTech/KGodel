@@ -10,6 +10,7 @@ from .comparison import compare_agents, format_comparison
 from .demos import DEFAULT_DEMO, DEMOS, load_demo
 from .logic import Inference, Knowledge
 from .model import KGodelError
+from .objects import ObjectSpace, format_objects
 from .parser import parse, parse_queries
 from .planning import deliberate, format_decision
 from .querying import evaluate_queries, format_query_results
@@ -64,6 +65,8 @@ def main(argv: list[str] | None = None) -> int:
                        help="Maximum hypothetical contexts per request or decision (default: 64)")
     check = commands.add_parser("check", help="Parse a program and validate its initial knowledge")
     check.add_argument("program")
+    objects = commands.add_parser("objects", help="Inspect classes, inherited methods, and object configuration")
+    objects.add_argument("program")
     preview = commands.add_parser("deliberate", help="Preview plan selection without loading a world")
     preview.add_argument("program")
     preview.add_argument("--max-hypotheses", type=int, default=64)
@@ -122,6 +125,9 @@ def main(argv: list[str] | None = None) -> int:
             return run_shell(agent, max_hypotheses=args.max_hypotheses)
         program_path = Path(args.program)
         program = parse(program_path.read_text(encoding="utf-8-sig"))
+        if args.command == "objects":
+            print(format_objects(ObjectSpace(program).describe()))
+            return 0
         if args.command in ("run", "shell"):
             world_path = Path(args.world) if args.world else program_path.with_suffix(".world.json")
             world = RouteWorld.from_json(world_path.read_text(encoding="utf-8-sig"))
@@ -139,12 +145,15 @@ def main(argv: list[str] | None = None) -> int:
             return {"selected": 0, "achieved": 0, "stuck": 1, "reasoning_error": 2}[report["status"]]
 
         if args.command == "check":
-            Inference(Knowledge(program.beliefs), program.rules)
+            Inference(Knowledge(program.beliefs), program.effective_rules)
             print(f"Valid: agent {program.name}; {len(program.beliefs)} beliefs, "
-                  f"{len(program.rules)} rules, {len(program.goals)} goals, {len(program.plans)} plans.")
+                  f"{len(program.rules)} rules, {len(program.goals)} goals, {len(program.plans)} plans; "
+                  f"{len(program.classes)} classes, {len(program.objects)} objects.")
             return 0
         source = Path(args.file).read_text(encoding="utf-8-sig") if args.file else args.query
-        report = evaluate_queries(Knowledge(program.beliefs), program.rules, parse_queries(source))
+        queries = parse_queries(source)
+        ObjectSpace(program).validate_queries(queries)
+        report = evaluate_queries(Knowledge(program.beliefs), program.effective_rules, queries)
         print(format_query_results(report, explain=args.command == "explain"))
         if args.result_json:
             save(args.result_json, json.dumps(report, indent=2))

@@ -2,7 +2,7 @@
   <img src="docs/assets/kgodel-logo-transparent.svg" alt="KGödel — Agentic Logic Programming" width="640">
 </p>
 
-# KGodel 0.7
+# KGodel 0.8
 
 **An experimental logic language for agents that can revise their beliefs and explain their decisions.**
 
@@ -10,7 +10,7 @@ New to KGodel? Read the [introduction for developers and non-developers](docs/in
 
 KGodel combines a small Prolog-inspired syntax with explicit goals, guarded plans, observations, and actions. This working prototype explores the reasoning cycle in a finite simulated world.
 
-KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. **Multi-step intentions** let agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails. Saved sessions preserve progress across restarts. Version 0.7 adds comparisons of saved or live states, including belief revisions, changed conclusions, and the evidence behind them.
+KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. **Multi-step intentions** let agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails. Saved sessions preserve progress across restarts, and comparisons expose changed beliefs and proofs. Version 0.8 adds **Smalltalk-inspired logical objects** with classes, instance variables, inheritance, overriding, and message sending.
 
 The first experiment starts with an outdated belief that a bridge is clear. The agent tries the bridge, discovers the blockage, retracts its old belief, checks a forest route, and reaches its destination. Its decision record preserves the evidence used before each action and the observations returned afterward.
 
@@ -32,6 +32,7 @@ python -m kgodel demo --list
 python -m kgodel demo blocked-route
 python -m kgodel demo hypothesis-planning
 python -m kgodel demo multistep-route
+python -m kgodel demo object-routes
 ```
 
 Demos include their programs and simulated worlds, so they need no relative file paths. You can still run directly from the source folder without installing:
@@ -109,6 +110,38 @@ python -m kgodel compare before.json after.json --query "at(goal)" --explain
 The report shows movement from the forest to the goal, newly accepted evidence, the completed intention, and `at(goal): unknown -> true` with its supporting proof. Comparison performs no simulator operations. In the shell, `:compare before.json` compares a saved baseline with the live agent.
 
 Comparison also helps examine failed assumptions: after the blocked-route demo discovers the blockage, `clear(bridge)` becomes false and `can_move(start, bridge)` becomes unknown because its proof no longer holds. If another proof keeps a conclusion true, the report shows the changed evidence. Add `--result-json comparison.json` to export the report. See [comparison semantics and examples](docs/comparison-v0.7.md).
+
+## Smalltalk-style objects and messages
+
+Objects package reusable reasoning policies. A method answers a logical message using current evidence:
+
+```text
+class Location {
+    slot place.
+    method clear { clear(@place). }
+    method not clear { not clear(@place). }
+}
+object forest : Location { place = forest. }
+```
+
+These declarations belong inside an `agent { ... }` block. Ask `[forest clear]` to obtain true, false, or unknown with a proof. Keyword messages accept arguments, for example `[cautious candidateFrom: start to: forest]`. Receiver and argument variables can enumerate supported answers.
+
+Try the bundled object experiment:
+
+```powershell
+python -m kgodel shell --demo object-routes
+```
+
+```text
+:objects
+[Receiver candidateFrom: start to: Place].
+suppose(clear(bridge)) { prove([relaxed mayMoveFrom: start to: bridge]). prove([cautious mayMoveFrom: start to: bridge]). }
+:run
+```
+
+The relaxed policy considers the bridge; the cautious subclass requires an approved destination. An inherited method sends to `self`, so its lookup uses the concrete receiver's overridden policy. The agent reaches the goal through the forest in four operations. Messages work in ordinary rules, goals, guards, step requirements, and hypothetical queries, and their proof sources identify the defining class, selector, and receiver.
+
+This is a Smalltalk-inspired extension to KGodel's Python interpreter. Its instance variables are read-only configuration and its methods are pure logical clauses. Object creation is declarative; mutable methods, arbitrary return objects, `super`, blocks, cascades, and a Smalltalk VM are outside this first object layer. See [object syntax, dispatch, and API semantics](docs/objects-v0.8.md).
 
 ## The language
 
@@ -272,7 +305,7 @@ Observations from the local simulator are trusted. They replace the directly opp
 
 A goal is satisfied when it is supported by the current knowledge. That does not make every supplied initial belief objectively true. In the example, the final goal's proof comes from the simulator's successful movement observation.
 
-Implemented: one agent, ground goals, function-free rules, explicit negation, unknown guards, local simulation, belief revision, proof records, bounded execution, nested hypothetical contexts, conditional plan applicability, explicit priorities, pure decision previews, multi-step intentions with current-evidence requirements, saved sessions, state and proof comparisons, bundled demos, and an interactive shell.
+Implemented: one agent, ground goals, function-free rules, explicit negation, unknown guards, local simulation, belief revision, proof records, bounded execution, nested hypothetical contexts, conditional plan applicability, explicit priorities, pure decision previews, multi-step intentions with current-evidence requirements, saved sessions, state and proof comparisons, logical objects with single inheritance and message dispatch, bundled demos, and an interactive shell.
 
 Future experiments: competing evidence, counterfactual belief replacement, computed utility and information gain, and optional LLM-generated proposals. Hypothetical checks qualify declared plans; they do not synthesize new plans, predict actual tool outcomes, or grant facts to the accepted belief state. There is no general external-tool interface or real-world action execution.
 

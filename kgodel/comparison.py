@@ -51,7 +51,7 @@ def _belief_changes(before, after):
 
 def _reason(agent, max_facts, max_work):
     try:
-        logic = Inference(agent.knowledge.copy(), agent.program.rules, max_facts=max_facts, max_work=max_work)
+        logic = Inference(agent.knowledge.copy(), agent.program.effective_rules, max_facts=max_facts, max_work=max_work)
         return logic, {"status": "ok", "facts": len(logic.proofs), "work": logic.work, "error": None}
     except KGodelError as error:
         return None, {"status": "error", "facts": None, "work": None, "error": str(error)}
@@ -102,7 +102,7 @@ def compare_agents(before: Agent, after: Agent, *, queries=(), max_facts=10000, 
     left, left_reasoning = _reason(before, max_facts, max_work)
     right, right_reasoning = _reason(after, max_facts, max_work)
     complete = left is not None and right is not None
-    sections = [field for field in ("name", "beliefs", "rules", "goals", "plans")
+    sections = [field for field in ("name", "beliefs", "rules", "goals", "plans", "classes", "objects")
                 if getattr(before.program, field) != getattr(after.program, field)]
     goals = []
     for goal in sorted(set(before.program.goals) | set(after.program.goals), key=str):

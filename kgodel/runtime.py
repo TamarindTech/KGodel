@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 import json
+import re
 
 from . import __version__
 from .logic import Inference, Knowledge
-from .model import Atom, KGodelError, Literal, Program, Proof
+from .model import Atom, KGodelError, Literal, Program, Proof, ProveQuery
+from .objects import ObjectSpace
 from .parser import parse_queries
 from .planning import Intention, attempt_key, choose_next, deliberate, format_decision
 from .querying import evaluate_queries
@@ -54,11 +56,12 @@ class RouteWorld:
         for plan in program.plans:
             for step in plan.steps:
                 expected = ("clear", 1) if step.operation == "observe" else ("move", 2)
-                if step.operation not in ("observe", "act") or (step.argument.name, len(step.argument.args)) != expected:
+                if (step.operation not in ("observe", "act") or step.argument.receiver is not None
+                        or (step.argument.name, len(step.argument.args)) != expected):
                     raise KGodelError(f"Route simulator does not support {step.operation} {step.argument}.")
 
     def observe(self, atom: Atom) -> Outcome:
-        if atom.name != "clear" or len(atom.args) != 1 or atom.variables:
+        if atom.receiver is not None or atom.name != "clear" or len(atom.args) != 1 or atom.variables:
             raise KGodelError(f"Unsupported observation: {atom}.")
         self.observation_calls += 1
         target = atom.args[0]
@@ -68,7 +71,7 @@ class RouteWorld:
         return Outcome(True, f"Observed {literal}.", (literal,))
 
     def act(self, atom: Atom) -> Outcome:
-        if atom.name != "move" or len(atom.args) != 2 or atom.variables:
+        if atom.receiver is not None or atom.name != "move" or len(atom.args) != 2 or atom.variables:
             raise KGodelError(f"Unsupported action: {atom}.")
         self.action_calls += 1
         origin, target = atom.args
@@ -107,11 +110,24 @@ class Agent:
 
     def inference(self) -> Inference:
         # Recompute from current base beliefs: old conclusions cannot survive revision.
-        return Inference(self.knowledge, self.program.rules)
+        return Inference(self.knowledge, self.program.effective_rules)
 
     def query(self, source: str, **limits) -> dict:
         """Explore current knowledge without advancing this agent or its environment."""
-        return evaluate_queries(self.knowledge, self.program.rules, parse_queries(source), **limits)
+        queries = parse_queries(source)
+        ObjectSpace(self.program).validate_queries(queries)
+        return evaluate_queries(self.knowledge, self.program.effective_rules, queries, **limits)
+
+    def send(self, receiver: str, selector: str, *arguments: str, **limits) -> dict:
+        """Send a ground logical message; return truth and proof without effects."""
+        if not isinstance(receiver, str) or not isinstance(selector, str) or any(not isinstance(a, str) for a in arguments):
+            raise KGodelError("Message receiver, selector, and arguments must be strings.")
+        if (not re.fullmatch(r"[a-z][A-Za-z0-9_]*|(?:[a-z][A-Za-z0-9_]*:)+", selector)
+                or selector.count(":") != len(arguments)):
+            raise KGodelError("Message selector must match its number of arguments.")
+        atom = Atom(selector, tuple(arguments), receiver)
+        ObjectSpace(self.program).validate_atom(atom)
+        return evaluate_queries(self.knowledge, self.program.effective_rules, (ProveQuery(Literal(atom)),), **limits)
 
     def deliberate(self, *, max_hypotheses: int = 64) -> dict:
         """Preview the next plan without recording an attempt or performing it."""

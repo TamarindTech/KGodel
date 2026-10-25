@@ -18,13 +18,27 @@ class Var:
     name: str
 
 
-Term = str | Var
+@dataclass(frozen=True)
+class SlotRef:
+    name: str
+
+
+@dataclass(frozen=True)
+class SelfRef:
+    pass
+
+
+Term = str | Var | SlotRef | SelfRef
 Bindings = dict[str, str]
 
 
 def render_term(term: Term) -> str:
     if isinstance(term, Var):
         return term.name
+    if isinstance(term, SlotRef):
+        return "@" + term.name
+    if isinstance(term, SelfRef):
+        return "self"
     return term if re.fullmatch(r"[a-z][A-Za-z0-9_]*", term) else json.dumps(term)
 
 
@@ -32,17 +46,34 @@ def render_term(term: Term) -> str:
 class Atom:
     name: str
     args: tuple[Term, ...] = ()
+    receiver: Term | None = None
 
     def __str__(self) -> str:
-        return self.name + ("(" + ", ".join(map(render_term, self.args)) + ")" if self.args else "")
+        return self.render()
+
+    def render(self, *, in_method: bool = False) -> str:
+        def term_text(term):
+            # Only method source reserves bare self. Ordinary literals keep
+            # their pre-object spelling, including old checkpoint attempt keys.
+            return json.dumps(term) if in_method and isinstance(term, str) and term == "self" else render_term(term)
+
+        if self.receiver is not None:
+            message = self.name if not self.args else " ".join(
+                f"{part}: {term_text(value)}" for part, value in zip(self.name.split(":"), self.args))
+            return f"[{term_text(self.receiver)} {message}]"
+        return self.name + ("(" + ", ".join(map(term_text, self.args)) + ")" if self.args else "")
 
     @property
     def variables(self) -> set[str]:
-        return {term.name for term in self.args if isinstance(term, Var)}
+        return {term.name for term in (*self.args, self.receiver) if isinstance(term, Var)}
 
     def ground(self, bindings: Bindings) -> Atom:
         try:
-            return Atom(self.name, tuple(bindings[t.name] if isinstance(t, Var) else t for t in self.args))
+            terms = (*self.args, self.receiver)
+            if any(isinstance(term, (SlotRef, SelfRef)) for term in terms):
+                raise KGodelError("Method instance variables must be resolved before inference.")
+            return Atom(self.name, tuple(bindings[t.name] if isinstance(t, Var) else t for t in self.args),
+                        bindings[self.receiver.name] if isinstance(self.receiver, Var) else self.receiver)
         except KeyError as error:
             raise KGodelError(f"Unbound variable {error.args[0]} in {self}.") from error
 
@@ -104,12 +135,42 @@ class Plan:
 
 
 @dataclass(frozen=True)
+class Method:
+    selector: str
+    parameters: tuple[str, ...]
+    body: tuple[Literal, ...]
+    negative: bool = False
+
+
+@dataclass(frozen=True)
+class ClassDefinition:
+    name: str
+    parent: str | None
+    slots: tuple[str, ...]
+    methods: tuple[Method, ...]
+
+
+@dataclass(frozen=True)
+class ObjectDefinition:
+    name: str
+    class_name: str
+    slots: tuple[tuple[str, str], ...]
+
+
+@dataclass(frozen=True)
 class Program:
     name: str
     beliefs: tuple[Literal, ...]
     rules: tuple[Rule, ...]
     goals: tuple[Atom, ...]
     plans: tuple[Plan, ...]
+    classes: tuple[ClassDefinition, ...] = ()
+    objects: tuple[ObjectDefinition, ...] = ()
+
+    @property
+    def effective_rules(self) -> tuple[Rule, ...]:
+        from .objects import ObjectSpace
+        return self.rules + ObjectSpace(self).compile_rules() if self.classes or self.objects else self.rules
 
 
 @dataclass(frozen=True)
@@ -144,10 +205,13 @@ def ground_query(query: Query, bindings: Bindings) -> Query:
 
 def match(pattern: Atom, value: Atom, bindings: Bindings | None = None) -> Bindings | None:
     """Match a possibly variable pattern against a ground atom."""
-    if pattern.name != value.name or len(pattern.args) != len(value.args):
+    if (pattern.name != value.name or len(pattern.args) != len(value.args)
+            or (pattern.receiver is None) != (value.receiver is None)):
         return None
     result = dict(bindings or {})
-    for expected, actual in zip(pattern.args, value.args):
+    expected_terms = pattern.args + ((pattern.receiver,) if pattern.receiver is not None else ())
+    actual_terms = value.args + ((value.receiver,) if value.receiver is not None else ())
+    for expected, actual in zip(expected_terms, actual_terms):
         if isinstance(actual, Var):
             raise KGodelError("Matching requires a ground value.")
         if isinstance(expected, Var):
