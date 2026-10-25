@@ -27,10 +27,10 @@ def verify(wheel: Path):
         python = scripts / ("python.exe" if os.name == "nt" else "python")
         console = scripts / ("kgodel.exe" if os.name == "nt" else "kgodel")
 
-        def run(*arguments, input=None):
+        def run(*arguments, input=None, expected_code=0):
             result = subprocess.run(list(map(str, arguments)), cwd=outside, env=environment,
                                     input=input, capture_output=True, text=True, timeout=120)
-            if result.returncode != 0:
+            if result.returncode != expected_code:
                 raise RuntimeError(f"Command failed ({result.returncode}): {arguments}\n{result.stdout}\n{result.stderr}")
             return result.stdout
 
@@ -63,7 +63,47 @@ def verify(wheel: Path):
         assert "Result: achieved" in transcript, transcript
         result = json.loads((outside / "session trace.json").read_text(encoding="utf-8"))
         assert result["status"] == "achieved" and result["steps"] == 5, result
-        print(f"{module_version}: module, console command, bundled data, and interactive session verified outside checkout")
+        checkpoint = outside / "saved session.json"
+        run(console, "demo", "--max-steps", "3", "--checkpoint", checkpoint, expected_code=1)
+        paused = checkpoint.read_bytes()
+        resumed_trace = outside / "resumed.json"
+        finished = outside / "finished session.json"
+        run(python, "-I", "-m", "kgodel", "resume", checkpoint, "--trace-json", resumed_trace,
+            "--checkpoint", finished)
+        resumed = json.loads(resumed_trace.read_text(encoding="utf-8"))
+        uninterrupted = json.loads((outside / "multistep-route.json").read_text(encoding="utf-8"))
+        assert resumed == uninterrupted, resumed
+        assert checkpoint.read_bytes() == paused
+        transcript = run(console, "shell", "--resume", checkpoint,
+                         input=":trace\n:explain at(forest)\n:run\n:quit\n")
+        assert "simulator:step_3" in transcript and "Result: achieved" in transcript, transcript
+        comparison = outside / "comparison.json"
+        rendered = run(console, "compare", checkpoint, finished, "--query", "at(goal)",
+                       "--explain", "--result-json", comparison)
+        assert "at(goal): unknown -> true" in rendered, rendered
+        report = json.loads(comparison.read_text(encoding="utf-8"))
+        assert report["status"] == "ok" and report["changed"], report
+        assert report["history"]["operations"]["common_prefix"] == 3, report
+        assert checkpoint.read_bytes() == paused
+        partial = run(python, "-I", "-m", "kgodel", "compare", checkpoint, finished,
+                      "--max-work", "0", expected_code=1)
+        assert "Comparison: partial" in partial, partial
+        transcript = run(console, "shell", "--resume", checkpoint,
+                         input=f':run\n:compare "{checkpoint}"\n:quit\n')
+        assert "position: forest -> goal" in transcript, transcript
+        object_checkpoint = outside / "object session.json"
+        transcript = run(console, "shell", "--demo", "object-routes", input="\n".join([
+            ":objects", "[cautious candidateFrom: start to: forest].", ":step",
+            ':checkpoint "object session.json"', ":quit", ""]))
+        assert "Class ApprovedPolicy extends RoutePolicy" in transcript, transcript
+        assert "true: [cautious candidateFrom: start to: forest]" in transcript, transcript
+        object_finished = outside / "object finished.json"
+        run(console, "resume", object_checkpoint, "--checkpoint", object_finished)
+        rendered = run(console, "compare", object_checkpoint, object_finished,
+                       "--query", "[cautious finished]", "--explain")
+        assert "[cautious finished]: unknown -> true" in rendered, rendered
+        assert "method:RoutePolicy>>finished@cautious" in rendered, rendered
+        print(f"{module_version}: installation, demos, objects, shell, session restart, and comparisons verified outside checkout")
 
 
 if __name__ == "__main__":

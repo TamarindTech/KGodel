@@ -5,11 +5,12 @@ from __future__ import annotations
 import json
 import re
 
-from .model import (Atom, KGodelError, Literal, Plan, PlanStep, Program, ProveQuery, Query, Rule,
-                    SupposeQuery, Unknown, Var, query_variables)
+from .model import (Atom, ClassDefinition, KGodelError, Literal, Method, ObjectDefinition, Plan,
+                    PlanStep, Program, ProveQuery, Query, Rule, SelfRef, SlotRef,
+                    SupposeQuery, Term, Unknown, Var, query_variables)
 
 
-TOKEN = re.compile(r'\s+|%[^\n]*|//[^\n]*|:-|[A-Za-z_][A-Za-z0-9_]*|[0-9]+|"(?:\\.|[^"\\])*"|[{}(),.]')
+TOKEN = re.compile(r'\s+|%[^\n]*|//[^\n]*|:-|[A-Za-z_][A-Za-z0-9_]*|[0-9]+|"(?:\\.|[^"\\])*"|[{}(),.\[\]:=@]')
 
 
 class Parser:
@@ -26,6 +27,7 @@ class Parser:
                 self.tokens.append((value, position))
             position = token.end()
         self.index = 0
+        self.in_method = False
 
     def fail(self, message: str, position: int | None = None):
         if position is None:
@@ -57,7 +59,13 @@ class Parser:
             self.fail("Expected a lowercase name")
         return self.take()
 
-    def term(self) -> str | Var:
+    def term(self) -> Term:
+        if self.accept("@"):
+            if not self.in_method:
+                self.fail("Instance variable access is only allowed inside methods")
+            return SlotRef(self.identifier())
+        if self.in_method and self.accept("self"):
+            return SelfRef()
         value = self.peek()
         if value.startswith('"'):
             self.take()
@@ -70,6 +78,19 @@ class Parser:
         return self.identifier()
 
     def atom(self) -> Atom:
+        if self.accept("["):
+            receiver = self.term()
+            first = self.identifier()
+            selector, arguments = first, []
+            if self.accept(":"):
+                selector += ":"
+                arguments.append(self.term())
+                while self.peek() != "]":
+                    selector += self.identifier() + ":"
+                    self.take(":")
+                    arguments.append(self.term())
+            self.take("]")
+            return Atom(selector, tuple(arguments), receiver)
         name = self.identifier()
         arguments = []
         if self.accept("("):
@@ -79,6 +100,74 @@ class Parser:
                     arguments.append(self.term())
             self.take(")")
         return Atom(name, tuple(arguments))
+
+    def class_name(self) -> str:
+        if not re.fullmatch(r"[A-Z][A-Za-z0-9_]*", self.peek()):
+            self.fail("Class names must start with an uppercase letter")
+        return self.take()
+
+    def class_definition(self) -> ClassDefinition:
+        name = self.class_name()
+        parent = self.class_name() if self.accept("extends") else None
+        self.take("{")
+        slots, methods = [], []
+        while self.peek() != "}":
+            kind = self.take()
+            if kind == "slot":
+                slots.append(self.identifier())
+                self.take(".")
+                continue
+            if kind != "method":
+                self.fail("Expected slot or method in a class")
+            negative = self.accept("not")
+            selector = self.identifier()
+            parameters = []
+            if self.accept(":"):
+                selector += ":"
+                while True:
+                    parameter = self.term()
+                    if not isinstance(parameter, Var):
+                        self.fail("Method parameters must be variables")
+                    parameters.append(parameter.name)
+                    if self.peek() == "{":
+                        break
+                    selector += self.identifier() + ":"
+                    self.take(":")
+            self.take("{")
+            self.in_method = True
+            body = []
+            while self.peek() != "}":
+                body.append(self.literal())
+                self.take(".")
+            self.in_method = False
+            self.take("}")
+            if not body:
+                self.fail("A method requires at least one logical condition")
+            if len(parameters) != len(set(parameters)):
+                self.fail("Method parameter names must be unique")
+            bound = set().union(*(literal.atom.variables for literal in body))
+            if not set(parameters) <= bound:
+                self.fail("Every method parameter must occur in its body")
+            methods.append(Method(selector, tuple(parameters), tuple(body), negative))
+        self.take("}")
+        return ClassDefinition(name, parent, tuple(slots), tuple(methods))
+
+    def object_definition(self) -> ObjectDefinition:
+        name = self.identifier()
+        self.take(":")
+        class_name = self.class_name()
+        self.take("{")
+        slots = []
+        while self.peek() != "}":
+            slot = self.identifier()
+            self.take("=")
+            value = self.term()
+            if not isinstance(value, str):
+                self.fail("Instance variables must be initialized with constants")
+            slots.append((slot, value))
+            self.take(".")
+        self.take("}")
+        return ObjectDefinition(name, class_name, tuple(slots))
 
     def literal(self) -> Literal:
         negative = self.accept("not")
@@ -171,10 +260,14 @@ class Parser:
         self.take("agent")
         name = self.identifier()
         self.take("{")
-        beliefs, rules, goals, plans = [], [], [], []
+        beliefs, rules, goals, plans, classes, objects = [], [], [], [], [], []
         while self.peek() != "}":
             kind = self.take()
-            if kind == "belief":
+            if kind == "class":
+                classes.append(self.class_definition())
+            elif kind == "object":
+                objects.append(self.object_definition())
+            elif kind == "belief":
                 belief = self.literal()
                 if belief.atom.variables:
                     self.fail("Beliefs must be ground: variables are not allowed")
@@ -203,11 +296,14 @@ class Parser:
                     self.fail(f"Duplicate plan name {plan.name}")
                 plans.append(plan)
             else:
-                self.fail(f"Expected belief, rule, goal, or plan; found {kind!r}")
+                self.fail(f"Expected belief, rule, goal, plan, class, or object; found {kind!r}")
         self.take("}")
         if self.peek() != "<end>":
             self.fail("Only one agent is supported in this version")
-        return Program(name, tuple(beliefs), tuple(rules), tuple(goals), tuple(plans))
+        program = Program(name, tuple(beliefs), tuple(rules), tuple(goals), tuple(plans), tuple(classes), tuple(objects))
+        from .objects import ObjectSpace
+        ObjectSpace(program).validate_program()
+        return program
 
     def hypothesis(self, *, depth: int = 0, allow_variables: bool = False) -> SupposeQuery:
         if depth >= 16:

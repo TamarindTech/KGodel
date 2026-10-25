@@ -11,6 +11,7 @@ DEMOS = {
     "blocked-route": ("blocked_route", "Revise an outdated belief after a failed movement."),
     "hypothesis-planning": ("hypothesis_planning", "Use hypothetical checks to choose useful observations."),
     "multistep-route": ("multistep_route", "Commit to a sequence and reconsider a blocked route."),
+    "object-routes": ("object_routes", "Send logical messages to inherited route-policy objects."),
 }
 DEFAULT_DEMO = "multistep-route"
 

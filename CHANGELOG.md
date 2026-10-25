@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.8.0
+
+- Added Smalltalk-inspired class and object declarations, read-only instance variables, single inheritance, selector overriding, and unary/keyword messages.
+- Added pure logical methods, including explicit negative clauses, recursive message reasoning, variable receivers, object composition, and inherited `self` dispatch to subclass overrides.
+- Integrated message literals with rules, goals, plan guards, step requirements, hypothetical queries, and comparisons; method proofs identify the defining class, receiver, selector, and clause.
+- Added `Agent.send`, the `objects PROGRAM` command, and shell `:objects` inspection.
+- Added the bundled `object-routes` experiment demonstrating relaxed and cautious route policies.
+- Added checkpoint schema 2 for object programs while continuing to read schema-1 sessions.
+- Added 27 object tests and installed-package checks for object queries, inspection, restart, and proof comparison.
+
+## 0.7.0
+
+- Added pure comparisons of saved and live agent states, including belief additions, removals, sign reversals, changed evidence, derived conclusions, goals, active intentions, and simulator state.
+- Added `compare BEFORE AFTER`, repeatable ground `--query` arguments, `--explain`, JSON export, and the shell command `:compare PATH`.
+- Compared full proof trees so alternative support remains visible when a conclusion stays true.
+- Compared history prefixes and both differing tails without assuming the inputs share an execution lineage.
+- Added independent inference budgets and partial reports that retain inspectable state while marking failed reasoning unresolved.
+- Kept input checkpoints read-only, including protection against output aliases, and retained compatibility with schema-1 sessions from 0.6.
+- Removed hidden inference during checkpoint loading so comparison budgets govern the actual reasoning work.
+- Added 21 comparison tests and installed-package checks for CLI, shell, JSON export, and incomplete reasoning.
+
+## 0.6.0
+
+- Added self-contained JSON session checkpoints for the built-in route simulator, preserving program semantics, current beliefs and proof sources, world state, attempts, histories, and active intentions.
+- Added `--checkpoint PATH` to `run` and `demo`, a `resume SESSION` command, `shell --resume SESSION`, and the shell's `:checkpoint PATH` command.
+- Restored unfinished intentions without replaying prior operations; trace exports remain separate from resumable checkpoints.
+- Added version and structural validation, bounded file loading, and atomic replacement that preserves an existing checkpoint when writing fails.
+- Added a pure `Agent.execution_record()` accessor so reopened shells can inspect earlier traces immediately.
+- Added 21 session tests and cross-process restart checks to the installed-wheel verifier.
+- Updated the README, introduction, and usage guide; added a session format and semantics reference.
+
 ## 0.5.0
 
 - Added standard Python packaging, wheel support, editable installation, and a `kgodel` console command.

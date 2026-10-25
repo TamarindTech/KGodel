@@ -1,4 +1,4 @@
-"""An interactive, in-memory session for examining a simulated agent."""
+"""An interactive session for examining a simulated agent."""
 
 from __future__ import annotations
 
@@ -6,10 +6,13 @@ import json
 from pathlib import Path
 
 from . import __version__
+from .comparison import compare_agents, format_comparison
 from .model import KGodelError, Literal
+from .objects import ObjectSpace, format_objects
 from .planning import format_decision
 from .querying import format_query_results
 from .runtime import Agent, format_trace
+from .sessions import load_session, save_session
 
 
 HELP = """Queries inspect current beliefs without executing operations:
@@ -24,12 +27,15 @@ Commands:
   :run [N]               Perform up to N further operations (default: 50)
   :status                Show current goals and the active intention
   :beliefs               Show accepted base beliefs and their sources
+  :objects               Inspect objects and their inherited methods
   :trace                 Show the most recent cumulative execution record
   :save PATH             Save that execution record as JSON
+  :checkpoint PATH       Save the agent and world for a later restart
+  :compare PATH          Compare a saved baseline with this live agent
   :help                  Show this help
   :quit                  End this session
 
-Enter each request on one line. Session state is kept only while the shell is open."""
+Enter each request on one line. Use :checkpoint before exiting to save progress."""
 
 
 class ShellSession:
@@ -38,7 +44,7 @@ class ShellSession:
             raise KGodelError("The hypothesis budget must be nonnegative.")
         self.agent = agent
         self.max_hypotheses = max_hypotheses
-        self.last_result: dict | None = None
+        self.last_result = agent.execution_record()
 
     def status(self) -> str:
         logic = self.agent.inference()
@@ -66,7 +72,7 @@ class ShellSession:
             return format_query_results(self.agent.query(line, max_contexts=self.max_hypotheses))
         parts = line.split(maxsplit=1)
         command, argument = parts[0], parts[1].strip() if len(parts) > 1 else ""
-        no_arguments = {":help", ":quit", ":preview", ":status", ":beliefs", ":trace"}
+        no_arguments = {":help", ":quit", ":preview", ":status", ":beliefs", ":trace", ":objects"}
         if command in no_arguments and argument:
             raise KGodelError(f"{command} does not take an argument.")
         if command == ":quit":
@@ -80,6 +86,8 @@ class ShellSession:
         if command == ":beliefs":
             return "\n".join(f"{literal} [{proof.source}]" for literal, proof in
                              sorted(self.agent.knowledge.facts.items(), key=lambda item: str(item[0]))) or "No base beliefs."
+        if command == ":objects":
+            return format_objects(ObjectSpace(self.agent.program).describe())
         if command in (":query", ":explain"):
             if not argument:
                 raise KGodelError(f"{command} requires a query expression.")
@@ -106,6 +114,15 @@ class ShellSession:
                 active = result["active_intention"]
                 lines.append(f"Next: {active['plan']} step {active['next_step']} of {active['total_steps']}.")
             return "\n".join(lines)
+        if command in (":checkpoint", ":compare"):
+            if len(argument) >= 2 and argument[0] == argument[-1] and argument[0] in "\"'":
+                argument = argument[1:-1]
+            if not argument:
+                raise KGodelError(f"{command} requires a file path.")
+            if command == ":compare":
+                return format_comparison(compare_agents(load_session(argument), self.agent))
+            save_session(self.agent, argument)
+            return f"Saved resumable session to {argument}."
         if command in (":trace", ":save"):
             if self.last_result is None:
                 raise KGodelError("No execution record yet. Use :step or :run first.")

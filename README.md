@@ -2,7 +2,7 @@
   <img src="docs/assets/kgodel-logo-transparent.svg" alt="KGödel — Agentic Logic Programming" width="640">
 </p>
 
-# KGodel 0.5
+# KGodel 0.8
 
 **An experimental logic language for agents that can revise their beliefs and explain their decisions.**
 
@@ -10,7 +10,7 @@ New to KGodel? Read the [introduction for developers and non-developers](docs/in
 
 KGodel combines a small Prolog-inspired syntax with explicit goals, guarded plans, observations, and actions. This working prototype explores the reasoning cycle in a finite simulated world.
 
-KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. **Multi-step intentions** let agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails. Version 0.5 adds installation support, bundled demos, and an interactive shell for exploring a live agent.
+KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. **Multi-step intentions** let agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails. Saved sessions preserve progress across restarts, and comparisons expose changed beliefs and proofs. Version 0.8 adds **Smalltalk-inspired logical objects** with classes, instance variables, inheritance, overriding, and message sending.
 
 The first experiment starts with an outdated belief that a bridge is clear. The agent tries the bridge, discovers the blockage, retracts its old belief, checks a forest route, and reaches its destination. Its decision record preserves the evidence used before each action and the observations returned afterward.
 
@@ -32,6 +32,7 @@ python -m kgodel demo --list
 python -m kgodel demo blocked-route
 python -m kgodel demo hypothesis-planning
 python -m kgodel demo multistep-route
+python -m kgodel demo object-routes
 ```
 
 Demos include their programs and simulated worlds, so they need no relative file paths. You can still run directly from the source folder without installing:
@@ -71,13 +72,76 @@ clear(bridge).
 suppose(clear(goal)) { prove(clear(goal)). }
 :status
 :run
-:save session.json
+:save session.trace.json
 :quit
 ```
 
 The first step observes the blocked bridge; the next two operations inspect the forest and move there. Queries use the agent's current beliefs and do not advance it. `:preview` explains the next decision. `:step` and `:run` continue the same agent and its active intention, preserving earlier observations. `:help` lists all commands, including `:beliefs` and `:trace`.
 
-To use your own program, run `python -m kgodel shell path/to/agent.kg`. Its companion world is loaded by default, or supply `--world PATH`. State is held in memory while the shell is open. `:save` exports a cumulative trace, not a resumable checkpoint.
+To use your own program, run `python -m kgodel shell path/to/agent.kg`. Its companion world is loaded by default, or supply `--world PATH`. `:save` exports a cumulative trace. Use `:checkpoint session.json` to save a resumable session before exiting.
+
+## Save and continue later
+
+```powershell
+python -m kgodel demo --max-steps 3 --checkpoint session.json
+python -m kgodel shell --resume session.json
+```
+
+The first command pauses in the forest, with two operations still to perform, and returns exit code 1 because the goal is unfinished. The second opens that saved agent for inspection: use `:preview`, `:trace`, or `:run`. Previous operations are not repeated.
+
+To continue directly and save the resulting state:
+
+```powershell
+python -m kgodel resume session.json --checkpoint session.json
+```
+
+Checkpoints contain the program, current beliefs and their sources, world, attempt history, execution records, and active intention. The original program and world files are not needed to resume. Saving replaces the specified file atomically; resuming only writes a new checkpoint when `--checkpoint` is supplied. Budgets apply to each new invocation and are not stored. See [saved-session semantics and the Python API](docs/sessions-v0.6.md).
+
+## Understand what changed
+
+Save an agent before it reaches its goal, continue into a second checkpoint, and compare them:
+
+```powershell
+python -m kgodel demo --max-steps 3 --checkpoint before.json
+python -m kgodel resume before.json --checkpoint after.json
+python -m kgodel compare before.json after.json --query "at(goal)" --explain
+```
+
+The report shows movement from the forest to the goal, newly accepted evidence, the completed intention, and `at(goal): unknown -> true` with its supporting proof. Comparison performs no simulator operations. In the shell, `:compare before.json` compares a saved baseline with the live agent.
+
+Comparison also helps examine failed assumptions: after the blocked-route demo discovers the blockage, `clear(bridge)` becomes false and `can_move(start, bridge)` becomes unknown because its proof no longer holds. If another proof keeps a conclusion true, the report shows the changed evidence. Add `--result-json comparison.json` to export the report. See [comparison semantics and examples](docs/comparison-v0.7.md).
+
+## Smalltalk-style objects and messages
+
+Objects package reusable reasoning policies. A method answers a logical message using current evidence:
+
+```text
+class Location {
+    slot place.
+    method clear { clear(@place). }
+    method not clear { not clear(@place). }
+}
+object forest : Location { place = forest. }
+```
+
+These declarations belong inside an `agent { ... }` block. Ask `[forest clear]` to obtain true, false, or unknown with a proof. Keyword messages accept arguments, for example `[cautious candidateFrom: start to: forest]`. Receiver and argument variables can enumerate supported answers.
+
+Try the bundled object experiment:
+
+```powershell
+python -m kgodel shell --demo object-routes
+```
+
+```text
+:objects
+[Receiver candidateFrom: start to: Place].
+suppose(clear(bridge)) { prove([relaxed mayMoveFrom: start to: bridge]). prove([cautious mayMoveFrom: start to: bridge]). }
+:run
+```
+
+The relaxed policy considers the bridge; the cautious subclass requires an approved destination. An inherited method sends to `self`, so its lookup uses the concrete receiver's overridden policy. The agent reaches the goal through the forest in four operations. Messages work in ordinary rules, goals, guards, step requirements, and hypothetical queries, and their proof sources identify the defining class, selector, and receiver.
+
+This is a Smalltalk-inspired extension to KGodel's Python interpreter. Its instance variables are read-only configuration and its methods are pure logical clauses. Object creation is declarative; mutable methods, arbitrary return objects, `super`, blocks, cascades, and a Smalltalk VM are outside this first object layer. See [object syntax, dispatch, and API semantics](docs/objects-v0.8.md).
 
 ## The language
 
@@ -219,7 +283,7 @@ python -m kgodel run examples/multistep_route.kg
 
 The agent abandons the bridge intention after inspection, then follows the forest intention through inspection, movement, another inspection, and arrival. It performs three observations and two successful movements. The [saved trace](output/multistep-route.trace.txt) explains the canceled intention and each continued step.
 
-An active intention keeps its fixed bindings and is not preempted by newly applicable plans. It ends on completion, failure, or satisfaction of its goal. Through Python, calling `agent.run(max_steps=...)` again on the same agent resumes at its next unfinished step; `agent.deliberate()` previews that step or its replacement. This state is held in memory, so restarting the CLI starts a fresh run. See the [0.4 specification](docs/language-v0.4.md) for a complete pause/resume example.
+An active intention keeps its fixed bindings and is not preempted by newly applicable plans. It ends on completion, failure, or satisfaction of its goal. Through Python, calling `agent.run(max_steps=...)` again on the same agent resumes at its next unfinished step; `agent.deliberate()` previews that step or its replacement. Checkpoints preserve this state across process restarts. See the [0.4 specification](docs/language-v0.4.md) for intention semantics and the [0.6 session guide](docs/sessions-v0.6.md) for disk persistence.
 
 ## Try a different world
 
@@ -241,9 +305,9 @@ Observations from the local simulator are trusted. They replace the directly opp
 
 A goal is satisfied when it is supported by the current knowledge. That does not make every supplied initial belief objectively true. In the example, the final goal's proof comes from the simulator's successful movement observation.
 
-Implemented: one agent, ground goals, function-free rules, explicit negation, unknown guards, local simulation, belief revision, proof records, bounded execution, nested hypothetical contexts, conditional plan applicability, explicit priorities, pure decision previews, multi-step intentions with current-evidence requirements and in-memory resumption, bundled demos, and an interactive shell.
+Implemented: one agent, ground goals, function-free rules, explicit negation, unknown guards, local simulation, belief revision, proof records, bounded execution, nested hypothetical contexts, conditional plan applicability, explicit priorities, pure decision previews, multi-step intentions with current-evidence requirements, saved sessions, state and proof comparisons, logical objects with single inheritance and message dispatch, bundled demos, and an interactive shell.
 
-Future experiments: competing evidence, counterfactual belief replacement, computed utility and information gain, durable checkpoints, and optional LLM-generated proposals. Hypothetical checks qualify declared plans; they do not synthesize new plans, predict actual tool outcomes, or grant facts to the accepted belief state. There is no general external-tool interface or real-world action execution.
+Future experiments: competing evidence, counterfactual belief replacement, computed utility and information gain, and optional LLM-generated proposals. Hypothetical checks qualify declared plans; they do not synthesize new plans, predict actual tool outcomes, or grant facts to the accepted belief state. There is no general external-tool interface or real-world action execution.
 
 See [the 0.4 intention specification](docs/language-v0.4.md), [the 0.3 planning specification](docs/language-v0.3.md), [the 0.2 hypothesis specification](docs/language-v0.2.md), and [the 0.1 core semantics](docs/language-v0.1.md) for exact behavior. The 0.4 specification supersedes the single-operation limit; 0.3 supersedes the original selection order.
 
@@ -266,7 +330,7 @@ python -m pip wheel . --no-deps --wheel-dir dist
 python tools/verify_install.py dist
 ```
 
-The verifier installs the wheel into a temporary environment and exercises the module command, console command, every bundled demo, and a stepped shell session from an unrelated directory. The `dist` directory must contain exactly one KGodel wheel, or pass a specific wheel path. GitHub Actions runs the unit suite and this installation check on Windows and Linux with Python 3.10 and 3.13.
+The verifier installs the wheel into a temporary environment and exercises the module command, console command, every bundled demo, a stepped shell session, checkpoint resumption in separate processes, and state comparisons from an unrelated directory. Session tests also cover every demo pause boundary, retained proof sources, conflicts, retry suppression, malformed files, and failed writes. Comparison tests cover revised beliefs, withdrawn conclusions, alternative proofs, differing scenarios, bounded reasoning, and input preservation. The `dist` directory must contain exactly one KGodel wheel, or pass a specific wheel path. GitHub Actions runs the unit suite and this installation check on Windows and Linux with Python 3.10 and 3.13.
 
 ## Design references
 
