@@ -1,5 +1,7 @@
 # KGodel 0.9: extend reasoning with `super`
 
+Versioned reference: superclass semantics remain current. The persistence section describes schema 3 as introduced in 0.9; KGodel 0.11 writes schema 4 and reads schemas 1–4. See the [object tutorial](tutorials/04-objects-and-messages.md) and [documentation home](README.md).
+
 Version 0.9 lets an overriding method reuse its parent's reasoning and add conditions. Methods remain pure logical clauses, and instance variables remain read-only.
 
 ## Run the experiment
@@ -96,7 +98,7 @@ Comparisons report changes to public conclusions and include superclass premises
 
 ## Persistence and limits
 
-New checkpoints use schema 3. They retain `super` expressions, annotated proofs, and active intentions. Loading resumes without replaying actions. Schema-1 and schema-2 checkpoints still load; schema-2 method receivers named `super` retain their original literal meaning and are quoted when saved again. Older KGodel versions cannot read schema 3.
+Version 0.9 introduced schema 3 to retain `super` expressions, annotated proofs, and active intentions. KGodel 0.11 writes schema 4 and reads schemas 1–4. Loading resumes without replaying actions. Schema-2 method receivers named `super` retain their original literal meaning and are quoted when saved again. Versions before 0.9 cannot read schema 3.
 
 The compiler expands only ancestor selectors referenced by `super`, sharing repeated targets for each receiver and lookup class. These clauses count toward the existing 10,000-rule limit, and their evidence counts toward inference fact/work budgets. Recursive `self` sends still use finite bottom-up reasoning. Exceeding a budget is an error, not a false answer.
 

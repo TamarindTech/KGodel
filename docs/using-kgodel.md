@@ -1,5 +1,7 @@
 # Using KGodel 0.11
 
+[Documentation home](README.md) · [Step-by-step tutorials](tutorials/README.md) · [Command reference](reference.md) · [Troubleshooting](troubleshooting.md)
+
 KGodel has two entry points: `python -m kgodel` and, after installation, the `kgodel` console command. Both call the same interpreter and accept the same arguments. Python 3.10 or newer is required.
 
 ## Installation
@@ -54,6 +56,7 @@ python -m kgodel demo blocked-route
 python -m kgodel demo hypothesis-planning
 python -m kgodel demo multistep-route
 python -m kgodel demo object-routes
+python -m kgodel demo super-routes
 ```
 
 `demo` without a name uses `multistep-route`. Each invocation creates a fresh agent and world from packaged resources, independent of your working directory. The editable examples in the repository remain available for experimenting with source and world files.
@@ -85,6 +88,7 @@ Every request occupies one line. A hypothetical request can contain nested scope
 | `suppose(clear(goal)) { prove(clear(goal)). }` | Explore a temporary context without changing the agent. |
 | `:query EXPRESSION` | Explicit form of a bare query. |
 | `:explain EXPRESSION` | Include supporting proofs and assumption dependencies. |
+| `:abduce GOAL from (A, B)` | Find minimal hypothetical assumptions with conditional proofs. |
 | `:preview` | Preview the next operation, continuation, or reconsideration. |
 | `:step [N]` | Execute at most N more operations, default 1. |
 | `:run [N]` | Execute at most N more operations, default 50. |
@@ -119,7 +123,7 @@ The pause command returns 1 because the goal is unfinished. `resume` loads the c
 
 `resume` leaves the input checkpoint unchanged unless you explicitly name it as an output. Use `--checkpoint session.json` to replace it with the new state, or choose a different path to retain the earlier state. For inspection before continuing, use `shell --resume session.json`; opening the shell performs no operations. Sessions do not autosave on exit.
 
-Checkpoints are self-contained and need no original `.kg` or world file. A saved trace from `:save` or `--trace-json` cannot be resumed. Invalid, truncated, oversized, and unsupported checkpoint formats produce a diagnostic. The language and intention semantics remain those of 0.4; persistence currently supports only the built-in local route simulator. See [the session format and Python API](sessions-v0.6.md) for precise guarantees and limits.
+Checkpoints are self-contained and need no original `.kg` or world file. A saved trace from `:save` or `--trace-json` cannot be resumed. Invalid, truncated, oversized, and unsupported checkpoint formats produce a diagnostic. Intention continuation follows the 0.4 semantics; current saves also preserve objects, superclass messages, and composed plan queries. Persistence currently supports only the built-in local route simulator. See [the session format and Python API](sessions-v0.6.md) for guarantees and [the persistence tutorial](tutorials/06-sessions-and-comparison.md) for a complete walkthrough.
 
 ## Compare evidence and progress
 
@@ -199,6 +203,7 @@ The result contains the minimal pair `clear(bridge), open(bridge)` and leaves ac
 
 ```powershell
 python -m unittest discover -s tests -v
+python tools/verify_tutorials.py
 python -m pip wheel . --no-deps --wheel-dir dist
 python tools/verify_install.py dist
 ```

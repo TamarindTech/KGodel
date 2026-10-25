@@ -8,6 +8,8 @@
 
 New to KGodel? Read the [introduction for developers and non-developers](docs/introduction.md).
 
+**Learn by doing:** follow the [eight-part tutorial course](docs/tutorials/README.md), from your first query to a resumable delivery agent. The [documentation home](docs/README.md) links the [command reference](docs/reference.md), [troubleshooting guide](docs/troubleshooting.md), and detailed feature specifications.
+
 KGodel combines a small Prolog-inspired syntax with explicit goals, guarded plans, observations, and actions. This working prototype explores the reasoning cycle in a finite simulated world.
 
 KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. **Multi-step intentions** let agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails. Saved sessions preserve progress across restarts, and comparisons expose changed beliefs and proofs. **Smalltalk-inspired logical objects** provide classes, instance variables, inheritance, overriding, and `self`/`super` message sending. **Abductive reasoning** finds minimal combinations of supplied assumptions that would make a conclusion provable. Version 0.11 adds **Prolog-style query composition**, anonymous variables, quoted constants, and shorthand facts and rules.
@@ -372,9 +374,10 @@ See [the 0.4 intention specification](docs/language-v0.4.md), [the 0.3 planning 
 
 ```powershell
 python -m unittest discover -s tests -v
+python tools/verify_tutorials.py
 ```
 
-The tests cover recursive rules, variable consistency, explicit negation, unknown facts, invalid syntax, stale conclusions, alternative proofs, contradictions, action isolation, failed actions, repeat prevention, execution limits, trace determinism, and the command-line example. Hypothesis tests also cover nested and sibling isolation, conditional proofs, contradictory assumptions, resource limits, variable answers, and exploration of a live agent without changing its later behavior.
+The tutorial verifier runs the library, policy, route, and delivery examples; checks documented answers, exercises, Python snippets, and pause/resume behavior; and checks local documentation link targets. It uses temporary files for generated outputs. The tests cover recursive rules, variable consistency, explicit negation, unknown facts, invalid syntax, stale conclusions, alternative proofs, contradictions, action isolation, failed actions, repeat prevention, execution limits, trace determinism, and the command-line example. Hypothesis tests also cover nested and sibling isolation, conditional proofs, contradictory assumptions, resource limits, variable answers, and exploration of a live agent without changing its later behavior.
 
 Planning tests cover bound hypothesis variables, priority and tie ordering, fallback after unsupported or inconsistent checks, shared decision budgets, pure previews, real observation requirements, decision-history continuity, and the route experiment.
 

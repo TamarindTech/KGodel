@@ -1,0 +1,5 @@
+recommended(bob, 'Field Notes').
+suppose(available('Field Notes')) {
+    recommended(bob, Book), topic(Book, travel).
+}
+recommended(bob, 'Field Notes').

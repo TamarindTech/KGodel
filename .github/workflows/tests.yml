@@ -21,6 +21,8 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Run language and shell tests
         run: python -m unittest discover -s tests -v
+      - name: Verify tutorials and local documentation links
+        run: python tools/verify_tutorials.py
       - name: Build wheel
         run: python -m pip wheel . --no-deps --wheel-dir dist
       - name: Verify installation outside checkout

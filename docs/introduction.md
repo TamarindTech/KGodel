@@ -104,6 +104,8 @@ Version 0.11 makes it easier to ask questions about several relationships at onc
 
 ## Where the experiment is heading
 
+To move from this overview to hands-on learning, follow the [eight-part tutorial course](tutorials/README.md). It starts with a library knowledge base and builds toward an agent whose policy, observations, and progress can be inspected. Each lesson includes runnable examples, expected results, and exercises with worked answers. The [documentation home](README.md) organizes the tutorials and references.
+
 The current prototype focuses on one agent in a local route simulator. It implements a limited logic language rather than full Prolog. Checkpoints preserve experiment state across restarts; traces provide a readable account of what happened. Saving is explicit, so changes since the last checkpoint are lost when you close the process.
 
 Future research directions include comparing conflicting evidence sources, richer plan evaluation, and validating proposals from language models. LLM integration, general external tools, and multi-agent communication are not implemented in version 0.11.

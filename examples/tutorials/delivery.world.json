@@ -1,0 +1,5 @@
+{
+  "position": "depot",
+  "edges": [["depot", "bridge"], ["bridge", "camp"], ["depot", "forest"], ["forest", "camp"]],
+  "blocked": ["bridge"]
+}

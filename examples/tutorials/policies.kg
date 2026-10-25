@@ -1,0 +1,25 @@
+% Tutorial 4: self stays dynamic; super reuses the parent clause.
+agent shelves {
+    class Catalog {
+        slot subject.
+        method candidate: Book { topic(Book, @subject). }
+        method recommends: Book {
+            [self candidate: Book].
+            available(Book).
+        }
+    }
+    class CuratedCatalog extends Catalog {
+        method candidate: Book {
+            [super candidate: Book].
+            featured(Book).
+        }
+    }
+    object general : Catalog { subject = logic. }
+    object curated : CuratedCatalog { subject = logic. }
+
+    topic('Logic for Agents', logic).
+    topic('Small Worlds', logic).
+    available('Logic for Agents').
+    available('Small Worlds').
+    featured('Logic for Agents').
+}

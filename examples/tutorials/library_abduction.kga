@@ -1,0 +1,5 @@
+recommended(bob, 'Field Notes') from (
+    available('Field Notes'),
+    available('Logic for Agents'),
+    available('Small Worlds')
+)
