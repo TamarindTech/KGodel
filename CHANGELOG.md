@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.0
+
+- Added bounded abductive reasoning: search explicit ground candidates for subset-minimal, consistent explanations of a query, with conditional proofs and no changes to accepted state.
+- Integrated signed literals, recursive rules, object messages, and superclass proofs; distinguish baseline evidence, rejected candidates, conflicting combinations, and partial searches.
+- Added `Agent.abduce`, the `abduce` CLI for program/demo/checkpoint sources, `.kga` request files, JSON reports, and shell `:abduce`.
+- Added size, context, solution, and inference limits. Stop on unresolved inference to preserve the minimality of every returned explanation.
+- Added 29 tests for semantic correctness, limits, pure inspection, CLI/shell behavior, and input-file protection; expanded installed-package checks for abduction and checkpoint inspection.
+- Added a route-abduction example and user/developer documentation; checkpoint schema 3 remains unchanged.
+
 ## 0.9.0
 
 - Added method-level `super` sends with lookup starting above the defining class, preserving the original receiver and dynamic `self` dispatch.

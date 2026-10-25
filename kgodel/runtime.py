@@ -7,10 +7,11 @@ import json
 import re
 
 from . import __version__
+from .abduction import find_explanations
 from .logic import Inference, Knowledge
 from .model import Atom, KGodelError, Literal, Program, Proof, ProveQuery
 from .objects import ObjectSpace
-from .parser import parse_queries
+from .parser import parse_queries, parse_query
 from .planning import Intention, attempt_key, choose_next, deliberate, format_decision
 from .querying import evaluate_queries
 
@@ -128,6 +129,14 @@ class Agent:
         atom = Atom(selector, tuple(arguments), receiver)
         ObjectSpace(self.program).validate_atom(atom)
         return evaluate_queries(self.knowledge, self.program.effective_rules, (ProveQuery(Literal(atom)),), **limits)
+
+    def abduce(self, query: str, candidates: list[str] | tuple[str, ...], **limits) -> dict:
+        """Find minimal hypothetical support without changing this agent."""
+        if (not isinstance(query, str) or not isinstance(candidates, (list, tuple))
+                or any(not isinstance(candidate, str) for candidate in candidates)):
+            raise KGodelError("Abduction needs a query string and a list or tuple of candidate strings.")
+        return find_explanations(self.program, self.knowledge, parse_query(query),
+                                 tuple(parse_query(candidate) for candidate in candidates), **limits)
 
     def deliberate(self, *, max_hypotheses: int = 64) -> dict:
         """Preview the next plan without recording an attempt or performing it."""

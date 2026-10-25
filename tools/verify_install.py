@@ -106,18 +106,34 @@ def verify(wheel: Path):
         super_checkpoint = outside / "super session.json"
         transcript = run(console, "shell", "--demo", "super-routes", input="\n".join([
             ":explain [cautious candidateFrom: start to: forest]",
+            ":abduce [cautious mayMoveFrom: start to: bridge] from (open(bridge), clear(bridge))",
             "[cautious candidateFrom: start to: bridge].", ":step",
             ':checkpoint "super session.json"', ":quit", ""]))
         assert "[cautious ^ApprovedPolicy candidateFrom: start to: forest]" in transcript, transcript
         assert "[cautious ^RoutePolicy candidateFrom: start to: forest]" in transcript, transcript
         assert "unknown: [cautious candidateFrom: start to: bridge]" in transcript, transcript
+        assert "Explanation 1: assume clear(bridge), open(bridge)." in transcript, transcript
         saved = json.loads(super_checkpoint.read_text(encoding="utf-8"))
         assert saved["schema_version"] == 3 and saved["intention"] is not None, saved
         super_trace = outside / "super resumed.json"
         run(console, "resume", super_checkpoint, "--trace-json", super_trace)
         expected = json.loads((outside / "super-routes.json").read_text(encoding="utf-8"))
         assert json.loads(super_trace.read_text(encoding="utf-8")) == expected
-        print(f"{module_version}: installation, demos, objects, super dispatch, shell, session restart, and comparisons verified outside checkout")
+        abduction = outside / "abduction.json"
+        query = "[cautious mayMoveFrom: start to: bridge]"
+        run(console, "abduce", "--demo", "super-routes", query,
+            "--assume", "clear(bridge)", "--assume", "open(bridge)", "--result-json", abduction)
+        report = json.loads(abduction.read_text(encoding="utf-8"))
+        assert report["status"] == "complete" and report["search"]["exhaustive"], report
+        assert [row["assumptions"] for row in report["solutions"]] == [["clear(bridge)", "open(bridge)"]], report
+        assert "^RoutePolicy" in json.dumps(report["solutions"][0]["proof"]), report
+        saved_bytes = super_checkpoint.read_bytes()
+        partial = run(console, "abduce", "--resume", super_checkpoint, query,
+                      "--assume", "open(bridge)", "--assume", "clear(bridge)",
+                      "--max-contexts", "0", expected_code=1)
+        assert "Abduction: partial" in partial, partial
+        assert super_checkpoint.read_bytes() == saved_bytes
+        print(f"{module_version}: installation, demos, objects, super dispatch, abduction, shell, session restart, and comparisons verified outside checkout")
 
 
 if __name__ == "__main__":

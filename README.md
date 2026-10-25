@@ -2,7 +2,7 @@
   <img src="docs/assets/kgodel-logo-transparent.svg" alt="KGödel — Agentic Logic Programming" width="640">
 </p>
 
-# KGodel 0.9
+# KGodel 0.10
 
 **An experimental logic language for agents that can revise their beliefs and explain their decisions.**
 
@@ -10,7 +10,7 @@ New to KGodel? Read the [introduction for developers and non-developers](docs/in
 
 KGodel combines a small Prolog-inspired syntax with explicit goals, guarded plans, observations, and actions. This working prototype explores the reasoning cycle in a finite simulated world.
 
-KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. **Multi-step intentions** let agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails. Saved sessions preserve progress across restarts, and comparisons expose changed beliefs and proofs. **Smalltalk-inspired logical objects** provide classes, instance variables, inheritance, overriding, and message sending. Version 0.9 adds **`super` messages** so subclasses can extend a parent's reasoning without duplicating it.
+KGodel supports **hypothetical reasoning**: `suppose` creates a temporary belief context, answers queries within it, and labels the assumptions behind each proof. Plans use hypothetical checks and priorities to choose their next commitment. **Multi-step intentions** let agents follow a sequence, check each step's declared requirements against current evidence, and reconsider when a requirement or operation fails. Saved sessions preserve progress across restarts, and comparisons expose changed beliefs and proofs. **Smalltalk-inspired logical objects** provide classes, instance variables, inheritance, overriding, and `self`/`super` message sending. Version 0.10 adds **abductive reasoning**: find minimal combinations of supplied assumptions that would make a conclusion provable.
 
 The first experiment starts with an outdated belief that a bridge is clear. The agent tries the bridge, discovers the blockage, retracts its old belief, checks a forest route, and reaches its destination. Its decision record preserves the evidence used before each action and the observations returned afterward.
 
@@ -157,6 +157,24 @@ class ApprovedPolicy extends RoutePolicy {
 The parent establishes a candidate path; the subclass adds an approval condition. Start `python -m kgodel shell --demo super-routes` and enter `:explain [cautious candidateFrom: start to: forest]` to see a proof through three policy classes. `super` keeps the same receiver and starts lookup above the method's defining class. Parent methods' `self` sends still use the object's overrides. See [the superclass reasoning guide](docs/super-v0.9.md).
 
 This is a Smalltalk-inspired extension to KGodel's Python interpreter. Its instance variables are read-only configuration and its methods are pure logical clauses. Object creation is declarative; mutable methods, arbitrary return objects, blocks, cascades, and a Smalltalk VM remain outside this object layer. See [object syntax, dispatch, and API semantics](docs/objects-v0.8.md).
+
+## Find missing assumptions
+
+Start `python -m kgodel shell --demo super-routes`, then ask:
+
+```text
+:abduce [cautious mayMoveFrom: start to: bridge] from (open(bridge), clear(bridge), clear(forest))
+```
+
+KGodel identifies `clear(bridge)` and `open(bridge)` as the required assumptions and gives a conditional proof through the policy classes. The forest candidate is unnecessary. These explanations do not change accepted beliefs or execute actions.
+
+For a report from the command line:
+
+```powershell
+python -m kgodel abduce --program examples/super_routes.kg --file examples/route_abduction.kga --explain --result-json abduction.json
+```
+
+The search returns subset-minimal explanations, rejects inconsistent combinations, and reports its bounds and any unfinished reasoning. It accepts up to 16 distinct ground candidates; the default maximum is three assumptions per explanation. `--demo` uses an installed experiment and `--resume` inspects a checkpoint's current beliefs. See [abduction semantics, limits, and the Python API](docs/abduction-v0.10.md).
 
 ## The language
 

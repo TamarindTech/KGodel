@@ -368,3 +368,21 @@ def parse_query(source: str, *, allow_internal: bool = False) -> Literal:
 def parse_queries(source: str) -> tuple[Query, ...]:
     """Parse a bare query, a prove expression, or a sequence of scoped queries."""
     return Parser(source).queries()
+
+
+def parse_abduction(source: str) -> tuple[Literal, tuple[Literal, ...]]:
+    """Parse GOAL from (CANDIDATE, ...), for the shell and .kga files."""
+    parser = Parser(source)
+    goal = parser.literal()
+    parser.take("from")
+    parser.take("(")
+    candidates = []
+    if parser.peek() != ")":
+        candidates.append(parser.literal())
+        while parser.accept(","):
+            candidates.append(parser.literal())
+    parser.take(")")
+    parser.accept(".")
+    if parser.peek() != "<end>":
+        parser.fail("Expected the end of the abduction request")
+    return goal, tuple(candidates)

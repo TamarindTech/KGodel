@@ -1,4 +1,4 @@
-# Using KGodel 0.9
+# Using KGodel 0.10
 
 KGodel has two entry points: `python -m kgodel` and, after installation, the `kgodel` console command. Both call the same interpreter and accept the same arguments. Python 3.10 or newer is required.
 
@@ -166,6 +166,22 @@ python -m kgodel shell --demo super-routes
 ```
 
 Methods can send `[super selector]` to reuse the implementation above their defining class. The demo adds approval and open-route conditions through three classes. Its proof annotations, such as `^RoutePolicy`, identify where parent lookup starts. The bridge query is unknown because its open-route condition lacks evidence. The forest route succeeds after four simulator operations. See [superclass semantics, proof annotations, and checkpoint compatibility](super-v0.9.md).
+
+## Find hypothetical explanations
+
+```powershell
+python -m kgodel abduce --demo super-routes "[cautious mayMoveFrom: start to: bridge]" --assume "clear(bridge)" --assume "open(bridge)" --explain
+```
+
+Use `--program PATH` to inspect a source program without loading a world, or `--resume SESSION` to inspect saved current beliefs. `--file examples/route_abduction.kga` provides the query and candidates together. `--result-json PATH` exports proofs, conflicts, and search coverage.
+
+In the shell:
+
+```text
+:abduce [cautious mayMoveFrom: start to: bridge] from (open(bridge), clear(bridge), clear(forest))
+```
+
+The result contains the minimal pair `clear(bridge), open(bridge)` and leaves accepted beliefs and any active intention unchanged. Searches are limited to explicit ground candidates. The CLI lets you set `--max-assumptions`, `--max-contexts`, `--max-solutions`, `--max-facts`, and `--max-work`. A partial report retains verified explanations and clearly reports the unfinished search. See [abduction semantics and examples](abduction-v0.10.md).
 
 ## Test a built distribution
 
