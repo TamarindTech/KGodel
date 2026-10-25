@@ -13,14 +13,14 @@ import tempfile
 
 from . import __version__
 from .logic import Knowledge
-from .model import KGodelError, Literal, Proof, ProveQuery
+from .model import ExpressionQuery, KGodelError, Literal, Proof, ProveQuery
 from .parser import parse, parse_query
 from .planning import Candidate, Intention, format_decision
 from .runtime import Agent, RouteWorld, format_trace
 
 
 FORMAT = "kgodel-session"
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 4
 MAX_BYTES = 32 * 1024 * 1024
 
 
@@ -44,8 +44,8 @@ def _string(value):
     return value
 
 
-def _literal(value):
-    literal = parse_query(_string(value))
+def _literal(value, *, allow_internal=False):
+    literal = parse_query(_string(value), allow_internal=allow_internal)
     _require(not literal.atom.variables, "stored beliefs and goals must be ground")
     return literal
 
@@ -53,6 +53,8 @@ def _literal(value):
 def _query_source(query):
     if isinstance(query, ProveQuery):
         return f"prove({query.literal})."
+    if isinstance(query, ExpressionQuery):
+        return f"prove({query.expression})."
     return ("suppose(" + ", ".join(map(str, query.assumptions)) + ") { "
             + " ".join(_query_source(child) for child in query.body) + " }")
 
@@ -100,7 +102,7 @@ def _proof(value, depth=0):
     _require(depth < 128, "proof nesting exceeds 128")
     _fields(value, "conclusion source premises")
     _require(isinstance(value["premises"], list), "proof premises must be a list")
-    return Proof(_literal(value["conclusion"]), _string(value["source"]),
+    return Proof(_literal(value["conclusion"], allow_internal=True), _string(value["source"]),
                  tuple(_proof(child, depth + 1) for child in value["premises"]))
 
 
@@ -230,10 +232,10 @@ def _validate_history(agent):
 def _restore(data):
     _fields(data, "format schema_version kgodel_version program world beliefs attempts events decisions intention intention_events next_intention_id last_outcome")
     _require(data["format"] == FORMAT, "not a KGodel session checkpoint")
-    _require(type(data["schema_version"]) is int and data["schema_version"] in (1, SCHEMA_VERSION),
+    _require(type(data["schema_version"]) is int and data["schema_version"] in (1, 2, 3, SCHEMA_VERSION),
              "unsupported session schema version")
     _string(data["kgodel_version"])
-    program = parse(_string(data["program"]))
+    program = parse(_string(data["program"]), legacy_super=data["schema_version"] < 3)
     _require(data["schema_version"] >= 2 or not (program.classes or program.objects),
              "object programs require session schema 2")
     world_data = data["world"]
@@ -252,6 +254,8 @@ def _restore(data):
     agent = Agent(program, world)
     _require(isinstance(data["beliefs"], list), "beliefs must be a list")
     proofs = [_proof(value) for value in data["beliefs"]]
+    _require(all(proof.conclusion.atom.lookup_class is None for proof in proofs),
+             "superclass lookup evidence cannot be an accepted belief")
     agent.knowledge = Knowledge(tuple(proof.conclusion for proof in proofs))
     _require(len(agent.knowledge.facts) == len(proofs), "duplicate stored beliefs")
     agent.knowledge.facts = {proof.conclusion: proof for proof in proofs}

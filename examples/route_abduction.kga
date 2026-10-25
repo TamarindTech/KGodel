@@ -1,0 +1,7 @@
+% Which candidate assumptions would make the cautious bridge move provable?
+% This query does not inspect or cross the bridge, or change accepted beliefs.
+[cautious mayMoveFrom: start to: bridge] from (
+    open(bridge),
+    clear(bridge),
+    clear(forest)
+).

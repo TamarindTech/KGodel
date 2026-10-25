@@ -6,9 +6,11 @@ import json
 from pathlib import Path
 
 from . import __version__
+from .abduction import find_explanations, format_abduction
 from .comparison import compare_agents, format_comparison
 from .model import KGodelError, Literal
 from .objects import ObjectSpace, format_objects
+from .parser import parse_abduction
 from .planning import format_decision
 from .querying import format_query_results
 from .runtime import Agent, format_trace
@@ -17,9 +19,12 @@ from .sessions import load_session, save_session
 
 HELP = """Queries inspect current beliefs without executing operations:
   clear(forest).
+  ?- path(start, Place), (clear(Place); open(Place)).
+  ?- path(_, _).
   suppose(clear(forest)) { prove(clear(forest)). }
   :query EXPRESSION       Query current beliefs (also accepts bare expressions)
   :explain EXPRESSION     Include supporting proofs
+  :abduce GOAL from (A, B)  Find minimal hypothetical assumptions with proofs
 
 Commands:
   :preview               Preview the next decision without changing the agent
@@ -88,6 +93,12 @@ class ShellSession:
                              sorted(self.agent.knowledge.facts.items(), key=lambda item: str(item[0]))) or "No base beliefs."
         if command == ":objects":
             return format_objects(ObjectSpace(self.agent.program).describe())
+        if command == ":abduce":
+            if not argument:
+                raise KGodelError(":abduce requires GOAL from (CANDIDATE, ...).")
+            goal, candidates = parse_abduction(argument)
+            return format_abduction(find_explanations(self.agent.program, self.agent.knowledge, goal, candidates,
+                                                      max_contexts=self.max_hypotheses), explain=True)
         if command in (":query", ":explain"):
             if not argument:
                 raise KGodelError(f"{command} requires a query expression.")

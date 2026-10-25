@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.11.0
+
+- Added conjunctive and disjunctive queries with shared variable bindings, comma-before-semicolon precedence, grouped expressions, and an optional `?-` prefix.
+- Added independent anonymous `_` variables, named underscore variables, single-quoted constants, and shorthand facts and rules inside agents.
+- Kept explicit three-valued truth for ground expressions, distinct named answer bindings, supporting/opposing proof trees, and hypothetical assumption provenance.
+- Integrated composition with object messages, interactive queries, and plan hypotheses; bounded expression size/depth and reused inference work limits.
+- Added checkpoint schema 4 for the expanded syntax, while retaining loading of schemas 1, 2, and 3.
+- Added 34 semantic and integration tests, a family-tree example and query file, developer documentation, and installed-package verification for composed queries and resumable plans.
+
+## 0.10.0
+
+- Added bounded abductive reasoning: search explicit ground candidates for subset-minimal, consistent explanations of a query, with conditional proofs and no changes to accepted state.
+- Integrated signed literals, recursive rules, object messages, and superclass proofs; distinguish baseline evidence, rejected candidates, conflicting combinations, and partial searches.
+- Added `Agent.abduce`, the `abduce` CLI for program/demo/checkpoint sources, `.kga` request files, JSON reports, and shell `:abduce`.
+- Added size, context, solution, and inference limits. Stop on unresolved inference to preserve the minimality of every returned explanation.
+- Added 29 tests for semantic correctness, limits, pure inspection, CLI/shell behavior, and input-file protection; expanded installed-package checks for abduction and checkpoint inspection.
+- Added a route-abduction example and user/developer documentation; checkpoint schema 3 remains unchanged.
+
+## 0.9.0
+
+- Added method-level `super` sends with lookup starting above the defining class, preserving the original receiver and dynamic `self` dispatch.
+- Kept parent-method support separate from public messages so superclass answers cannot bypass subclass conditions; retained explicit negative support, alternative clauses, recursion, and inference budgets.
+- Added nested superclass proof annotations and a three-level `super-routes` demo with hypothetical checks and resumable intentions.
+- Added checkpoint schema 3 while retaining schema-1/schema-2 loading, including legacy objects literally named `super`.
+- Added dispatch and integration tests plus installed-wheel checks for superclass explanations and cross-process resume.
+- Updated the introduction, usage guide, README, and superclass reasoning reference.
+
 ## 0.8.0
 
 - Added Smalltalk-inspired class and object declarations, read-only instance variables, single inheritance, selector overriding, and unary/keyword messages.

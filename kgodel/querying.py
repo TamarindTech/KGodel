@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 from .logic import Inference, Knowledge
-from .model import KGodelError, KnowledgeConflict, Proof, ProveQuery, Query, Rule, render_term
+from .model import (ExpressionQuery, GoalExpression, KGodelError, KnowledgeConflict, Literal,
+                    Proof, ProveQuery, Query, Rule, render_term)
 
 
-def assumptions_used(proof: Proof | None) -> list[dict]:
+def assumptions_used(proof: Proof | dict | None) -> list[dict]:
     found = set()
     pending = [proof] if proof else []
     while pending:
         item = pending.pop()
-        if item.source.startswith("assumption:"):
-            found.add((item.source.removeprefix("assumption:"), str(item.conclusion)))
-        pending.extend(item.premises)
+        source = item.source if isinstance(item, Proof) else item["source"]
+        conclusion = str(item.conclusion) if isinstance(item, Proof) else item["conclusion"]
+        if source.startswith("assumption:"):
+            found.add((source.removeprefix("assumption:"), conclusion))
+        pending.extend(item.premises if isinstance(item, Proof) else item["premises"])
     return [{"scope": scope, "literal": literal} for scope, literal in sorted(found)]
 
 
@@ -30,11 +33,12 @@ class _Evaluator:
                  scope: str = "base", depth: int = 0) -> list[dict]:
         results = []
         for query in queries:
-            if isinstance(query, ProveQuery):
+            if isinstance(query, (ProveQuery, ExpressionQuery)):
+                expression = query.literal if isinstance(query, ProveQuery) else query.expression
                 try:
                     results.append(self.prove(query, logic, scope))
                 except KGodelError as error:
-                    results.append({"kind": "query", "scope": scope, "query": str(query.literal),
+                    results.append({"kind": "query", "scope": scope, "query": str(expression),
                                     "status": "error", "error": str(error)})
                 continue
 
@@ -59,22 +63,70 @@ class _Evaluator:
         return results
 
     @staticmethod
-    def prove(query: ProveQuery, logic: Inference, scope: str) -> dict:
-        literal = query.literal
-        result = {"kind": "query", "scope": scope, "query": str(literal)}
-        if literal.atom.variables:
-            answers = []
-            for bindings, evidence in logic.solve((literal,)):
-                proof = evidence[0]
-                answers.append({"bindings": bindings, "proof": proof.as_dict(),
+    def prove(query: ProveQuery | ExpressionQuery, logic: Inference, scope: str) -> dict:
+        expression = query.literal if isinstance(query, ProveQuery) else query.expression
+        variables = expression.atom.variables if isinstance(expression, Literal) else expression.variables
+        result = {"kind": "query", "scope": scope, "query": str(expression)}
+        if variables:
+            answers, seen = [], set()
+            for bindings, proof in solve_expression(expression, logic):
+                key = tuple(sorted(bindings.items()))
+                if key in seen:
+                    continue
+                seen.add(key)
+                answers.append({"bindings": bindings, "proof": proof,
                                 "assumptions_used": assumptions_used(proof)})
             result.update(status="answers" if answers else "no_answers", answers=answers)
         else:
-            status = logic.status(literal)
-            proof = logic.explanation(literal if status == "true" else literal.opposite())
-            result.update(status=status, proof=proof.as_dict() if proof else None,
+            status, proof = expression_status(expression, logic)
+            result.update(status=status, proof=proof,
                           assumptions_used=assumptions_used(proof))
         return result
+
+
+def expression_proof(expression: GoalExpression, premises: list[dict], *, opposing=False) -> dict:
+    return {"conclusion": ("not " if opposing else "") + str(expression),
+            "source": "query:" + expression.operator, "premises": premises}
+
+
+def solve_expression(expression: Literal | GoalExpression, logic: Inference, initial=None):
+    """Join conjunctions and enumerate independent alternatives without DNF expansion."""
+    if isinstance(expression, Literal):
+        for bindings, evidence in logic.solve((expression,), initial):
+            yield bindings, evidence[0].as_dict()
+    elif expression.operator == "or":
+        for operand in expression.operands:
+            for bindings, proof in solve_expression(operand, logic, initial):
+                yield bindings, expression_proof(expression, [proof])
+    else:
+        rows = [(dict(initial or {}), [])]
+        for operand in expression.operands:
+            next_rows = []
+            for bindings, premises in rows:
+                for extended, proof in solve_expression(operand, logic, bindings):
+                    next_rows.append((extended, premises + [proof]))
+            rows = next_rows
+            if not rows:
+                break
+        for bindings, premises in rows:
+            yield bindings, expression_proof(expression, premises)
+
+
+def expression_status(expression: Literal | GoalExpression, logic: Inference) -> tuple[str, dict | None]:
+    """Three-valued truth for ground expressions, retaining explicit opposition."""
+    if isinstance(expression, Literal):
+        status = logic.status(expression)
+        proof = logic.explanation(expression if status == "true" else expression.opposite())
+        return status, proof.as_dict() if proof else None
+    children = [expression_status(operand, logic) for operand in expression.operands]
+    decisive = "false" if expression.operator == "and" else "true"
+    for status, proof in children:
+        if status == decisive:
+            return status, expression_proof(expression, [proof], opposing=status == "false")
+    if all(status != "unknown" for status, _ in children):
+        status = "true" if expression.operator == "and" else "false"
+        return status, expression_proof(expression, [proof for _, proof in children], opposing=status == "false")
+    return "unknown", None
 
 
 def evaluate_queries(knowledge: Knowledge, rules: tuple[Rule, ...], queries: tuple[Query, ...], *,
@@ -128,7 +180,8 @@ def format_query_results(report: dict, *, explain: bool = False) -> str:
                 lines.append(f"{indent}No supported bindings. This does not establish explicit falsity.")
             for answer in result["answers"]:
                 lines.append(indent + ", ".join(f"{key} = {render_term(value)}"
-                             for key, value in sorted(answer["bindings"].items())))
+                             for key, value in sorted(answer["bindings"].items()))
+                             if answer["bindings"] else indent + "true (no named bindings)")
                 dependencies(answer, indent + "  ")
         else:
             lines.append(f"{indent}{status}: {result['query']}")

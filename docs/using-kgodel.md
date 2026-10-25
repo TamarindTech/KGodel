@@ -1,4 +1,4 @@
-# Using KGodel 0.8
+# Using KGodel 0.11
 
 KGodel has two entry points: `python -m kgodel` and, after installation, the `kgodel` console command. Both call the same interpreter and accept the same arguments. Python 3.10 or newer is required.
 
@@ -135,7 +135,7 @@ In the shell, `:compare PATH` uses the checkpoint as the baseline and the curren
 
 Comparison exits with 0 when both sides finish reasoning, whether or not state differs; 1 when a conflict or inference limit leaves a partial report; and 2 for invalid input or file errors. `--max-facts` and `--max-work` set nonnegative inference limits separately for each side, defaulting to 10000 facts and 200000 work units. A partial report retains base-belief and world differences while marking unresolved answers explicitly. It never treats an inference error as logical falsity.
 
-The input checkpoints are read-only; an output path resolving to either input, including a hard link, is rejected. Existing comparison output files are replaced when explicitly named. Schema-1 checkpoints from KGodel 0.6 and 0.7 remain supported. New saves use schema 2, which also preserves object declarations. See [the comparison reference](comparison-v0.7.md) for proof-selection details and how histories from different scenarios are compared.
+The input checkpoints are read-only; an output path resolving to either input, including a hard link, is rejected. Existing comparison output files are replaced when explicitly named. Checkpoints with schemas 1, 2, and 3 remain supported. New saves use schema 4, which preserves the expanded Prolog-style syntax as well as object and superclass proofs. See [the comparison reference](comparison-v0.7.md) for proof-selection details and how histories from different scenarios are compared.
 
 ## Explore logical objects
 
@@ -150,6 +150,50 @@ The file-based commands use the examples in the checkout. The bundled shell work
 Methods are pure logical queries. A known message without supporting or opposing evidence is unknown; a missing receiver or selector is an input error. The shell reports such errors and stays open. Methods may send messages to `self` or another declared object, and inherited `self` sends use subclass overrides. Only the existing `:step` and `:run` commands advance the simulator.
 
 Use `:checkpoint PATH` at any pause point to retain the object program and active intention. `:compare PATH` can show changing message answers, and the CLI accepts message literals in `--query`. See [the object-language guide](objects-v0.8.md) for the syntax and current limits.
+
+## Extend a parent policy
+
+```powershell
+python -m kgodel shell --demo super-routes
+```
+
+```text
+:explain [cautious candidateFrom: start to: forest]
+[cautious candidateFrom: start to: bridge].
+:step
+:checkpoint super-session.json
+:run
+```
+
+Methods can send `[super selector]` to reuse the implementation above their defining class. The demo adds approval and open-route conditions through three classes. Its proof annotations, such as `^RoutePolicy`, identify where parent lookup starts. The bridge query is unknown because its open-route condition lacks evidence. The forest route succeeds after four simulator operations. See [superclass semantics, proof annotations, and checkpoint compatibility](super-v0.9.md).
+
+## Combine Prolog-style queries
+
+Use comma for joined conditions, semicolon for alternatives, and parentheses to group them. Comma binds more tightly. An anonymous `_` matches independently without adding a named binding:
+
+```powershell
+python -m kgodel query examples/prolog_family.kg "?- parent(alice, Parent), parent(Parent, Child)."
+python -m kgodel query examples/prolog_family.kg "?- ancestor(alice, Person), (artist(Person); scientist(Person))."
+python -m kgodel explain examples/prolog_family.kg --file examples/prolog_family.kgq
+```
+
+The same syntax works in shell queries, `:explain`, and `Agent.query`. Single-quoted constants and named underscore variables are supported. See the [Prolog feature guide](prolog-v0.11.md) for binding rules, proof output, limits, and saved-session compatibility.
+
+## Find hypothetical explanations
+
+```powershell
+python -m kgodel abduce --demo super-routes "[cautious mayMoveFrom: start to: bridge]" --assume "clear(bridge)" --assume "open(bridge)" --explain
+```
+
+Use `--program PATH` to inspect a source program without loading a world, or `--resume SESSION` to inspect saved current beliefs. `--file examples/route_abduction.kga` provides the query and candidates together. `--result-json PATH` exports proofs, conflicts, and search coverage.
+
+In the shell:
+
+```text
+:abduce [cautious mayMoveFrom: start to: bridge] from (open(bridge), clear(bridge), clear(forest))
+```
+
+The result contains the minimal pair `clear(bridge), open(bridge)` and leaves accepted beliefs and any active intention unchanged. Searches are limited to explicit ground candidates. The CLI lets you set `--max-assumptions`, `--max-contexts`, `--max-solutions`, `--max-facts`, and `--max-work`. A partial report retains verified explanations and clearly reports the unfinished search. See [abduction semantics and examples](abduction-v0.10.md).
 
 ## Test a built distribution
 

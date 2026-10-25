@@ -6,12 +6,13 @@ from pathlib import Path
 import sys
 
 from . import __version__
+from .abduction import find_explanations, format_abduction
 from .comparison import compare_agents, format_comparison
 from .demos import DEFAULT_DEMO, DEMOS, load_demo
 from .logic import Inference, Knowledge
 from .model import KGodelError
 from .objects import ObjectSpace, format_objects
-from .parser import parse, parse_queries
+from .parser import parse, parse_abduction, parse_queries, parse_query
 from .planning import deliberate, format_decision
 from .querying import evaluate_queries, format_query_results
 from .runtime import Agent, RouteWorld, format_trace
@@ -75,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
         command = commands.add_parser(name, help="Query initial beliefs without executing any actions")
         command.add_argument("program")
         request = command.add_mutually_exclusive_group(required=True)
-        request.add_argument("query", nargs="?", help="A literal, prove expression, or suppose block")
+        request.add_argument("query", nargs="?", help="A query with comma/semicolon, prove expression, or suppose block")
         request.add_argument("--file", help="Read a sequence of queries from a .kgq file")
         command.add_argument("--result-json", help="Save query answers, assumptions, and proofs")
     run = commands.add_parser("run", help="Run an agent in the local route simulator")
@@ -93,8 +94,54 @@ def main(argv: list[str] | None = None) -> int:
     compare.add_argument("--max-facts", type=int, default=10000)
     compare.add_argument("--max-work", type=int, default=200000)
     compare.add_argument("--result-json", help="Save the comparison report")
+    abduce = commands.add_parser("abduce", help="Find minimal assumptions that would support a ground query")
+    source = abduce.add_mutually_exclusive_group(required=True)
+    source.add_argument("--program", help="Inspect initial knowledge without loading a world")
+    source.add_argument("--demo", choices=DEMOS, help="Inspect a bundled experiment without running it")
+    source.add_argument("--resume", metavar="SESSION", help="Inspect current beliefs from a checkpoint")
+    request = abduce.add_mutually_exclusive_group(required=True)
+    request.add_argument("query", nargs="?", help="Ground literal to explain hypothetically")
+    request.add_argument("--file", help="Read GOAL from (CANDIDATE, ...) from a .kga file")
+    abduce.add_argument("--assume", action="append", default=[], help="Candidate ground assumption; repeatable")
+    abduce.add_argument("--max-assumptions", type=int, default=3, help="Maximum assumptions per explanation (default: 3)")
+    abduce.add_argument("--max-contexts", type=int, default=256, help="Maximum hypothetical contexts (default: 256)")
+    abduce.add_argument("--max-solutions", type=int, default=20)
+    abduce.add_argument("--max-facts", type=int, default=10000)
+    abduce.add_argument("--max-work", type=int, default=200000)
+    abduce.add_argument("--explain", action="store_true", help="Include full conditional proofs")
+    abduce.add_argument("--result-json", help="Save explanations, conflicts, limits, and search coverage")
     args = parser.parse_args(argv)
     try:
+        if args.command == "abduce":
+            if args.file and args.assume:
+                parser.error("abduce --file cannot be combined with --assume")
+            if args.result_json:
+                target = Path(args.result_json)
+                for filename in (args.program, args.resume, args.file):
+                    if filename:
+                        source = Path(filename)
+                        if (target.resolve() == source.resolve()
+                                or (target.exists() and source.exists() and target.samefile(source))):
+                            raise KGodelError("Abduction output must not overwrite an input file.")
+            if args.program:
+                program = parse(Path(args.program).read_text(encoding="utf-8-sig"))
+                knowledge = Knowledge(program.beliefs)
+            else:
+                agent = load_session(args.resume) if args.resume else load_demo(args.demo)
+                program, knowledge = agent.program, agent.knowledge
+            if args.file:
+                goal, candidates = parse_abduction(Path(args.file).read_text(encoding="utf-8-sig"))
+            else:
+                goal, candidates = parse_query(args.query), tuple(parse_query(item) for item in args.assume)
+            report = find_explanations(program, knowledge, goal, candidates,
+                                       max_assumptions=args.max_assumptions, max_contexts=args.max_contexts,
+                                       max_solutions=args.max_solutions, max_facts=args.max_facts, max_work=args.max_work)
+            print(format_abduction(report, explain=args.explain))
+            if args.result_json:
+                save(args.result_json, json.dumps(report, indent=2))
+            if report["status"] in {"error", "inconsistent"}:
+                return 2
+            return 0 if report["status"] == "complete" and report["solutions"] else 1
         if args.command == "compare":
             if args.result_json:
                 target = Path(args.result_json)
