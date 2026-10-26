@@ -9,11 +9,13 @@ from . import __version__
 from .abduction import find_explanations, format_abduction
 from .comparison import compare_agents, format_comparison
 from .demos import DEFAULT_DEMO, DEMOS, load_demo
+from .diagnostics import diagnose, format_diagnostics
 from .logic import Inference, Knowledge
 from .model import KGodelError
 from .objects import ObjectSpace, format_objects
 from .parser import parse, parse_abduction, parse_queries, parse_query
 from .planning import deliberate, format_decision
+from .projects import TEMPLATES, create_project
 from .querying import evaluate_queries, format_query_results
 from .runtime import Agent, RouteWorld, format_trace
 from .sessions import load_session, save_session
@@ -24,6 +26,27 @@ def save(path: str, content: str):
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(content + "\n", encoding="utf-8")
+
+
+def validate_outputs(args: argparse.Namespace):
+    """Reject path aliases before execution or export can damage an input."""
+    inputs = [(name, Path(value)) for name in ("program", "world", "file", "session", "resume", "before", "after")
+              if (value := getattr(args, name, None))]
+    if args.command == "run" and not args.world:
+        inputs.append(("world", Path(args.program).with_suffix(".world.json")))
+    outputs = [(name, Path(value)) for name in ("result_json", "trace_json", "trace_text", "checkpoint")
+               if (value := getattr(args, name, None))]
+
+    def same(left, right):
+        return left.resolve() == right.resolve() or (left.exists() and right.exists() and left.samefile(right))
+
+    for index, (name, target) in enumerate(outputs):
+        for source_name, source in inputs:
+            if same(target, source) and not (
+                    args.command == "resume" and name == "checkpoint" and source_name == "session"):
+                raise KGodelError("Output must not overwrite an input file.")
+        if any(same(target, other) for _, other in outputs[:index]):
+            raise KGodelError("Output files must use distinct paths.")
 
 
 def execution_options(command: argparse.ArgumentParser):
@@ -52,6 +75,11 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="kgodel", description="KGodel experimental agent logic language")
     parser.add_argument("--version", action="version", version=f"KGodel {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
+    init = commands.add_parser("init", help="Create a starter project in a new folder")
+    init.add_argument("directory", help="New directory; its parent must exist")
+    init.add_argument("--template", choices=TEMPLATES, default="route")
+    doctor = commands.add_parser("doctor", help="Check this Python installation and a bundled simulation")
+    doctor.add_argument("--json", action="store_true", help="Print machine-readable diagnostics")
     demo = commands.add_parser("demo", help="Run a bundled experiment from any working directory")
     demo.add_argument("name", nargs="?", choices=DEMOS, help=f"Default: {DEFAULT_DEMO}")
     demo.add_argument("--list", action="store_true", help="List experiments without running one")
@@ -112,17 +140,18 @@ def main(argv: list[str] | None = None) -> int:
     abduce.add_argument("--result-json", help="Save explanations, conflicts, limits, and search coverage")
     args = parser.parse_args(argv)
     try:
+        validate_outputs(args)
+        if args.command == "doctor":
+            report = diagnose()
+            print(json.dumps(report, indent=2) if args.json else format_diagnostics(report))
+            return 2 if report["status"] == "error" else (1 if report["status"] == "warning" else 0)
+        if args.command == "init":
+            target = create_project(args.directory, args.template)
+            print(f"Created {args.template} project: {target}\nOpen its README.md for commands and exercises.")
+            return 0
         if args.command == "abduce":
             if args.file and args.assume:
                 parser.error("abduce --file cannot be combined with --assume")
-            if args.result_json:
-                target = Path(args.result_json)
-                for filename in (args.program, args.resume, args.file):
-                    if filename:
-                        source = Path(filename)
-                        if (target.resolve() == source.resolve()
-                                or (target.exists() and source.exists() and target.samefile(source))):
-                            raise KGodelError("Abduction output must not overwrite an input file.")
             if args.program:
                 program = parse(Path(args.program).read_text(encoding="utf-8-sig"))
                 knowledge = Knowledge(program.beliefs)
@@ -143,12 +172,6 @@ def main(argv: list[str] | None = None) -> int:
                 return 2
             return 0 if report["status"] == "complete" and report["solutions"] else 1
         if args.command == "compare":
-            if args.result_json:
-                target = Path(args.result_json)
-                for source in (Path(args.before), Path(args.after)):
-                    if target.resolve() == source.resolve() or (target.exists() and source.exists()
-                                                                and target.samefile(source)):
-                        raise KGodelError("Comparison output must not overwrite an input checkpoint.")
             report = compare_agents(load_session(args.before), load_session(args.after), queries=args.query,
                                     max_facts=args.max_facts, max_work=args.max_work)
             print(format_comparison(report, explain=args.explain))
@@ -205,7 +228,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.result_json:
             save(args.result_json, json.dumps(report, indent=2))
         return {"ok": 0, "inconsistent": 1, "error": 2}[report["status"]]
-    except (KGodelError, OSError) as error:
+    except (KGodelError, OSError, UnicodeError) as error:
         print(f"KGodel error: {error}", file=sys.stderr)
         return 2
 

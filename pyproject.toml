@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "kgodel"
 dynamic = ["version"]
 description = "An experimental logic language for inspectable agent reasoning"
-readme = "README.md"
+readme = "PACKAGE.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -24,12 +24,16 @@ kgodel = "kgodel.__main__:main"
 
 [project.urls]
 Repository = "https://github.com/TamarindTech/KGodel"
+Documentation = "https://github.com/TamarindTech/KGodel/tree/main/docs"
+Issues = "https://github.com/TamarindTech/KGodel/issues"
+Changelog = "https://github.com/TamarindTech/KGodel/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 include = ["kgodel*"]
 
 [tool.setuptools.package-data]
 "kgodel.demos" = ["*.kg", "*.world.json"]
+"kgodel.templates" = ["*/*.md", "*/*.kg", "*/*.kgq"]
 
 [tool.setuptools.dynamic]
 version = {attr = "kgodel.__version__"}

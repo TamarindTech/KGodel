@@ -1,4 +1,4 @@
-# Troubleshooting KGodel 0.12
+# Troubleshooting KGodel 0.13 developer preview
 
 [Documentation home](README.md) · [Command reference](reference.md) · [Tutorial course](tutorials/README.md)
 
@@ -11,11 +11,13 @@ python -c "import sys; print(sys.executable)"
 python -m pip show kgodel
 ```
 
-From the checkout root, install with that same interpreter: `python -m pip install -e .`. In a virtual environment, use its Python for installation and execution. Installing with a different Python does not make the package available to this one. After installation, `python -m kgodel --version` should show 0.12.0 for this documentation.
+From the checkout root, install with that same interpreter: `python -m pip install -e .`. In a virtual environment, use its Python for installation and execution. Installing with a different Python does not make the package available to this one. After installation, `python -m kgodel --version` should show 0.13.0a1 for this preview.
 
 If only the `kgodel` console command is missing, use `python -m kgodel`; the script directory need not be on PATH. Do not assume `pip install kgodel` from PyPI identifies this project.
 
 ## A source or world file cannot be found
+
+`python -m kgodel init my-agent` creates a complete route project, including its world and query files, in a new folder. For a pure knowledge base use `--template logic`. Existing destinations are refused; select a new path instead of deleting your project.
 
 Relative paths start at the terminal's current directory. Run tutorial commands from the repository root or supply full file paths. Installing KGodel does not copy `examples/tutorials` into every working directory or into the wheel.
 

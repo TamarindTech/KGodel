@@ -1,10 +1,12 @@
-# Using KGodel 0.12
+# Using KGodel 0.13 developer preview
 
 [Documentation home](README.md) · [Step-by-step tutorials](tutorials/README.md) · [Command reference](reference.md) · [Troubleshooting](troubleshooting.md)
 
 KGodel has two entry points: `python -m kgodel` and, after installation, the `kgodel` console command. Both call the same interpreter and accept the same arguments. Python 3.10 or newer is required.
 
 ## Installation
+
+For downloadable wheels, the offline kit, and creating a first project with `init`, see [the product preview guide](product-preview.md). The following commands install a source checkout. Run `python -m kgodel doctor` after installation to check the interpreter, package version, and bundled demo.
 
 Open a terminal in the repository root, which contains `pyproject.toml` and the `kgodel/` directory:
 
@@ -214,4 +216,4 @@ python tools/verify_install.py dist
 
 The verifier requires a wheel path or a directory containing exactly one KGodel wheel. It creates a fresh temporary environment, installs the local wheel without using a package index, and runs from a directory outside the repository. It checks that the imported package comes from the temporary environment, validates metadata and both command entry points, runs every bundled demo, steps a shell session, restores a checkpoint in separate processes, and compares saved and live states. The resumed trace must equal an uninterrupted run.
 
-The normal test suite needs only Python's standard library. Wheel creation needs the declared setuptools build dependency. GitHub Actions is configured to perform both checks on Windows and Linux using Python 3.10 and 3.13.
+The normal test suite needs only Python's standard library. Wheel creation needs the declared setuptools build dependency. GitHub Actions checks Windows, Linux, and macOS using Python 3.10 and 3.13, and also validates the source package and offline kit. See [the release guide](releasing.md) for the complete build and distribution checks.

@@ -1,0 +1,3 @@
+prove(at(start)).
+prove(clear(forest)).
+suppose(clear(forest)) { prove(clear(forest)). }

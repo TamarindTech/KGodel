@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.0a1 — developer preview
+
+- Added `init` with route-agent and pure-logic starters, packaged query files, and first-project instructions. Existing destinations are never overwritten.
+- Added local `doctor` diagnostics for the active Python/package, metadata mismatch, and bundled-demo health, with text and JSON output.
+- Protected command-line exports from overwriting input files or sharing output paths, while preserving explicit in-place checkpoint resume. Invalid UTF-8 input reports a normal CLI error.
+- Added wheel/source metadata validation, an offline starter kit, release manifests and checksums, isolated starter verification, and a manual draft-prerelease workflow.
+- Extended the test matrix to macOS alongside Windows/Linux, added contributor/issue guidance, and documented alpha compatibility, supported use cases, and release steps. Checkpoint schema 5 is unchanged.
+
 ## 0.12.0
 
 - Added ground equality, difference, and lexical-order comparisons (`==`, `\==`, `@<`, `@=<`, `@>`, `@>=`) to queries, rule/method bodies, plan entry guards, requirements, and hypothetical checks.

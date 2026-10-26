@@ -1,0 +1,8 @@
+include README.md PACKAGE.md CHANGELOG.md CONTRIBUTING.md LICENSE
+recursive-include docs *.md *.svg
+recursive-include examples *.py *.kg *.kgq *.kga *.json *.md
+recursive-include tests *.py
+recursive-include tools *.py
+include output/*.txt output/*.json
+prune output/branding
+global-exclude __pycache__ *.py[cod]

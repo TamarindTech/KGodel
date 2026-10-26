@@ -75,7 +75,7 @@ Proof records connect conclusions to rules and evidence sources. Execution trace
 
 ## What you can use today
 
-KGodel 0.12 includes a Python interpreter, five bundled route experiments, an interactive shell, saved sessions, state comparisons, Smalltalk-inspired logical objects with superclass reasoning, bounded abductive reasoning, Prolog-style composed queries, and readable or JSON execution records. It runs locally with Python 3.10 or newer and requires no API keys or third-party runtime dependencies.
+KGodel 0.13.0a1 is a developer preview with a Python interpreter, five bundled route experiments, an interactive shell, saved sessions, state comparisons, Smalltalk-inspired logical objects with superclass reasoning, bounded abductive reasoning, Prolog-style composed queries, and readable or JSON execution records. It runs locally with Python 3.10 or newer and requires no API keys or third-party runtime dependencies. New users can create a starter with `python -m kgodel init my-agent` and check installation with `python -m kgodel doctor`; see [the product preview guide](product-preview.md).
 
 From the repository root, install the checkout:
 

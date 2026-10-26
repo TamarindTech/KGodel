@@ -1,4 +1,4 @@
-# KGodel 0.12 command reference
+# KGodel 0.13 developer preview command reference
 
 [Documentation home](README.md) · [Tutorial course](tutorials/README.md) · [Troubleshooting](troubleshooting.md)
 
@@ -8,6 +8,8 @@ Use `python -m kgodel COMMAND ...`, or `kgodel COMMAND ...` when the installed c
 
 | Command | Input | Behavior |
 | --- | --- | --- |
+| `init DIRECTORY [--template route\|logic]` | New directory with an existing parent | Create an editable starter, queries, and README; refuse existing destinations |
+| `doctor [--json]` | Current Python environment | Inspect installation metadata and run a bundled simulation in memory |
 | `check PROGRAM` | `.kg` program | Parse, validate, and compute initial logical closure |
 | `query PROGRAM QUERY` | A query expression, optionally `?-` or `prove(...)` | Inspect initial knowledge, returning statuses or bindings |
 | `explain PROGRAM QUERY` | Same as query | Include supporting/opposing proof trees |
@@ -29,6 +31,8 @@ The five bundled names are `blocked-route`, `hypothesis-planning`, `multistep-ro
 `check`, `query`, `explain`, `objects`, and program-based `abduce` can use a pure knowledge base without goals or a world. Preview validates logical applicability, not the physical feasibility of an operation. `run` and the shell require a goal and a world whose simulator supports the program's operations.
 
 ## Input and output options
+
+Command-line exports must use distinct paths and cannot overwrite input files, including aliases. `resume SESSION --checkpoint SESSION` is the explicit exception for continuing and replacing the same checkpoint. These checks run before agent execution. `doctor --json` prints diagnostics to stdout and writes no files; `init` writes only into a newly created folder.
 
 - `query` and `explain` accept either a query argument or `--file REQUESTS.kgq`. Use `--result-json PATH` to save structured answers, proofs, and dependencies.
 - `deliberate` accepts `--max-hypotheses N` and `--result-json PATH`.
@@ -67,6 +71,8 @@ Only `:step` and `:run` advance the simulator. Save commands write files without
 
 | Command family | Exit 0 | Exit 1 | Exit 2 |
 | --- | --- | --- | --- |
+| `init` | Project created | — | Existing destination, invalid arguments, or file error |
+| `doctor` | Installation and demo checks passed | Missing/different installed metadata | Demo or diagnostic failure |
 | `check`, `objects` | Valid input | — | Input, file, or initial reasoning error |
 | `query`, `explain` | Request evaluated, including false/unknown/no matches | Inconsistent hypothetical context | Input or inference error |
 | `deliberate` | Selected or already achieved | Stuck | Input or reasoning error |

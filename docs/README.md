@@ -1,11 +1,13 @@
 # KGodel documentation
 
-This is the documentation home for **KGodel 0.12**. KGodel is an experimental language for inspectable agent reasoning: facts and rules describe knowledge, queries explain support, and plans act through a local simulator.
+This is the documentation home for **KGodel 0.13.0a1**, an alpha developer preview. KGodel is an experimental language for inspectable agent reasoning: facts and rules describe knowledge, queries explain support, and plans act through a local simulator.
 
 ## Choose a starting point
 
 | You want to… | Start here |
 | --- | --- |
+| Try the product preview or create a starter project | [Developer preview](product-preview.md) |
+| Prepare verified release downloads | [Release guide](releasing.md) |
 | Understand the idea without programming | [Introduction for developers and non-developers](introduction.md) |
 | Learn by running and changing examples | [Nine-part tutorial course](tutorials/README.md) |
 | Install KGodel or use the interactive shell | [Usage guide](using-kgodel.md) |

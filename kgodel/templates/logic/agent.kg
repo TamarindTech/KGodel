@@ -1,0 +1,9 @@
+agent family {
+    parent(alice, bob).
+    parent(alice, carol).
+    parent(bob, david).
+    ancestor(X, Y) :- parent(X, Y).
+    ancestor(X, Y) :- parent(X, Z), ancestor(Z, Y).
+    sibling(X, Y) :- parent(Parent, X), parent(Parent, Y), X \== Y.
+    sibling_pair(X, Y) :- sibling(X, Y), X @< Y.
+}

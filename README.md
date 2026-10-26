@@ -2,11 +2,13 @@
   <img src="docs/assets/kgodel-logo-transparent.svg" alt="KGödel — Agentic Logic Programming" width="640">
 </p>
 
-# KGodel 0.12
+# KGodel 0.13 developer preview
 
 **An experimental logic language for agents that can revise their beliefs and explain their decisions.**
 
 New to KGodel? Read the [introduction for developers and non-developers](docs/introduction.md).
+
+**Preparing a first product release:** version `0.13.0a1` adds starter projects, installation diagnostics, and an offline release kit. Follow the [developer preview guide](docs/product-preview.md) to try it, or the [release guide](docs/releasing.md) to prepare downloads. This is an alpha preview; it is not yet a stable 1.0 product.
 
 **Learn by doing:** follow the [nine-part tutorial course](docs/tutorials/README.md), from your first query to a resumable delivery agent. The [documentation home](docs/README.md) links the [command reference](docs/reference.md), [troubleshooting guide](docs/troubleshooting.md), and detailed feature specifications.
 
@@ -24,6 +26,17 @@ Requires Python 3.10 or newer. There are no third-party runtime dependencies or 
 python -m pip install .
 python -m kgodel demo
 ```
+
+Create an editable starter and check the installation:
+
+```powershell
+python -m kgodel doctor
+python -m kgodel init my-agent
+python -m kgodel run my-agent/agent.kg
+python -m kgodel init my-knowledge --template logic
+```
+
+Each new folder includes a README and query examples. `init` refuses existing destinations. Release starter kits include a wheel and offline documentation; source installation remains available before a public release.
 
 After installation, `python -m kgodel` works from any folder when using that same Python environment. The installed `kgodel` command is also available when that environment's Scripts/bin directory is on your PATH. For active development, use `python -m pip install -e .` so source edits take effect immediately. KGodel has not been published to PyPI; these instructions install this local checkout.
 

@@ -19,7 +19,9 @@ EXAMPLES = ROOT / "examples" / "tutorials"
 
 
 def check_links():
-    documents = [ROOT / "README.md", EXAMPLES / "README.md", *sorted((ROOT / "docs").rglob("*.md"))]
+    documents = [*sorted(ROOT.glob("*.md")), EXAMPLES / "README.md",
+                 *sorted((ROOT / "docs").rglob("*.md")),
+                 *sorted((ROOT / "kgodel/templates").rglob("*.md"))]
     checked = 0
     for document in documents:
         contents = document.read_text(encoding="utf-8")
@@ -86,7 +88,7 @@ def verify():
         delivery = EXAMPLES / "delivery.kg"
         for program in (library, policies, first, delivery):
             assert "Valid: agent" in cli("check", program)
-        assert cli("--version").strip() == "KGodel 0.12.0"
+        assert cli("--version").strip() == "KGodel 0.13.0a1"
         assert "super-routes" in cli("demo", "--list")
 
         # Lessons 1 and 2: bindings, explicit opposition, unknown, and recursion.
