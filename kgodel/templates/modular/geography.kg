@@ -1,0 +1,14 @@
+module geography {
+    node(start).
+    node(bridge).
+    node(forest).
+    node(goal).
+    path(start, bridge).
+    path(bridge, goal).
+    path(start, forest).
+    path(forest, goal).
+    approved(forest).
+    approved(goal).
+    reachable(X, X) :- node(X).
+    reachable(X, Goal) :- path(X, Next), reachable(Next, Goal).
+}

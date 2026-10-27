@@ -11,9 +11,10 @@ from .comparison import compare_agents, format_comparison
 from .demos import DEFAULT_DEMO, DEMOS, load_demo
 from .diagnostics import diagnose, format_diagnostics
 from .logic import Inference, Knowledge
+from .loading import format_imports, load_project
 from .model import KGodelError
 from .objects import ObjectSpace, format_objects
-from .parser import parse, parse_abduction, parse_queries, parse_query
+from .parser import parse_abduction, parse_queries, parse_query
 from .planning import deliberate, format_decision
 from .projects import TEMPLATES, create_project
 from .querying import evaluate_queries, format_query_results
@@ -28,10 +29,11 @@ def save(path: str, content: str):
     target.write_text(content + "\n", encoding="utf-8")
 
 
-def validate_outputs(args: argparse.Namespace):
+def validate_outputs(args: argparse.Namespace, *, sources=()):
     """Reject path aliases before execution or export can damage an input."""
     inputs = [(name, Path(value)) for name in ("program", "world", "file", "session", "resume", "before", "after")
               if (value := getattr(args, name, None))]
+    inputs.extend(("module", Path(value)) for value in sources)
     if args.command == "run" and not args.world:
         inputs.append(("world", Path(args.program).with_suffix(".world.json")))
     outputs = [(name, Path(value)) for name in ("result_json", "trace_json", "trace_text", "checkpoint")
@@ -47,6 +49,10 @@ def validate_outputs(args: argparse.Namespace):
                 raise KGodelError("Output must not overwrite an input file.")
         if any(same(target, other) for _, other in outputs[:index]):
             raise KGodelError("Output files must use distinct paths.")
+
+
+def protect_sources(args, project):
+    validate_outputs(args, sources=(project.root / source.path for source in project.sources))
 
 
 def execution_options(command: argparse.ArgumentParser):
@@ -94,6 +100,9 @@ def main(argv: list[str] | None = None) -> int:
                        help="Maximum hypothetical contexts per request or decision (default: 64)")
     check = commands.add_parser("check", help="Parse a program and validate its initial knowledge")
     check.add_argument("program")
+    imports = commands.add_parser("imports", help="Inspect and validate a program's local module dependencies")
+    imports.add_argument("program")
+    imports.add_argument("--result-json", help="Save dependency paths and source hashes")
     objects = commands.add_parser("objects", help="Inspect classes, inherited methods, and object configuration")
     objects.add_argument("program")
     preview = commands.add_parser("deliberate", help="Preview plan selection without loading a world")
@@ -153,7 +162,9 @@ def main(argv: list[str] | None = None) -> int:
             if args.file and args.assume:
                 parser.error("abduce --file cannot be combined with --assume")
             if args.program:
-                program = parse(Path(args.program).read_text(encoding="utf-8-sig"))
+                project = load_project(args.program)
+                protect_sources(args, project)
+                program = project.program
                 knowledge = Knowledge(program.beliefs)
             else:
                 agent = load_session(args.resume) if args.resume else load_demo(args.demo)
@@ -194,7 +205,14 @@ def main(argv: list[str] | None = None) -> int:
             agent = load_session(args.resume) if args.resume else load_demo(args.demo)
             return run_shell(agent, max_hypotheses=args.max_hypotheses)
         program_path = Path(args.program)
-        program = parse(program_path.read_text(encoding="utf-8-sig"))
+        project = load_project(program_path)
+        protect_sources(args, project)
+        program = project.program
+        if args.command == "imports":
+            print(format_imports(project))
+            if args.result_json:
+                save(args.result_json, json.dumps(project.as_dict(), indent=2))
+            return 0
         if args.command == "objects":
             print(format_objects(ObjectSpace(program).describe()))
             return 0

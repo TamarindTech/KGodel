@@ -6,8 +6,9 @@ The developer preview includes:
 
 - Queries, recursive rules, comparison filters, temporary hypotheses, and bounded abduction.
 - Classes, inheritance, and `self` / `super` logical messages.
+- Reusable local modules for shared facts, policies, and plans, with dependency inspection.
 - A local route simulator, resumable sessions, and proof and trace exports.
-- Two starter projects, five bundled demos, and an installation diagnostic.
+- Three starter projects, five bundled demos, and an installation diagnostic.
 
 Python 3.10 or newer is required. There are no runtime dependencies, API keys, or hosted services. Install the wheel from a verified [GitHub release](https://github.com/TamarindTech/KGodel/releases) with `python -m pip install PATH_TO_WHEEL`, then:
 

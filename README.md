@@ -2,15 +2,17 @@
   <img src="docs/assets/kgodel-logo-transparent.svg" alt="KGödel — Agentic Logic Programming" width="640">
 </p>
 
-# KGodel 0.13 developer preview
+# KGodel 0.14 developer preview
 
 **An experimental logic language for agents that can revise their beliefs and explain their decisions.**
 
+Version 0.14 adds [reusable modules](docs/modules-v0.14.md). Share facts, recursive rules, logical objects, and plans across local files; inspect their dependencies; save agents as self-contained checkpoints.
+
 New to KGodel? Read the [introduction for developers and non-developers](docs/introduction.md).
 
-**Preparing a first product release:** version `0.13.0a1` adds starter projects, installation diagnostics, and an offline release kit. Follow the [developer preview guide](docs/product-preview.md) to try it, or the [release guide](docs/releasing.md) to prepare downloads. This is an alpha preview; it is not yet a stable 1.0 product.
+**Preparing a first product release:** version `0.14.0a1` includes starter projects, installation diagnostics, and an offline release kit. Follow the [developer preview guide](docs/product-preview.md) to try it, or the [release guide](docs/releasing.md) to prepare downloads. This is an alpha preview; it is not yet a stable 1.0 product.
 
-**Learn by doing:** follow the [nine-part tutorial course](docs/tutorials/README.md), from your first query to a resumable delivery agent. The [documentation home](docs/README.md) links the [command reference](docs/reference.md), [troubleshooting guide](docs/troubleshooting.md), and detailed feature specifications.
+**Learn by doing:** follow the [ten-part tutorial course](docs/tutorials/README.md), from your first query to a resumable delivery agent. The [documentation home](docs/README.md) links the [command reference](docs/reference.md), [troubleshooting guide](docs/troubleshooting.md), and detailed feature specifications.
 
 KGodel combines a small Prolog-inspired syntax with explicit goals, guarded plans, observations, and actions. This working prototype explores the reasoning cycle in a finite simulated world.
 
@@ -34,6 +36,8 @@ python -m kgodel doctor
 python -m kgodel init my-agent
 python -m kgodel run my-agent/agent.kg
 python -m kgodel init my-knowledge --template logic
+python -m kgodel init my-modular-agent --template modular
+python -m kgodel imports my-modular-agent/agent.kg
 ```
 
 Each new folder includes a README and query examples. `init` refuses existing destinations. Release starter kits include a wheel and offline documentation; source installation remains available before a public release.
@@ -405,7 +409,7 @@ python -m pip wheel . --no-deps --wheel-dir dist
 python tools/verify_install.py dist
 ```
 
-The verifier installs the wheel into a temporary environment and exercises the module command, console command, every bundled demo, a stepped shell session, checkpoint resumption in separate processes, and state comparisons from an unrelated directory. Session tests also cover every demo pause boundary, retained proof sources, conflicts, retry suppression, malformed files, and failed writes. Comparison tests cover revised beliefs, withdrawn conclusions, alternative proofs, differing scenarios, bounded reasoning, and input preservation. The `dist` directory must contain exactly one KGodel wheel, or pass a specific wheel path. GitHub Actions runs the unit suite and this installation check on Windows and Linux with Python 3.10 and 3.13.
+The verifier installs the wheel into a temporary environment and exercises the module command, console command, every bundled demo, a stepped shell session, checkpoint resumption in separate processes, and state comparisons from an unrelated directory. Session tests also cover every demo pause boundary, retained proof sources, conflicts, retry suppression, malformed files, and failed writes. Comparison tests cover revised beliefs, withdrawn conclusions, alternative proofs, differing scenarios, bounded reasoning, and input preservation. The `dist` directory must contain exactly one KGodel wheel, or pass a specific wheel path. GitHub Actions runs the unit suite and this installation check on Windows, Linux, and macOS with Python 3.10 and 3.13.
 
 ## Design references
 

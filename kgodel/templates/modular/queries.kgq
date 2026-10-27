@@ -1,0 +1,5 @@
+?- [courier candidateFrom: start to: Place].
+?- [courier mayMoveFrom: start to: forest].
+suppose(clear(forest)) { [courier mayMoveFrom: start to: forest]. }
+?- [courier mayMoveFrom: start to: forest].
+?- reachable(start, Place).

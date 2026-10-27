@@ -7,7 +7,7 @@ from .demos import DEMOS
 from .model import KGodelError
 
 
-TEMPLATES = ("route", "logic")
+TEMPLATES = ("route", "logic", "modular")
 
 
 def create_project(directory: str | Path, template: str = "route") -> Path:
@@ -22,8 +22,11 @@ def create_project(directory: str | Path, template: str = "route") -> Path:
         stem = DEMOS["multistep-route"][0]
         contents["agent.kg"] = demo.joinpath(stem + ".kg").read_text(encoding="utf-8")
         contents["agent.world.json"] = demo.joinpath(stem + ".world.json").read_text(encoding="utf-8")
-    else:
+    elif template == "logic":
         contents["agent.kg"] = resources.joinpath("agent.kg").read_text(encoding="utf-8")
+    else:
+        for name in ("agent.kg", "agent.world.json", "geography.kg", "policies.kg", "travel.kg"):
+            contents[name] = resources.joinpath(name).read_text(encoding="utf-8")
     contents[".gitignore"] = "__pycache__/\n.venv/\n*.trace.json\n*.trace.txt\n*.session.json\n"
     target = Path(directory).absolute()
     try:

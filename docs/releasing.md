@@ -2,7 +2,7 @@
 
 [Product preview](product-preview.md) · [Contributor guide](../CONTRIBUTING.md)
 
-The first product channel is an alpha developer preview. Release tooling requires an alpha version such as `0.13.0a1`; it does not label experimental code stable. This guide describes the process, not a claim that a release is published.
+The first product channel is an alpha developer preview. Release tooling requires an alpha version such as `0.14.0a1`; it does not label experimental code stable. This guide describes the process, not a claim that a release is published.
 
 ## Build and verify locally
 

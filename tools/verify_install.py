@@ -47,16 +47,25 @@ def verify(wheel: Path):
         assert run(console, "--version").strip() == module_version
         diagnostics = json.loads(run(console, "doctor", "--json"))
         assert diagnostics["status"] == "ok" and diagnostics["version"] == metadata["version"], diagnostics
-        for template in ("route", "logic"):
+        for template in ("route", "logic", "modular"):
             project = outside / f"{template} starter"
             run(console, "init", project, "--template", template)
             run(console, "check", project / "agent.kg")
             run(console, "explain", project / "agent.kg", "--file", project / "queries.kgq")
-            if template == "route":
+            if template in ("route", "modular"):
                 assert "Result: achieved" in run(console, "run", project / "agent.kg")
             original = (project / "agent.kg").read_bytes()
             run(console, "init", project, expected_code=2)
             assert (project / "agent.kg").read_bytes() == original
+            if template == "modular":
+                dependencies = outside / "module-dependencies.json"
+                run(console, "imports", project / "agent.kg", "--result-json", dependencies)
+                assert len(json.loads(dependencies.read_text())["files"]) == 4
+                checkpoint = outside / "modular-session.json"
+                run(console, "run", project / "agent.kg", "--max-steps", "1", "--checkpoint", checkpoint, expected_code=1)
+                for source in project.glob("*.kg"):
+                    source.unlink()
+                assert "Result: achieved" in run(console, "resume", checkpoint)
         names = json.loads(run(python, "-I", "-c",
                               "import json; from kgodel.demos import DEMOS; print(json.dumps(list(DEMOS)))"))
         listing = run(console, "demo", "--list")
@@ -178,7 +187,7 @@ def verify(wheel: Path):
         run(python, "-I", "-m", "kgodel", "resume", prolog_checkpoint, "--trace-json", prolog_trace)
         result = json.loads(prolog_trace.read_text(encoding="utf-8"))
         assert result["status"] == "achieved" and result["steps"] == 2, result
-        print(f"{module_version}: installation, diagnostics, starter projects, demos, objects, super dispatch, abduction, Prolog queries, shell, session restart, and comparisons verified outside checkout")
+        print(f"{module_version}: installation, diagnostics, starter projects, local modules, demos, objects, super dispatch, abduction, Prolog queries, shell, session restart, and comparisons verified outside checkout")
 
 
 if __name__ == "__main__":
