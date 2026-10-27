@@ -37,7 +37,7 @@ Term = str | Var | SlotRef | SelfRef | SuperRef
 Bindings = dict[str, str]
 
 
-def render_term(term: Term) -> str:
+def render_term(term: Term, *, in_method: bool = False) -> str:
     if isinstance(term, Var):
         return term.name
     if isinstance(term, SlotRef):
@@ -46,6 +46,8 @@ def render_term(term: Term) -> str:
         return "self"
     if isinstance(term, SuperRef):
         return "super"
+    if in_method and term in {"self", "super"}:
+        return json.dumps(term)
     return term if re.fullmatch(r"[a-z][A-Za-z0-9_]*", term) else json.dumps(term)
 
 
@@ -104,6 +106,10 @@ class Literal:
     def opposite(self) -> Literal:
         return Literal(self.atom, not self.negative)
 
+    @property
+    def variables(self) -> set[str]:
+        return self.atom.variables
+
     def ground(self, bindings: Bindings) -> Literal:
         return Literal(self.atom.ground(bindings), self.negative)
 
@@ -115,19 +121,66 @@ class Unknown:
     def __str__(self) -> str:
         return f"unknown({self.atom})"
 
+    @property
+    def variables(self) -> set[str]:
+        return self.atom.variables
+
+
+COMPARISON_OPPOSITES = {"==": "\\==", "\\==": "==", "@<": "@>=", "@>=": "@<",
+                        "@=<": "@>", "@>": "@=<"}
+
+
+@dataclass(frozen=True)
+class Comparison:
+    """A pure test of two ground constants; it never binds a variable."""
+    left: Term
+    operator: str
+    right: Term
+
+    def __post_init__(self):
+        if self.operator not in COMPARISON_OPPOSITES:
+            raise KGodelError(f"Unsupported comparison operator {self.operator}.")
+        if "_" in self.variables:
+            raise KGodelError("Anonymous variables are not allowed in comparisons; use bound named variables.")
+
+    @property
+    def variables(self) -> set[str]:
+        return {term.name for term in (self.left, self.right) if isinstance(term, Var)}
+
+    def render(self, *, in_method: bool = False) -> str:
+        return (f"{render_term(self.left, in_method=in_method)} {self.operator} "
+                f"{render_term(self.right, in_method=in_method)}")
+
+    def __str__(self) -> str:
+        return self.render()
+
+    def ground(self, bindings: Bindings) -> Comparison:
+        values = Atom("comparison", (self.left, self.right)).ground(bindings).args
+        return Comparison(values[0], self.operator, values[1])
+
+    def opposite(self) -> Comparison:
+        return Comparison(self.left, COMPARISON_OPPOSITES[self.operator], self.right)
+
+    def holds(self) -> bool:
+        if not isinstance(self.left, str) or not isinstance(self.right, str):
+            raise KGodelError("Comparisons require ground constants; bind variables with a literal first.")
+        return {"==": self.left == self.right, "\\==": self.left != self.right,
+                "@<": self.left < self.right, "@=<": self.left <= self.right,
+                "@>": self.left > self.right, "@>=": self.left >= self.right}[self.operator]
+
 
 @dataclass(frozen=True)
 class Rule:
     name: str
     head: Literal
-    body: tuple[Literal, ...]
+    body: tuple[Literal | Comparison, ...]
 
 
 @dataclass(frozen=True)
 class PlanStep:
     operation: str
     argument: Atom
-    requirements: tuple[Literal | Unknown, ...] = ()
+    requirements: tuple[Literal | Comparison | Unknown, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -135,7 +188,7 @@ class Plan:
     name: str
     parameters: tuple[str, ...]
     target: Atom
-    guards: tuple[Literal | Unknown, ...]
+    guards: tuple[Literal | Comparison | Unknown, ...]
     steps: tuple[PlanStep, ...]
     priority: int = 0
     hypotheses: tuple[SupposeQuery, ...] = ()
@@ -153,7 +206,7 @@ class Plan:
 class Method:
     selector: str
     parameters: tuple[str, ...]
-    body: tuple[Literal, ...]
+    body: tuple[Literal | Comparison, ...]
     negative: bool = False
 
 
@@ -196,7 +249,7 @@ class ProveQuery:
 @dataclass(frozen=True)
 class GoalExpression:
     operator: str
-    operands: tuple[Literal | GoalExpression, ...]
+    operands: tuple[Literal | Comparison | GoalExpression, ...]
 
     def __post_init__(self):
         if self.operator not in {"and", "or"} or len(self.operands) < 2:
@@ -208,8 +261,7 @@ class GoalExpression:
 
     @property
     def variables(self) -> set[str]:
-        return set().union(*(item.atom.variables if isinstance(item, Literal) else item.variables
-                             for item in self.operands))
+        return set().union(*(item.variables for item in self.operands))
 
     def ground(self, bindings: Bindings) -> GoalExpression:
         return GoalExpression(self.operator, tuple(item.ground(bindings) for item in self.operands))
@@ -217,7 +269,7 @@ class GoalExpression:
 
 @dataclass(frozen=True)
 class ExpressionQuery:
-    expression: GoalExpression
+    expression: Comparison | GoalExpression
 
 
 @dataclass(frozen=True)
@@ -229,10 +281,10 @@ class SupposeQuery:
 Query = ProveQuery | ExpressionQuery | SupposeQuery
 
 
-def expression_literals(expression: Literal | GoalExpression):
+def expression_literals(expression: Literal | Comparison | GoalExpression):
     if isinstance(expression, Literal):
         yield expression
-    else:
+    elif isinstance(expression, GoalExpression):
         for operand in expression.operands:
             yield from expression_literals(operand)
 
@@ -282,7 +334,7 @@ def match(pattern: Atom, value: Atom, bindings: Bindings | None = None) -> Bindi
 
 @dataclass(frozen=True)
 class Proof:
-    conclusion: Literal
+    conclusion: Literal | Comparison
     source: str
     premises: tuple[Proof, ...] = ()
 

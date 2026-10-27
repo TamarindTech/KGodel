@@ -1,0 +1,5 @@
+?- ancestor(alice, Person).
+?- sibling_pair(First, Second).
+?- sibling(bob, bob).
+suppose(parent(carol, emma)) { ancestor(alice, emma). }
+?- ancestor(alice, emma).

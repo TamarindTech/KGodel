@@ -7,7 +7,7 @@ No method executes host code or simulator operations.
 
 from __future__ import annotations
 
-from .model import (Atom, ExpressionQuery, KGodelError, Literal, Program, ProveQuery, Rule, SelfRef,
+from .model import (Atom, Comparison, ExpressionQuery, KGodelError, Literal, Program, ProveQuery, Rule, SelfRef,
                     SlotRef, SuperRef, Var, expression_literals, render_term)
 
 
@@ -45,7 +45,8 @@ class ObjectSpace:
                 local = {}
                 for index, method in enumerate(definition.methods, 1):
                     for literal in method.body:
-                        terms = (*literal.atom.args, literal.atom.receiver)
+                        terms = ((literal.left, literal.right) if isinstance(literal, Comparison)
+                                 else (*literal.atom.args, literal.atom.receiver))
                         for term in terms:
                             if isinstance(term, SlotRef) and term.name not in slots:
                                 raise KGodelError(f"Unknown instance variable @{term.name} in {definition.name}.")
@@ -57,6 +58,8 @@ class ObjectSpace:
         for definition in program.classes:
             for method in definition.methods:
                 for literal in method.body:
+                    if isinstance(literal, Comparison):
+                        continue
                     atom = literal.atom
                     if atom.lookup_class is not None:
                         raise KGodelError("Superclass lookup annotations are reserved for stored proofs.")
@@ -129,6 +132,9 @@ class ObjectSpace:
                 for owner, index, method in clauses:
                     body = []
                     for item in method.body:
+                        if isinstance(item, Comparison):
+                            body.append(Comparison(resolve(item.left), item.operator, resolve(item.right)))
+                            continue
                         atom = item.atom
                         arguments = tuple(resolve(term) for term in atom.args)
                         if isinstance(atom.receiver, SuperRef):
@@ -166,19 +172,22 @@ class ObjectSpace:
         for rule in self.program.rules:
             self.validate_atom(rule.head.atom)
             for literal in rule.body:
-                self.validate_atom(literal.atom)
+                if isinstance(literal, Literal):
+                    self.validate_atom(literal.atom)
         for goal in self.program.goals:
             self.validate_atom(goal)
         for plan in self.program.plans:
             self.validate_atom(plan.target)
             for guard in plan.guards:
-                self.validate_atom(guard.atom)
+                if not isinstance(guard, Comparison):
+                    self.validate_atom(guard.atom)
             self.validate_queries(plan.hypotheses)
             for step in plan.steps:
                 if step.argument.receiver is not None:
                     raise KGodelError("Messages are logical queries; act and observe require simulator predicates.")
                 for guard in step.requirements:
-                    self.validate_atom(guard.atom)
+                    if not isinstance(guard, Comparison):
+                        self.validate_atom(guard.atom)
 
     def describe(self) -> dict:
         return {

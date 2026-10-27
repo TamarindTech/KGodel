@@ -1,4 +1,4 @@
-# KGodel 0.11 command reference
+# KGodel 0.13 developer preview command reference
 
 [Documentation home](README.md) · [Tutorial course](tutorials/README.md) · [Troubleshooting](troubleshooting.md)
 
@@ -8,6 +8,8 @@ Use `python -m kgodel COMMAND ...`, or `kgodel COMMAND ...` when the installed c
 
 | Command | Input | Behavior |
 | --- | --- | --- |
+| `init DIRECTORY [--template route\|logic]` | New directory with an existing parent | Create an editable starter, queries, and README; refuse existing destinations |
+| `doctor [--json]` | Current Python environment | Inspect installation metadata and run a bundled simulation in memory |
 | `check PROGRAM` | `.kg` program | Parse, validate, and compute initial logical closure |
 | `query PROGRAM QUERY` | A query expression, optionally `?-` or `prove(...)` | Inspect initial knowledge, returning statuses or bindings |
 | `explain PROGRAM QUERY` | Same as query | Include supporting/opposing proof trees |
@@ -30,6 +32,8 @@ The five bundled names are `blocked-route`, `hypothesis-planning`, `multistep-ro
 
 ## Input and output options
 
+Command-line exports must use distinct paths and cannot overwrite input files, including aliases. `resume SESSION --checkpoint SESSION` is the explicit exception for continuing and replacing the same checkpoint. These checks run before agent execution. `doctor --json` prints diagnostics to stdout and writes no files; `init` writes only into a newly created folder.
+
 - `query` and `explain` accept either a query argument or `--file REQUESTS.kgq`. Use `--result-json PATH` to save structured answers, proofs, and dependencies.
 - `deliberate` accepts `--max-hypotheses N` and `--result-json PATH`.
 - `run` and file-based `shell` accept `--world WORLD.json`. Otherwise `agent.kg` uses the sibling `agent.world.json`. Bundled and resumed sources cannot be given a replacement world.
@@ -38,7 +42,7 @@ The five bundled names are `blocked-route`, `hypothesis-planning`, `multistep-ro
 - `abduce` accepts repeatable `--assume "GROUND_LITERAL"`, or `--file REQUEST.kga` instead of a query and candidates. It also accepts `--explain`, `--result-json PATH`, `--max-assumptions N` (default 3), `--max-contexts N` (256), `--max-solutions N` (20), `--max-facts N` (10000), and `--max-work N` (200000 per closure). At most 16 distinct candidates are accepted.
 - `shell` accepts `--max-hypotheses N` (default 64 per query request or decision).
 
-Named outputs can replace an existing file. Use separate output names for sources, worlds, traces, and checkpoints. Comparison and abduction explicitly reject result outputs that alias their inputs. New saves use checkpoint schema 4; older schemas 1–3 remain readable. Trace JSON is a report and cannot be resumed.
+Named outputs can replace an existing file. Use separate output names for sources, worlds, traces, and checkpoints. Comparison and abduction explicitly reject result outputs that alias their inputs. New saves use checkpoint schema 5; older schemas 1–4 remain readable. Trace JSON is a report and cannot be resumed.
 
 The plain `query`/`explain` CLI does not expose inference-budget flags; use `Agent.query` or `evaluate_queries` in Python to customize those limits. See [the Python tutorial](tutorials/07-python-api.md).
 
@@ -67,6 +71,8 @@ Only `:step` and `:run` advance the simulator. Save commands write files without
 
 | Command family | Exit 0 | Exit 1 | Exit 2 |
 | --- | --- | --- | --- |
+| `init` | Project created | — | Existing destination, invalid arguments, or file error |
+| `doctor` | Installation and demo checks passed | Missing/different installed metadata | Demo or diagnostic failure |
 | `check`, `objects` | Valid input | — | Input, file, or initial reasoning error |
 | `query`, `explain` | Request evaluated, including false/unknown/no matches | Inconsistent hypothetical context | Input or inference error |
 | `deliberate` | Selected or already achieved | Stuck | Input or reasoning error |
@@ -77,6 +83,10 @@ Only `:step` and `:run` advance the simulator. Save commands write files without
 The shell normally exits 0 on `:quit` or end-of-input regardless of whether its goal was achieved; Ctrl+C exits 130. An argument-parser error also exits 2. Inspect JSON report statuses to distinguish logical answers from operational success. A `true` answer means supported by this knowledge; it does not certify external reality.
 
 Ground query statuses are `true`, `false`, and `unknown`. Variable results are `answers` or `no_answers`. Execution results include `achieved`, `stuck`, `step_limit`, and `reasoning_error`. A partial abductive result is not an impossibility proof. Hypothesis conflicts stay isolated from accepted beliefs.
+
+## Term comparison conditions
+
+Ground term filters are `==`, `\==`, `@<`, `@=<`, `@>`, and `@>=`. They work in query expressions, rule/method bodies, plan guards, and requirements. Bind query variables in earlier literals; comparisons never assign values. They are distinct from the `compare` command, which compares agent snapshots. See [term comparison semantics](comparisons-v0.12.md).
 
 ## File formats
 

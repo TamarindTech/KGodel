@@ -1,0 +1,39 @@
+name: Prepare preview release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-release
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/tests.yml
+  draft:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@v4
+        with:
+          name: preview-distributions
+          path: release
+      - name: Verify exact downloads
+        run: python tools/verify_release.py release
+      - name: Create an unpublished prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          VERSION=$(python -c 'import kgodel; print(kgodel.__version__)')
+          gh release create "v$VERSION" release/* --target "$GITHUB_SHA" --draft --prerelease --title "KGodel $VERSION developer preview" --notes-file "docs/releases/v$VERSION.md"

@@ -1,6 +1,6 @@
 # 1. Install and ask your first question
 
-By the end, you will run a query, recognize a proof, and explore a simulated agent. You need Python 3.10 or newer and a checkout of KGodel 0.11. No API key is required.
+By the end, you will run a query, recognize a proof, and explore a simulated agent. You need Python 3.10 or newer and a checkout or extracted starter kit of KGodel 0.13.0a1. No API key is required. For wheel-only installation and a quick starter project, begin with [the product preview guide](../product-preview.md).
 
 ## Install the checkout
 
@@ -19,7 +19,7 @@ python -m pip install -e .
 python -m kgodel --version
 ```
 
-The final command should print `KGodel 0.11.0`. An editable installation reads this checkout as you change it. Keep the checkout in place. KGodel is not published to PyPI; these commands install this repository.
+The final command should print `KGodel 0.13.0a1`. An editable installation reads this checkout as you change it. Keep the checkout in place. PyPI publication is separate; these commands install this repository. If using the starter kit offline, install its bundled wheel via `START_HERE.md` instead, then run the course from the extracted kit root.
 
 To use an isolated environment on Windows without activating a script:
 

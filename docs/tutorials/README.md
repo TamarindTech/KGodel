@@ -1,6 +1,6 @@
 # Learn KGodel step by step
 
-These tutorials target **KGodel 0.11**. Start with no previous logic-programming experience, then build toward an agent whose decisions you can inspect, pause, and explain. Each lesson includes a runnable example, expected results, and an exercise with a worked answer.
+These tutorials target **KGodel 0.12**. Start with no previous logic-programming experience, then build toward an agent whose decisions you can inspect, pause, and explain. Each lesson includes a runnable example, expected results, and an exercise with a worked answer.
 
 ## The course
 
@@ -14,6 +14,7 @@ These tutorials target **KGodel 0.11**. Start with no previous logic-programming
 | [6. Save, resume, and compare](06-sessions-and-comparison.md) | Preserve progress, inspect a saved state, compare changing proofs | 15 minutes |
 | [7. Use KGodel from Python](07-python-api.md) | Evaluate pure knowledge and embed a resumable agent | 25 minutes |
 | [8. Build an inspectable delivery agent](08-delivery-capstone.md) | Combine policy objects, hypotheses, abduction, execution, and persistence | 30 minutes |
+| [9. Compare values and exclude duplicate pairs](09-term-comparisons.md) | Filter bound values with equality, difference, and lexical ordering | 20 minutes |
 
 For a non-developer walkthrough, begin with the [introduction](../introduction.md), then lessons 1, 3, 5, and 6. You can inspect the supplied programs without writing one. Developers new to Prolog should follow the sequence. Developers familiar with logic programming can start at lesson 2 and continue to the agent features.
 

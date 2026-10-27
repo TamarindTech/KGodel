@@ -1,6 +1,6 @@
 # Tutorial examples
 
-These files accompany the [KGodel tutorial course](../../docs/tutorials/README.md). Run commands from the repository root after installing KGodel 0.11 into your chosen Python.
+These files accompany the [KGodel tutorial course](../../docs/tutorials/README.md). Run commands from the repository root after installing KGodel 0.12 into your chosen Python.
 
 | File | Lesson and purpose |
 | --- | --- |
@@ -11,6 +11,7 @@ These files accompany the [KGodel tutorial course](../../docs/tutorials/README.m
 | [first_route.kg](first_route.kg), [world](first_route.world.json) | Minimal inspect-and-move agent |
 | [delivery.kg](delivery.kg), [world](delivery.world.json) | Full policy/planning capstone |
 | [inspect_agent.py](inspect_agent.py) | Python integration with checkpoints and comparison |
+| [comparisons.kg](comparisons.kg), [queries](comparisons.kgq) | Distinct siblings, unique pairs, equality filters, and method slot comparisons |
 
 ```powershell
 python -m kgodel query examples/tutorials/library.kg --file examples/tutorials/library.kgq
@@ -18,6 +19,7 @@ python -m kgodel explain examples/tutorials/policies.kg "[curated recommends: Bo
 python -m kgodel run examples/tutorials/first_route.kg
 python -m kgodel run examples/tutorials/delivery.kg
 python -m examples.tutorials.inspect_agent output/tutorial-python
+python -m kgodel explain examples/tutorials/comparisons.kg --file examples/tutorials/comparisons.kgq
 ```
 
 The library and policy files are pure knowledge bases: use `check`, `query`, `explain`, `objects`, or program-based `abduce`. They have no world or goal and cannot be run as simulated agents. The route examples have both.

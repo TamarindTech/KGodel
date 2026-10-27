@@ -1,0 +1,1 @@
+"""Packaged starter project resources."""

@@ -1,0 +1,24 @@
+name: Bug report
+description: Report a reproducible language, installation, or runtime problem.
+body:
+  - type: textarea
+    id: environment
+    attributes:
+      label: KGodel and Python versions, operating system
+      description: You can use python -m kgodel doctor. Remove personal paths before sharing output.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal program and command
+      description: Include a small program and exact steps that reproduce the issue.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual behavior
+      description: Include error output or the unexpected answer; remove secrets and private data.
+    validations:
+      required: true

@@ -18,6 +18,7 @@
 | Unknown | Neither a ground statement nor its explicit opposite is supported |
 | Conflict | Both polarities are supported in one reasoning context; ordinary reasoning cannot continue consistently |
 | Query | A pure question returning truth/support or bindings, without executing simulator operations |
+| Term comparison | A computed equality, difference, or lexical-order test of two bound constants; it never binds variables |
 | Hypothesis | A `suppose` context that temporarily adds ground evidence, then discards it and its consequences |
 | Assumption dependency | A temporary assumption actually used in a retained proof |
 | Abduction | Search over supplied candidates for consistent assumptions sufficient to prove a target |
@@ -34,7 +35,7 @@
 | Selector | A message name such as `finished` or `candidateFrom:to:`; colons identify keyword arguments |
 | `self` | The current receiver, using dynamic public dispatch even from an inherited method |
 | `super` | The same receiver with lookup starting above the class defining the current method |
-| Checkpoint | Self-contained resumable agent/world state, currently written with schema 4 |
+| Checkpoint | Self-contained resumable agent/world state, currently written with schema 5 |
 | Trace | A cumulative execution report containing operations, decisions, and evidence; not a checkpoint |
 | Partial result | A report whose requested reasoning/search did not fully resolve within its limits |
 

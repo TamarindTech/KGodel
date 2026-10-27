@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .logic import Inference, Knowledge
-from .model import (ExpressionQuery, GoalExpression, KGodelError, KnowledgeConflict, Literal,
+from .model import (Comparison, ExpressionQuery, GoalExpression, KGodelError, KnowledgeConflict, Literal,
                     Proof, ProveQuery, Query, Rule, render_term)
 
 
@@ -65,7 +65,7 @@ class _Evaluator:
     @staticmethod
     def prove(query: ProveQuery | ExpressionQuery, logic: Inference, scope: str) -> dict:
         expression = query.literal if isinstance(query, ProveQuery) else query.expression
-        variables = expression.atom.variables if isinstance(expression, Literal) else expression.variables
+        variables = expression.variables
         result = {"kind": "query", "scope": scope, "query": str(expression)}
         if variables:
             answers, seen = [], set()
@@ -89,9 +89,13 @@ def expression_proof(expression: GoalExpression, premises: list[dict], *, opposi
             "source": "query:" + expression.operator, "premises": premises}
 
 
-def solve_expression(expression: Literal | GoalExpression, logic: Inference, initial=None):
+def solve_expression(expression: Literal | Comparison | GoalExpression, logic: Inference, initial=None):
     """Join conjunctions and enumerate independent alternatives without DNF expansion."""
-    if isinstance(expression, Literal):
+    if isinstance(expression, Comparison):
+        supported, proof = logic.compare(expression, initial)
+        if supported:
+            yield dict(initial or {}), proof.as_dict()
+    elif isinstance(expression, Literal):
         for bindings, evidence in logic.solve((expression,), initial):
             yield bindings, evidence[0].as_dict()
     elif expression.operator == "or":
@@ -112,8 +116,11 @@ def solve_expression(expression: Literal | GoalExpression, logic: Inference, ini
             yield bindings, expression_proof(expression, premises)
 
 
-def expression_status(expression: Literal | GoalExpression, logic: Inference) -> tuple[str, dict | None]:
+def expression_status(expression: Literal | Comparison | GoalExpression, logic: Inference) -> tuple[str, dict | None]:
     """Three-valued truth for ground expressions, retaining explicit opposition."""
+    if isinstance(expression, Comparison):
+        supported, proof = logic.compare(expression)
+        return "true" if supported else "false", proof.as_dict()
     if isinstance(expression, Literal):
         status = logic.status(expression)
         proof = logic.explanation(expression if status == "true" else expression.opposite())

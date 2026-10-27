@@ -1,10 +1,12 @@
-# Using KGodel 0.11
+# Using KGodel 0.13 developer preview
 
 [Documentation home](README.md) · [Step-by-step tutorials](tutorials/README.md) · [Command reference](reference.md) · [Troubleshooting](troubleshooting.md)
 
 KGodel has two entry points: `python -m kgodel` and, after installation, the `kgodel` console command. Both call the same interpreter and accept the same arguments. Python 3.10 or newer is required.
 
 ## Installation
+
+For downloadable wheels, the offline kit, and creating a first project with `init`, see [the product preview guide](product-preview.md). The following commands install a source checkout. Run `python -m kgodel doctor` after installation to check the interpreter, package version, and bundled demo.
 
 Open a terminal in the repository root, which contains `pyproject.toml` and the `kgodel/` directory:
 
@@ -139,7 +141,7 @@ In the shell, `:compare PATH` uses the checkpoint as the baseline and the curren
 
 Comparison exits with 0 when both sides finish reasoning, whether or not state differs; 1 when a conflict or inference limit leaves a partial report; and 2 for invalid input or file errors. `--max-facts` and `--max-work` set nonnegative inference limits separately for each side, defaulting to 10000 facts and 200000 work units. A partial report retains base-belief and world differences while marking unresolved answers explicitly. It never treats an inference error as logical falsity.
 
-The input checkpoints are read-only; an output path resolving to either input, including a hard link, is rejected. Existing comparison output files are replaced when explicitly named. Checkpoints with schemas 1, 2, and 3 remain supported. New saves use schema 4, which preserves the expanded Prolog-style syntax as well as object and superclass proofs. See [the comparison reference](comparison-v0.7.md) for proof-selection details and how histories from different scenarios are compared.
+The input checkpoints are read-only; an output path resolving to either input, including a hard link, is rejected. Existing comparison output files are replaced when explicitly named. Checkpoints with schemas 1–4 remain supported. New saves use schema 5, which also preserves term-comparison proof leaves. See [the comparison reference](comparison-v0.7.md) for proof-selection details and how histories from different scenarios are compared.
 
 ## Explore logical objects
 
@@ -183,6 +185,10 @@ python -m kgodel explain examples/prolog_family.kg --file examples/prolog_family
 
 The same syntax works in shell queries, `:explain`, and `Agent.query`. Single-quoted constants and named underscore variables are supported. See the [Prolog feature guide](prolog-v0.11.md) for binding rules, proof output, limits, and saved-session compatibility.
 
+## Compare bound values
+
+Term filters are available inside queries and logical conditions: `parent(alice, Child), Child \== bob` keeps supported children whose names differ from Bob. `First @< Second` can choose one orientation of a pair. Both operands must already be bound; these tests do not assign variables. Try `python -m kgodel explain examples/tutorials/comparisons.kg --file examples/tutorials/comparisons.kgq` and follow the [comparison tutorial](tutorials/09-term-comparisons.md).
+
 ## Find hypothetical explanations
 
 ```powershell
@@ -210,4 +216,4 @@ python tools/verify_install.py dist
 
 The verifier requires a wheel path or a directory containing exactly one KGodel wheel. It creates a fresh temporary environment, installs the local wheel without using a package index, and runs from a directory outside the repository. It checks that the imported package comes from the temporary environment, validates metadata and both command entry points, runs every bundled demo, steps a shell session, restores a checkpoint in separate processes, and compares saved and live states. The resumed trace must equal an uninterrupted run.
 
-The normal test suite needs only Python's standard library. Wheel creation needs the declared setuptools build dependency. GitHub Actions is configured to perform both checks on Windows and Linux using Python 3.10 and 3.13.
+The normal test suite needs only Python's standard library. Wheel creation needs the declared setuptools build dependency. GitHub Actions checks Windows, Linux, and macOS using Python 3.10 and 3.13, and also validates the source package and offline kit. See [the release guide](releasing.md) for the complete build and distribution checks.

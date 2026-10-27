@@ -1,4 +1,4 @@
-# Troubleshooting KGodel 0.11
+# Troubleshooting KGodel 0.13 developer preview
 
 [Documentation home](README.md) · [Command reference](reference.md) · [Tutorial course](tutorials/README.md)
 
@@ -11,11 +11,13 @@ python -c "import sys; print(sys.executable)"
 python -m pip show kgodel
 ```
 
-From the checkout root, install with that same interpreter: `python -m pip install -e .`. In a virtual environment, use its Python for installation and execution. Installing with a different Python does not make the package available to this one. After installation, `python -m kgodel --version` should show 0.11.0 for this documentation.
+From the checkout root, install with that same interpreter: `python -m pip install -e .`. In a virtual environment, use its Python for installation and execution. Installing with a different Python does not make the package available to this one. After installation, `python -m kgodel --version` should show 0.13.0a1 for this preview.
 
 If only the `kgodel` console command is missing, use `python -m kgodel`; the script directory need not be on PATH. Do not assume `pip install kgodel` from PyPI identifies this project.
 
 ## A source or world file cannot be found
+
+`python -m kgodel init my-agent` creates a complete route project, including its world and query files, in a new folder. For a pure knowledge base use `--template logic`. Existing destinations are refused; select a new path instead of deleting your project.
 
 Relative paths start at the terminal's current directory. Run tutorial commands from the repository root or supply full file paths. Installing KGodel does not copy `examples/tutorials` into every working directory or into the wheel.
 
@@ -38,6 +40,10 @@ Answers are distinct binding dictionaries, not every possible proof path. An alt
 A rule cannot invent an arbitrary value for its head. In `related(X, Y) :- known(X).`, nothing supplies `Y`. Add a supported body condition that binds it or change the head. Initial facts and goals must be ground. Anonymous `_` is allowed in rule bodies but not heads or persisted facts.
 
 All named plan variables must be declared, and variables needed by operations, unknown guards, or hypothetical checks must be bound by the goal or signed entry guards. `_` cannot stand in for an operation argument; the runtime needs a concrete value.
+
+## A term comparison reports an unbound variable
+
+First match the value with a signed literal, for example `parent(alice, Child), Child \== bob`. `Child == bob` alone is a test with a missing input, not an assignment. Every incoming branch must bind the variables used by a later test. `_` cannot be compared; use a bound named variable. In rules and methods, comparison variables must occur in a signed body literal. Terms are strings, so ordering is lexical rather than arithmetic. See the [comparison tutorial](tutorials/09-term-comparisons.md).
 
 ## An object message is invalid or unexpectedly unsupported
 
@@ -63,7 +69,7 @@ Hypotheses add evidence and cannot replace an opposing belief. An inconsistent s
 
 Inspect the stopping reason before changing budgets. Abduction is bounded by candidate count, assumption-set size, contexts, solutions, and per-context inference. Increasing a budget can explore more combinations but does not guarantee useful answers. No candidate outside the supplied set is invented.
 
-Query composition is limited to 256 literal occurrences, 32 nested operator nodes, and fewer than 64 nested grouping parentheses. Hypothesis nesting is limited separately. Resource errors must not be interpreted as false statements or as complete search results.
+Query composition is limited to 256 literal or comparison conditions, 32 nested operator nodes, and fewer than 64 nested grouping parentheses. Hypothesis nesting is limited separately. Resource errors must not be interpreted as false statements or as complete search results.
 
 ## `Route simulator does not support ...`
 
@@ -73,6 +79,6 @@ For the world, use exactly `position`, `edges`, and `blocked`; edges are directe
 
 ## A saved file will not resume, or recent work disappeared
 
-Only checkpoints from `--checkpoint` or `:checkpoint` are resumable. Trace/result exports are different formats. New checkpoints use schema 4; KGodel 0.11 reads schemas 1–4. An older interpreter cannot read schema 4. Invalid, oversized, or truncated files are rejected; do not repair them by guessing field values.
+Only checkpoints from `--checkpoint` or `:checkpoint` are resumable. Trace/result exports are different formats. New checkpoints use schema 5; KGodel 0.12 reads schemas 1–5. An older interpreter cannot read schema 5. Invalid, oversized, or truncated files are rejected; do not repair them by guessing field values.
 
 Sessions do not autosave. `resume` leaves its input unchanged unless you explicitly select it as the new checkpoint output. Save to a new filename when you want to preserve the earlier state. A resumed `run` performs more operations; `shell --resume` opens the state for inspection first.

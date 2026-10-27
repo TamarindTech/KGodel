@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+.venv-release/
 *.egg-info/
 .pytest_cache/
 build/

@@ -1,0 +1,18 @@
+% Tutorial 9: exclude self-matches and return each sibling pair once.
+agent comparisons {
+    parent(alice, bob).
+    parent(alice, carol).
+    parent(alice, david).
+
+    sibling(X, Y) :- parent(Parent, X), parent(Parent, Y), X \== Y.
+    sibling_pair(X, Y) :- sibling(X, Y), X @< Y.
+
+    class Family {
+        slot excluded.
+        method otherChild: Child {
+            parent(alice, Child).
+            Child \== @excluded.
+        }
+    }
+    object family : Family { excluded = bob. }
+}

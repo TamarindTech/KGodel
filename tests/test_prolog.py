@@ -258,7 +258,7 @@ class PrologIntegrationTests(unittest.TestCase):
         self.assertIsNotNone(agent.intention)
         self.assertNotIn("_", agent.intention.candidate.bindings)
         saved = dumps_session(agent)
-        self.assertEqual(json.loads(saved)["schema_version"], 4)
+        self.assertEqual(json.loads(saved)["schema_version"], 5)
         restored = loads_session(saved)
         self.assertEqual(restored.program, program)
         self.assertEqual(restored.decisions, agent.decisions)

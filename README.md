@@ -2,13 +2,15 @@
   <img src="docs/assets/kgodel-logo-transparent.svg" alt="KGödel — Agentic Logic Programming" width="640">
 </p>
 
-# KGodel 0.11
+# KGodel 0.13 developer preview
 
 **An experimental logic language for agents that can revise their beliefs and explain their decisions.**
 
 New to KGodel? Read the [introduction for developers and non-developers](docs/introduction.md).
 
-**Learn by doing:** follow the [eight-part tutorial course](docs/tutorials/README.md), from your first query to a resumable delivery agent. The [documentation home](docs/README.md) links the [command reference](docs/reference.md), [troubleshooting guide](docs/troubleshooting.md), and detailed feature specifications.
+**Preparing a first product release:** version `0.13.0a1` adds starter projects, installation diagnostics, and an offline release kit. Follow the [developer preview guide](docs/product-preview.md) to try it, or the [release guide](docs/releasing.md) to prepare downloads. This is an alpha preview; it is not yet a stable 1.0 product.
+
+**Learn by doing:** follow the [nine-part tutorial course](docs/tutorials/README.md), from your first query to a resumable delivery agent. The [documentation home](docs/README.md) links the [command reference](docs/reference.md), [troubleshooting guide](docs/troubleshooting.md), and detailed feature specifications.
 
 KGodel combines a small Prolog-inspired syntax with explicit goals, guarded plans, observations, and actions. This working prototype explores the reasoning cycle in a finite simulated world.
 
@@ -24,6 +26,17 @@ Requires Python 3.10 or newer. There are no third-party runtime dependencies or 
 python -m pip install .
 python -m kgodel demo
 ```
+
+Create an editable starter and check the installation:
+
+```powershell
+python -m kgodel doctor
+python -m kgodel init my-agent
+python -m kgodel run my-agent/agent.kg
+python -m kgodel init my-knowledge --template logic
+```
+
+Each new folder includes a README and query examples. `init` refuses existing destinations. Release starter kits include a wheel and offline documentation; source installation remains available before a public release.
 
 After installation, `python -m kgodel` works from any folder when using that same Python environment. The installed `kgodel` command is also available when that environment's Scripts/bin directory is on your PATH. For active development, use `python -m pip install -e .` so source edits take effect immediately. KGodel has not been published to PyPI; these instructions install this local checkout.
 
@@ -177,6 +190,8 @@ python -m kgodel abduce --program examples/super_routes.kg --file examples/route
 ```
 
 The search returns subset-minimal explanations, rejects inconsistent combinations, and reports its bounds and any unfinished reasoning. It accepts up to 16 distinct ground candidates; the default maximum is three assumptions per explanation. `--demo` uses an installed experiment and `--resume` inspects a checkpoint's current beliefs. See [abduction semantics, limits, and the Python API](docs/abduction-v0.10.md).
+
+Version 0.12 adds **ground term comparisons** (`==`, `\==`, `@<`, `@=<`, `@>`, `@>=`) across queries, rules, methods, and plan conditions. Comparisons test bound values and retain computed evidence in proofs. Follow the [new comparison tutorial](docs/tutorials/09-term-comparisons.md) or read the [semantics reference](docs/comparisons-v0.12.md).
 
 ## Prolog-style reasoning
 

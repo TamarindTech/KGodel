@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from .model import Bindings, KGodelError, KnowledgeConflict, Literal, Proof, Rule, Unknown, match
+from .model import Bindings, Comparison, KGodelError, KnowledgeConflict, Literal, Proof, Rule, Unknown, match
 
 
 class Knowledge:
     def __init__(self, beliefs: tuple[Literal, ...] = ()):
         self.facts: dict[Literal, Proof] = {}
         for belief in beliefs:
+            if not isinstance(belief, Literal):
+                raise KGodelError("Beliefs must be signed literals, not comparisons.")
             if belief.atom.variables:
                 raise KGodelError("Beliefs must be ground.")
             if belief.opposite() in self.facts:
@@ -27,6 +29,8 @@ class Knowledge:
             raise KGodelError("A hypothesis requires at least one assumption.")
         child = self.copy()
         for literal in assumptions:
+            if not isinstance(literal, Literal):
+                raise KGodelError("Assumptions must be signed literals, not comparisons.")
             if literal.atom.variables:
                 raise KGodelError("Assumptions must be ground.")
             if literal.opposite() in child.facts:
@@ -36,6 +40,8 @@ class Knowledge:
         return child
 
     def observe(self, literal: Literal, source: str) -> dict:
+        if not isinstance(literal, Literal):
+            raise KGodelError("Observations must be signed literals, not comparisons.")
         if literal.atom.variables:
             raise KGodelError("Observations must be ground.")
         previous = self.facts.pop(literal.opposite(), None)
@@ -76,7 +82,19 @@ class Inference:
                         self.proofs[conclusion] = Proof(conclusion, rule.name, premises)
                         changed = True
 
-    def solve(self, guards: tuple[Literal | Unknown, ...], initial: Bindings | None = None):
+    def charge(self):
+        self.work += 1
+        if self.work > self.max_work:
+            raise KGodelError("Inference work limit exceeded; this is not a logical false result.")
+
+    def compare(self, comparison: Comparison, bindings: Bindings | None = None) -> tuple[bool, Proof]:
+        self.charge()
+        grounded = comparison.ground(bindings or {})
+        supported = grounded.holds()
+        conclusion = grounded if supported else grounded.opposite()
+        return supported, Proof(conclusion, "builtin:" + conclusion.operator)
+
+    def solve(self, guards: tuple[Literal | Comparison | Unknown, ...], initial: Bindings | None = None):
         rows: list[tuple[Bindings, tuple[Proof | dict, ...]]] = [(dict(initial or {}), ())]
         # Explicit signed literals bind variables. Unknown only tests a ground atom.
         for guard in (item for item in guards if isinstance(item, Literal)):
@@ -90,12 +108,18 @@ class Inference:
             next_rows = []
             for bindings, evidence in rows:
                 for literal, proof in candidates:
-                    self.work += 1
-                    if self.work > self.max_work:
-                        raise KGodelError("Inference work limit exceeded; this is not a logical false result.")
+                    self.charge()
                     matched = match(guard.atom, literal.atom, bindings)
                     if matched is not None:
                         next_rows.append((matched, evidence + (proof,)))
+            rows = next_rows
+        # Comparisons filter complete literal bindings; they never generate values.
+        for guard in (item for item in guards if isinstance(item, Comparison)):
+            next_rows = []
+            for bindings, evidence in rows:
+                supported, proof = self.compare(guard, bindings)
+                if supported:
+                    next_rows.append((bindings, evidence + (proof,)))
             rows = next_rows
         for guard in (item for item in guards if isinstance(item, Unknown)):
             next_rows = []
