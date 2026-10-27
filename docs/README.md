@@ -1,6 +1,6 @@
 # KGodel documentation
 
-This is the documentation home for **KGodel 0.13.0a1**, an alpha developer preview. KGodel is an experimental language for inspectable agent reasoning: facts and rules describe knowledge, queries explain support, and plans act through a local simulator.
+This is the documentation home for **KGodel 0.14.0a1**, an alpha developer preview. KGodel is an experimental language for inspectable agent reasoning: facts and rules describe knowledge, queries explain support, and plans act through a local simulator.
 
 ## Choose a starting point
 
@@ -9,7 +9,7 @@ This is the documentation home for **KGodel 0.13.0a1**, an alpha developer previ
 | Try the product preview or create a starter project | [Developer preview](product-preview.md) |
 | Prepare verified release downloads | [Release guide](releasing.md) |
 | Understand the idea without programming | [Introduction for developers and non-developers](introduction.md) |
-| Learn by running and changing examples | [Nine-part tutorial course](tutorials/README.md) |
+| Learn by running and changing examples | [Ten-part tutorial course](tutorials/README.md) |
 | Install KGodel or use the interactive shell | [Usage guide](using-kgodel.md) |
 | Find a command, exit code, or file format | [Command reference](reference.md) |
 | Resolve an error or an unexpected answer | [Troubleshooting](troubleshooting.md) |
@@ -24,6 +24,7 @@ Read these after a tutorial when you need precise behavior. Each versioned filen
 
 | Area | Reference | Current behavior |
 | --- | --- | --- |
+| Reusable modules | [Local source composition](modules-v0.14.md) | Shared facts, rules, policies, and plans; dependency reports and self-contained checkpoints |
 | Term comparisons | [Equality, difference, and ordering](comparisons-v0.12.md) | Pure filters over bound constants, with computed proofs |
 | Prolog-style syntax | [Queries, variables, and shorthand declarations](prolog-v0.11.md) | Conjunction/disjunction, grouping, anonymous matches, quoted constants |
 | Hypotheses | [Scoped reasoning](language-v0.2.md) | Isolated assumptions; also usable in plans since 0.3 |
@@ -48,4 +49,4 @@ Tutorial programs live in [examples/tutorials](../examples/tutorials/README.md).
 python tools/verify_tutorials.py
 ```
 
-This runs the teaching examples, checks their expected answers and restart behavior, and checks local Markdown link targets. Generated verification files stay in a temporary directory. The same check runs in CI on Windows and Linux.
+This runs the teaching examples, checks their expected answers and restart behavior, and checks local Markdown link targets. Generated verification files stay in a temporary directory. The same check runs in CI on Windows, Linux, and macOS.

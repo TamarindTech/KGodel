@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+from dataclasses import replace
 
 from .model import (Atom, ClassDefinition, Comparison, COMPARISON_OPPOSITES, ExpressionQuery,
                     GoalExpression, KGodelError, Literal, Method, ObjectDefinition, Plan,
@@ -325,14 +326,30 @@ class Parser:
             self.fail("Every rule-head variable must occur in the rule body")
         return Rule(f"rule_{number}", head, tuple(body))
 
-    def program(self) -> Program:
-        self.take("agent")
+    def program(self, *, declaration: str = "agent", include=None, validate: bool = True) -> Program:
+        self.take(declaration)
         name = self.identifier()
         self.take("{")
         beliefs, rules, goals, plans, classes, objects = [], [], [], [], [], []
         while self.peek() != "}":
             kind = self.take()
-            if kind == "class":
+            if kind == "include" and self.peek().startswith(("'", '"')):
+                reference = self.term()
+                self.take(".")
+                if include is None:
+                    self.fail("File includes require parse_file(); parsing text never reads other files")
+                fragment = include(reference)
+                if fragment is not None:
+                    beliefs.extend(fragment.beliefs)
+                    for rule in fragment.rules:
+                        rules.append(replace(rule, name=f"rule_{len(rules) + 1}"))
+                    classes.extend(fragment.classes)
+                    objects.extend(fragment.objects)
+                    for plan in fragment.plans:
+                        if any(existing.name == plan.name for existing in plans):
+                            self.fail(f"Duplicate plan name {plan.name}")
+                        plans.append(plan)
+            elif kind == "class":
                 classes.append(self.class_definition())
             elif kind == "object":
                 objects.append(self.object_definition())
@@ -343,6 +360,8 @@ class Parser:
                 beliefs.append(belief)
                 self.take(".")
             elif kind == "goal":
+                if declaration == "module":
+                    self.fail("Modules cannot declare goals; put goals in the entry agent")
                 goal = self.atom()
                 if goal.variables:
                     self.fail("Goals must be ground in this version")
@@ -368,10 +387,11 @@ class Parser:
                     beliefs.append(head)
         self.take("}")
         if self.peek() != "<end>":
-            self.fail("Only one agent is supported in this version")
+            self.fail(f"Only one {declaration} is supported per source")
         program = Program(name, tuple(beliefs), tuple(rules), tuple(goals), tuple(plans), tuple(classes), tuple(objects))
         from .objects import ObjectSpace
-        ObjectSpace(program).validate_program()
+        if validate:
+            ObjectSpace(program).validate_program()
         return program
 
     def hypothesis(self, *, depth: int = 0, allow_variables: bool = False) -> SupposeQuery:

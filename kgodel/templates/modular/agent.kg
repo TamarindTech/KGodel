@@ -1,0 +1,8 @@
+agent modular_courier {
+    include "geography.kg".
+    include "travel.kg".
+
+    object courier : ApprovedPolicy {}
+    at(start).
+    goal at(goal).
+}

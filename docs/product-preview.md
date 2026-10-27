@@ -2,13 +2,13 @@
 
 [Documentation home](README.md) · [Tutorials](tutorials/README.md) · [Release guide](releasing.md)
 
-KGodel **0.13.0a1** is an alpha preview for developers, educators, and researchers exploring explainable agent reasoning. Its workflow is: describe a small world, query its knowledge, inspect a proposed decision, run a simulated agent, and review or resume its reasoning later.
+KGodel **0.14.0a1** is an alpha preview for developers, educators, and researchers exploring explainable agent reasoning. Its workflow is: describe a small world, query its knowledge, inspect a proposed decision, run a simulated agent, and review or resume its reasoning later.
 
 ## What you receive
 
 - A Python wheel with the command-line tool and Python modules, with no runtime dependencies.
-- Five packaged demos and two starter project templates.
-- A source distribution and starter kit containing examples, nine tutorials, references, and tests.
+- Five packaged demos and three starter project templates.
+- A source distribution and starter kit containing examples, ten tutorials, references, and tests.
 - SHA-256 checksums for the three downloads and a machine-readable release manifest.
 
 This preview is a local developer tool. The route simulator supports `clear` observations and `move` actions. It has no graphical UI, hosted account, LLM connection, arbitrary tool execution, billing, or telemetry. Pure logic queries can model other domains without using the simulator. The language remains a function-free Prolog-inspired subset with read-only Smalltalk-style logical objects.
@@ -21,7 +21,7 @@ Create an environment and install the downloaded wheel on Windows:
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\python -m pip install --no-index --no-deps ./kgodel-0.13.0a1-py3-none-any.whl
+.venv\Scripts\python -m pip install --no-index --no-deps ./kgodel-0.14.0a1-py3-none-any.whl
 .venv\Scripts\python -m kgodel doctor
 ```
 
@@ -29,7 +29,7 @@ On macOS or Linux:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/python -m pip install --no-index --no-deps ./kgodel-0.13.0a1-py3-none-any.whl
+.venv/bin/python -m pip install --no-index --no-deps ./kgodel-0.14.0a1-py3-none-any.whl
 .venv/bin/python -m kgodel doctor
 ```
 
@@ -57,6 +57,8 @@ python -m kgodel explain my-knowledge/agent.kg --file my-knowledge/queries.kgq
 ```
 
 The destination must be a new folder whose parent already exists. `init` refuses existing files, folders, and links. The logic starter teaches recursion, comparisons, and hypothetical queries. It has no agent goal or simulated world, so use query commands instead of `run` or the agent shell.
+
+For a larger project, use `python -m kgodel init my-modular-agent --template modular`. This starter separates geography, inherited policies, and a travel plan into reusable files. Inspect its dependencies with `python -m kgodel imports my-modular-agent/agent.kg`, then follow [the module tutorial](tutorials/10-reusable-modules.md). Checkpoints embed the combined program and remain independent of those files.
 
 ## Compatibility and limits
 

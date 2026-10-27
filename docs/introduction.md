@@ -75,7 +75,7 @@ Proof records connect conclusions to rules and evidence sources. Execution trace
 
 ## What you can use today
 
-KGodel 0.13.0a1 is a developer preview with a Python interpreter, five bundled route experiments, an interactive shell, saved sessions, state comparisons, Smalltalk-inspired logical objects with superclass reasoning, bounded abductive reasoning, Prolog-style composed queries, and readable or JSON execution records. It runs locally with Python 3.10 or newer and requires no API keys or third-party runtime dependencies. New users can create a starter with `python -m kgodel init my-agent` and check installation with `python -m kgodel doctor`; see [the product preview guide](product-preview.md).
+KGodel 0.14.0a1 is a developer preview with a Python interpreter, five bundled route experiments, an interactive shell, saved sessions, state comparisons, Smalltalk-inspired logical objects with superclass reasoning, bounded abductive reasoning, Prolog-style composed queries, and readable or JSON execution records. It runs locally with Python 3.10 or newer and requires no API keys or third-party runtime dependencies. New users can create a starter with `python -m kgodel init my-agent` and check installation with `python -m kgodel doctor`; see [the product preview guide](product-preview.md).
 
 From the repository root, install the checkout:
 
@@ -106,7 +106,7 @@ Version 0.11 makes it easier to ask questions about several relationships at onc
 
 Version 0.12 adds comparisons between known values. An agent can now require that a destination differs from its current location, or list each pair of related people once. These conditions appear in the proof alongside the facts that supplied their values. The [ninth tutorial](tutorials/09-term-comparisons.md) demonstrates the idea through a family knowledge base.
 
-To move from this overview to hands-on learning, follow the [nine-part tutorial course](tutorials/README.md). It starts with a library knowledge base and builds toward an agent whose policy, observations, and progress can be inspected. Each lesson includes runnable examples, expected results, and exercises with worked answers. The [documentation home](README.md) organizes the tutorials and references.
+To move from this overview to hands-on learning, follow the [ten-part tutorial course](tutorials/README.md). It starts with a library knowledge base and builds toward an agent whose policy, observations, and progress can be inspected. Each lesson includes runnable examples, expected results, and exercises with worked answers. The [documentation home](README.md) organizes the tutorials and references.
 
 The current prototype focuses on one agent in a local route simulator. It implements a limited logic language rather than full Prolog. Checkpoints preserve experiment state across restarts; traces provide a readable account of what happened. Saving is explicit, so changes since the last checkpoint are lost when you close the process.
 
