@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.14.0a1 — reusable modules
+
+- Added local `module` declarations and `include` composition across all program-file commands, with shared logical names and validation after linking.
+- Added `parse_file` and `load_project`, deterministic first-include expansion, bounded file/depth/byte loading, original-file syntax diagnostics, and dependency paths/content hashes through `imports`.
+- Rejected cycles, duplicate module/class/object/plan names, module-defined goals, and paths outside the entry directory. Export protection now includes every loaded module.
+- Kept text/checkpoint parsing free of filesystem includes. Saved sessions embed the combined program and retain schema-5 compatibility without needing their original source files.
+- Added a packaged modular starter, a tenth tutorial, semantic/integration tests, and installed-wheel verification of module loading and restart without source files.
+
 ## 0.13.0a1 — developer preview
 
 - Added `init` with route-agent and pure-logic starters, packaged query files, and first-project instructions. Existing destinations are never overwritten.

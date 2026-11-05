@@ -1,4 +1,4 @@
-# KGodel 0.13 developer preview command reference
+# KGodel 0.14 developer preview command reference
 
 [Documentation home](README.md) · [Tutorial course](tutorials/README.md) · [Troubleshooting](troubleshooting.md)
 
@@ -8,8 +8,9 @@ Use `python -m kgodel COMMAND ...`, or `kgodel COMMAND ...` when the installed c
 
 | Command | Input | Behavior |
 | --- | --- | --- |
-| `init DIRECTORY [--template route\|logic]` | New directory with an existing parent | Create an editable starter, queries, and README; refuse existing destinations |
+| `init DIRECTORY [--template route\|logic\|modular]` | New directory with an existing parent | Create an editable starter, queries, and README; refuse existing destinations |
 | `doctor [--json]` | Current Python environment | Inspect installation metadata and run a bundled simulation in memory |
+| `imports PROGRAM [--result-json PATH]` | Entry `.kg` agent | Link and structurally validate local modules; report dependency paths, hashes, and sizes without inference |
 | `check PROGRAM` | `.kg` program | Parse, validate, and compute initial logical closure |
 | `query PROGRAM QUERY` | A query expression, optionally `?-` or `prove(...)` | Inspect initial knowledge, returning statuses or bindings |
 | `explain PROGRAM QUERY` | Same as query | Include supporting/opposing proof trees |
@@ -33,6 +34,8 @@ The five bundled names are `blocked-route`, `hypothesis-planning`, `multistep-ro
 ## Input and output options
 
 Command-line exports must use distinct paths and cannot overwrite input files, including aliases. `resume SESSION --checkpoint SESSION` is the explicit exception for continuing and replacing the same checkpoint. These checks run before agent execution. `doctor --json` prints diagnostics to stdout and writes no files; `init` writes only into a newly created folder.
+
+All program-file commands resolve local includes with bounded loading (64 files, depth 16, 1 MiB per file, 8 MiB total). Export protection includes every loaded module. Read [module semantics](modules-v0.14.md) for relative paths, shared names, errors, and Python overrides. Query files are requests, not includable libraries.
 
 - `query` and `explain` accept either a query argument or `--file REQUESTS.kgq`. Use `--result-json PATH` to save structured answers, proofs, and dependencies.
 - `deliberate` accepts `--max-hypotheses N` and `--result-json PATH`.
@@ -72,6 +75,7 @@ Only `:step` and `:run` advance the simulator. Save commands write files without
 | Command family | Exit 0 | Exit 1 | Exit 2 |
 | --- | --- | --- | --- |
 | `init` | Project created | — | Existing destination, invalid arguments, or file error |
+| `imports` | Sources linked and structurally valid | — | Input, source-limit, module, or file error |
 | `doctor` | Installation and demo checks passed | Missing/different installed metadata | Demo or diagnostic failure |
 | `check`, `objects` | Valid input | — | Input, file, or initial reasoning error |
 | `query`, `explain` | Request evaluated, including false/unknown/no matches | Inconsistent hypothetical context | Input or inference error |
@@ -92,7 +96,7 @@ Ground term filters are `==`, `\==`, `@<`, `@=<`, `@>`, and `@>=`. They work in 
 
 | Extension or content | Purpose |
 | --- | --- |
-| `.kg` | One `agent` declaration, its facts/rules, optional objects and plans |
+| `.kg` | One entry `agent` or included `module`; facts/rules, optional objects and plans |
 | `.kgq` | Period-separated queries and `suppose` blocks |
 | `.kga` | One `GROUND_TARGET from (CANDIDATE, ...)` request |
 | `.world.json` | Exactly `position`, directed `edges`, and `blocked` fields for the route simulator |

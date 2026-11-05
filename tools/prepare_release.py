@@ -32,6 +32,10 @@ def validate_distributions(directory: Path, version: str):
         required = {"kgodel/templates/route/README.md", "kgodel/templates/route/queries.kgq",
                     "kgodel/templates/logic/README.md", "kgodel/templates/logic/agent.kg",
                     "kgodel/templates/logic/queries.kgq", "kgodel/demos/multistep_route.kg",
+                    "kgodel/templates/modular/agent.kg", "kgodel/templates/modular/geography.kg",
+                    "kgodel/templates/modular/policies.kg", "kgodel/templates/modular/travel.kg",
+                    "kgodel/templates/modular/agent.world.json", "kgodel/templates/modular/queries.kgq",
+                    "kgodel/templates/modular/README.md",
                     "kgodel/demos/multistep_route.world.json", f"kgodel-{version}.dist-info/licenses/LICENSE"}
         if not required <= names:
             raise ValueError(f"Wheel is missing resources: {sorted(required - names)}")

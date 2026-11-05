@@ -86,4 +86,4 @@ later_child(Child) :- parent(alice, Child), Child @>= carol.
 
 See the [comparison reference](../comparisons-v0.12.md) for binding order, proof semantics, resource limits, and schema-5 persistence. [Saved-state comparison](../comparison-v0.7.md) is a separate feature: it compares whole agent snapshots.
 
-[← Delivery capstone](08-delivery-capstone.md) · [Course index](README.md) · [Documentation home](../README.md)
+[← Delivery capstone](08-delivery-capstone.md) · [Next: reusable modules →](10-reusable-modules.md) · [Course index](README.md)

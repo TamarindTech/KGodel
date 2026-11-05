@@ -1,6 +1,6 @@
 # Tutorial examples
 
-These files accompany the [KGodel tutorial course](../../docs/tutorials/README.md). Run commands from the repository root after installing KGodel 0.12 into your chosen Python.
+These files accompany the [KGodel tutorial course](../../docs/tutorials/README.md). Run commands from the repository root after installing KGodel 0.14.0a1 into your chosen Python.
 
 | File | Lesson and purpose |
 | --- | --- |
@@ -31,3 +31,5 @@ python tools/verify_tutorials.py
 ```
 
 Examples are source-checkout resources, not additional bundled demos. They are not installed into the wheel. Use full paths if running a file-based command from another directory; run the Python `examples.tutorials` module from the checkout root.
+
+Lesson 10 uses the packaged modular starter: run `python -m kgodel init my-modular-agent --template modular` from any working directory. It creates its own geography, policy, plan, query, and world files. See [the module tutorial](../../docs/tutorials/10-reusable-modules.md).

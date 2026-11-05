@@ -1,4 +1,4 @@
-# Using KGodel 0.13 developer preview
+# Using KGodel 0.14 developer preview
 
 [Documentation home](README.md) · [Step-by-step tutorials](tutorials/README.md) · [Command reference](reference.md) · [Troubleshooting](troubleshooting.md)
 
@@ -7,6 +7,8 @@ KGodel has two entry points: `python -m kgodel` and, after installation, the `kg
 ## Installation
 
 For downloadable wheels, the offline kit, and creating a first project with `init`, see [the product preview guide](product-preview.md). The following commands install a source checkout. Run `python -m kgodel doctor` after installation to check the interpreter, package version, and bundled demo.
+
+Use `init my-agent --template modular` to create a reusable multi-file agent. `imports my-agent/agent.kg` displays its sources; all program-file commands load the same includes. The [module guide](modules-v0.14.md) covers file limits and Python's `parse_file` / `load_project`. The existing `parse(source)` function remains a pure text parser.
 
 Open a terminal in the repository root, which contains `pyproject.toml` and the `kgodel/` directory:
 

@@ -88,7 +88,7 @@ def verify():
         delivery = EXAMPLES / "delivery.kg"
         for program in (library, policies, first, delivery):
             assert "Valid: agent" in cli("check", program)
-        assert cli("--version").strip() == "KGodel 0.13.0a1"
+        assert cli("--version").strip() == "KGodel 0.14.0a1"
         assert "super-routes" in cli("demo", "--list")
 
         # Lessons 1 and 2: bindings, explicit opposition, unknown, and recursion.
@@ -232,6 +232,30 @@ def verify():
         later = changed_program("comparisons.kg", "later_child(Child) :- parent(alice, Child), Child @>= carol.")
         assert [item["bindings"] for item in query(later, "later_child(Child)")["answers"]] == [
             {"Child": "carol"}, {"Child": "david"}]
+
+        # Lesson 10: reusable modules, dependency reports, and saved combined programs.
+        modular = outputs / "modular"
+        cli("init", modular, "--template", "modular")
+        entry = modular / "agent.kg"
+        dependencies = report("imports", entry)
+        assert len(dependencies["files"]) == 4
+        assert dependencies["files"][3]["includes"] == ["geography.kg"]
+        assert "Valid: agent" in cli("check", entry)
+        results = report("explain", entry, "--file", modular / "queries.kgq")["results"]
+        assert results[0]["answers"][0]["bindings"] == {"Place": "forest"}
+        assert [result["status"] for result in results[1:4]] == ["unknown", "evaluated", "unknown"]
+        assert report("deliberate", entry)["selected"]["argument"] == "clear(forest)"
+        paused_path, done_path = outputs / "modular-paused.json", outputs / "modular-done.json"
+        report("run", entry, "--max-steps", "1", "--checkpoint", paused_path, expected=1, execution=True)
+        complete = report("resume", paused_path, "--checkpoint", done_path, execution=True)
+        assert complete["status"] == "achieved" and complete["steps"] == 4
+        assert report("compare", paused_path, done_path, "--query", "at(goal)")["changed"]
+        geography = modular / "geography.kg"
+        geography.write_text(geography.read_text().replace("approved(forest).", ""), encoding="utf-8")
+        stuck = report("run", entry, expected=1, execution=True)
+        assert stuck["status"] == "stuck" and stuck["steps"] == 0
+        resumed = report("resume", paused_path, execution=True)
+        assert resumed["status"] == "achieved" and resumed["steps"] == 4
 
     print(f"Tutorials verified: {commands} successful command checks; {links} local Markdown link targets checked.")
 

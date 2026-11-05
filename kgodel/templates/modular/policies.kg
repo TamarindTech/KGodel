@@ -1,0 +1,17 @@
+module policies {
+    include "geography.kg".
+
+    class RoutePolicy {
+        method candidateFrom: From to: To { path(From, To). }
+        method mayMoveFrom: From to: To {
+            [self candidateFrom: From to: To].
+            clear(To).
+        }
+    }
+    class ApprovedPolicy extends RoutePolicy {
+        method candidateFrom: From to: To {
+            [super candidateFrom: From to: To].
+            approved(To).
+        }
+    }
+}

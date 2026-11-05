@@ -1,0 +1,10 @@
+module travel {
+    include "policies.kg".
+
+    plan travel(Policy, From, To, Goal) for at(Goal) {
+        when at(From), [Policy candidateFrom: From to: To], reachable(To, Goal), From \== To, unknown(clear(To)).
+        observe clear(To).
+        require [Policy mayMoveFrom: From to: To].
+        act move(From, To).
+    }
+}

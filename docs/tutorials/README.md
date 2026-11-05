@@ -1,6 +1,6 @@
 # Learn KGodel step by step
 
-These tutorials target **KGodel 0.12**. Start with no previous logic-programming experience, then build toward an agent whose decisions you can inspect, pause, and explain. Each lesson includes a runnable example, expected results, and an exercise with a worked answer.
+These tutorials target **KGodel 0.14.0a1**. Start with no previous logic-programming experience, then build toward an agent whose decisions you can inspect, pause, and explain. Each lesson includes a runnable example, expected results, and an exercise with a worked answer.
 
 ## The course
 
@@ -15,6 +15,7 @@ These tutorials target **KGodel 0.12**. Start with no previous logic-programming
 | [7. Use KGodel from Python](07-python-api.md) | Evaluate pure knowledge and embed a resumable agent | 25 minutes |
 | [8. Build an inspectable delivery agent](08-delivery-capstone.md) | Combine policy objects, hypotheses, abduction, execution, and persistence | 30 minutes |
 | [9. Compare values and exclude duplicate pairs](09-term-comparisons.md) | Filter bound values with equality, difference, and lexical ordering | 20 minutes |
+| [10. Build an agent from reusable modules](10-reusable-modules.md) | Split policies and plans across files, inspect dependencies, resume without source files | 25 minutes |
 
 For a non-developer walkthrough, begin with the [introduction](../introduction.md), then lessons 1, 3, 5, and 6. You can inspect the supplied programs without writing one. Developers new to Prolog should follow the sequence. Developers familiar with logic programming can start at lesson 2 and continue to the agent features.
 
@@ -25,7 +26,7 @@ For a non-developer walkthrough, begin with the [introduction](../introduction.m
 - Blocks labeled `text` contain KGodel source, shell requests, or output; the surrounding sentence tells you where they belong. Do not paste `kgodel>` prompt text into a request.
 - Each `query`, `run`, or `demo` command starts from its input again. The interactive shell and Python `Agent` retain state across requests; `resume` starts from a checkpoint.
 - A planned pause returns terminal exit code 1 when goals remain unfinished. That is expected in the persistence lessons.
-- Lesson commands write outputs under `output/tutorial-*`. Rerunning them replaces those named outputs. Keep source inputs and saved outputs at different paths.
+- Lessons 1–9 write outputs under `output/tutorial-*`. Lesson 10 creates `my-modular-agent` and named checkpoint files in the current folder. Rerunning exports replaces those named outputs; project creation refuses existing folders. Keep source inputs and saved outputs at different paths.
 
 Programs in [the example directory](../../examples/tutorials/README.md) are complete; short extracts in lessons illustrate specific parts. Exercises that change a program should use a copy so the baseline examples remain available.
 

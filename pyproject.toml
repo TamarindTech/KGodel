@@ -33,7 +33,7 @@ include = ["kgodel*"]
 
 [tool.setuptools.package-data]
 "kgodel.demos" = ["*.kg", "*.world.json"]
-"kgodel.templates" = ["*/*.md", "*/*.kg", "*/*.kgq"]
+"kgodel.templates" = ["*/*.md", "*/*.kg", "*/*.kgq", "*/*.world.json"]
 
 [tool.setuptools.dynamic]
 version = {attr = "kgodel.__version__"}

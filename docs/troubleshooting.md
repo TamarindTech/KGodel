@@ -1,4 +1,4 @@
-# Troubleshooting KGodel 0.13 developer preview
+# Troubleshooting KGodel 0.14 developer preview
 
 [Documentation home](README.md) · [Command reference](reference.md) · [Tutorial course](tutorials/README.md)
 
@@ -11,11 +11,13 @@ python -c "import sys; print(sys.executable)"
 python -m pip show kgodel
 ```
 
-From the checkout root, install with that same interpreter: `python -m pip install -e .`. In a virtual environment, use its Python for installation and execution. Installing with a different Python does not make the package available to this one. After installation, `python -m kgodel --version` should show 0.13.0a1 for this preview.
+From the checkout root, install with that same interpreter: `python -m pip install -e .`. In a virtual environment, use its Python for installation and execution. Installing with a different Python does not make the package available to this one. After installation, `python -m kgodel --version` should show 0.14.0a1 for this preview.
 
 If only the `kgodel` console command is missing, use `python -m kgodel`; the script directory need not be on PATH. Do not assume `pip install kgodel` from PyPI identifies this project.
 
 ## A source or world file cannot be found
+
+For modular agents, run `python -m kgodel imports path/to/agent.kg`. Paths in an `include` are relative to its containing file, use forward slashes, and must resolve within the entry file's directory or subfolders. Included files must declare `module NAME`, not `agent NAME`. Cycle errors display the dependency chain; move shared declarations into a third module rather than including back into the entry. Python users should call `kgodel.loading.parse_file` when includes are present.
 
 `python -m kgodel init my-agent` creates a complete route project, including its world and query files, in a new folder. For a pure knowledge base use `--template logic`. Existing destinations are refused; select a new path instead of deleting your project.
 
